@@ -1,4 +1,4 @@
-package com.amorgens.ui.theme
+package com.amorgens.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -19,19 +19,19 @@ fun GeneralScaffold(topBar: @Composable () -> Unit, floatingActionButton: @Compo
         },
         modifier = Modifier
             .padding(all = 0.dp)
-            .background(color = MaterialTheme.colorScheme.primary),
+            .background(color = MaterialTheme.colorScheme.secondary),
         bottomBar = {
 
         },
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.tertiary,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.secondary,
         floatingActionButton = {
             floatingActionButton()
         },
 
         floatingActionButtonPosition = FabPosition.Center,
     ) { it ->
-        Box(modifier = Modifier.padding(it)) {
+        Box(modifier = Modifier.padding(it).padding(start = 15.dp, end = 15.dp)) {
             screenView()
         }
     }
