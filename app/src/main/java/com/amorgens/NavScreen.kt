@@ -8,4 +8,8 @@ sealed class NavScreen(
         route = "home",
         title = "Home"
     )
+    object WalletScreen: NavScreen(
+        route = "wallet",
+        title = "Wallet"
+    )
 }

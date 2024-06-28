@@ -15,10 +15,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.GeneralTopBar
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.amorgens.menu.domain.MenuItemData
 
 @Composable
-fun MenuScreen(){
+fun MenuScreen(navController: NavController){
 
 
     GeneralScaffold(topBar = { GeneralTopBar() }, floatingActionButton = { }) {
@@ -49,7 +50,7 @@ fun MenuScreen(){
                horizontalArrangement = Arrangement.End
            ) {
                items(menus.size){index->
-                   MenuItem(iconImage =menus[index].icon, menuTitle = menus[index].title)
+                   MenuItem(iconImage =menus[index].icon, menuTitle = menus[index].title, menuRoute = menus[index].route)
                }
            }
         }

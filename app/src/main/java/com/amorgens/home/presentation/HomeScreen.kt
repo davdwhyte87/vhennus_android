@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import com.amorgens.NavScreen
 import com.amorgens.feed.presentation.FeedScreen
 import com.amorgens.home.presentation.components.BottomNavItem
@@ -36,7 +37,7 @@ import com.amorgens.ui.theme.Purple
 // home screen will have buttom navigation and will contains four screens
 
 @Composable
-fun HomeScreen(){
+fun HomeScreen(navController: NavController){
     var selectedTabIndex by remember {
         mutableIntStateOf(0)
     }
@@ -101,7 +102,7 @@ fun HomeScreen(){
 
             }
             if(it == 3){
-                MenuScreen()
+                MenuScreen(navController)
             }
         }
         TabRow(selectedTabIndex = selectedTabIndex) {
