@@ -50,7 +50,7 @@ fun MenuScreen(navController: NavController){
                horizontalArrangement = Arrangement.End
            ) {
                items(menus.size){index->
-                   MenuItem(iconImage =menus[index].icon, menuTitle = menus[index].title, menuRoute = menus[index].route)
+                   MenuItem(iconImage =menus[index].icon, menuTitle = menus[index].title, menuRoute = menus[index].route, navController)
                }
            }
         }
