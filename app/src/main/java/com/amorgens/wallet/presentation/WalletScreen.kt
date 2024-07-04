@@ -23,17 +23,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
 
 
 @Composable
-fun WalletScreen(){
-    GeneralScaffold(topBar = { HomeTopBar() }, floatingActionButton = {  }) {
+fun WalletScreen(navController: NavController){
+    GeneralScaffold(topBar = { HomeTopBar("Wallets") }, floatingActionButton = {  }) {
         var isExpanded = remember {
             mutableStateOf(false)
         }
-        Column {
+        Column  (
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ){
             ElevatedCard(
                 shape = RoundedCornerShape(10.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
@@ -90,6 +93,7 @@ fun WalletScreen(){
 
                 }
             }
+            WalletList(navController)
         }
     }
 }

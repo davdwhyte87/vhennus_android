@@ -12,4 +12,9 @@ sealed class NavScreen(
         route = "wallet",
         title = "Wallet"
     )
+
+    object SingleWalletScreen: NavScreen(
+        route = "single_wallet",
+        title = "Single Wallet"
+    )
 }

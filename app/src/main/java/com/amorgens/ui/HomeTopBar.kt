@@ -16,9 +16,9 @@ import androidx.compose.ui.text.style.TextAlign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopBar(){
+fun HomeTopBar(pageName:String){
     CenterAlignedTopAppBar(
-        title = { Text(text = "Wallets", textAlign = TextAlign.Center)},
+        title = { Text(text = pageName, textAlign = TextAlign.Center)},
         navigationIcon = {
             IconButton(onClick = { /*TODO*/ }) {
                 Icon(imageVector = Icons.Outlined.Home ,
