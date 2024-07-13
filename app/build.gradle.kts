@@ -85,6 +85,19 @@ dependencies {
     // hilt
     implementation ("com.google.dagger:hilt-android:$hilt_version")
     kapt ("com.google.dagger:hilt-compiler:$hilt_version")
+    implementation ("androidx.hilt:hilt-navigation-compose:1.2.0")
+    kapt ("com.google.dagger:hilt-android-compiler:2.48")
+
+    // coroutine
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.3")
+
+
+    // gson
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    //lotie animation
+
+    implementation("com.airbnb.android:lottie-compose:4.0.0")
 
 }
 

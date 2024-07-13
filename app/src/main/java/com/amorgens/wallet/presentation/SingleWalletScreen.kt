@@ -30,13 +30,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.amorgens.NavScreen
+import com.amorgens.ui.BackTopBar
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
 
 
 @Composable
 fun SingleWalletScreen(address: String, navController: NavController){
-    GeneralScaffold(topBar = { HomeTopBar("Wallet") }, floatingActionButton = {  }) {
+    GeneralScaffold(topBar = { BackTopBar("Wallet", navController) }, floatingActionButton = {  }) {
         var isExpanded = remember {
             mutableStateOf(false)
         }
@@ -120,7 +122,7 @@ fun SingleWalletScreen(address: String, navController: NavController){
                 )
                 menus.forEachIndexed { index, walletMenu ->
                     WalletMenuItem(name = walletMenu.name, icon = walletMenu.icon ) {
-//                        navController.navigate()
+                        navController.navigate(NavScreen.TransferScreen.route+"/${address}")
                     }
                 }
             }

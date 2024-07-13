@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCard
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -24,13 +26,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.amorgens.NavScreen
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
 
 
 @Composable
 fun WalletScreen(navController: NavController){
-    GeneralScaffold(topBar = { HomeTopBar("Wallets") }, floatingActionButton = {  }) {
+    GeneralScaffold(topBar = { HomeTopBar("Wallets", navController) }, floatingActionButton = {  }) {
         var isExpanded = remember {
             mutableStateOf(false)
         }
@@ -93,6 +96,26 @@ fun WalletScreen(navController: NavController){
 
                 }
             }
+
+            Row {
+                val menus = listOf(WalletMenu("Add", Icons.Default.Add),
+                    WalletMenu("New", Icons.Default.AddCard)
+                )
+                menus.forEachIndexed { index, walletMenu ->
+                    WalletMenuItem(iconImage = walletMenu.icon , menuTitle = walletMenu.name) {
+                        if (index == 0){
+                            navController.navigate(NavScreen.AddWalletScreen.route)
+                        }
+
+                        if (index ==1){
+                            navController.navigate(NavScreen.NewWalletScreen.route)
+                        }
+
+                    }
+                }
+            }
+
+
             WalletList(navController)
         }
     }

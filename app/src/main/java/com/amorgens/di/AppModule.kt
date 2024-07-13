@@ -6,6 +6,8 @@ import dagger.hilt.InstallIn
 
 import android.app.Application
 import android.content.Context
+import com.amorgens.wallet.data.WalletService
+import dagger.Provides
 
 import dagger.hilt.components.SingletonComponent
 
@@ -13,7 +15,8 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-
-
-
+    @Provides
+    fun getWalletService():WalletService{
+        return WalletService()
+    }
 }
