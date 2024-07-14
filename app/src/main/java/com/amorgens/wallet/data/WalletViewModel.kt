@@ -4,32 +4,40 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amorgens.wallet.domain.CreateWalletReq
+import com.amorgens.wallet.domain.GetBalanceReq
 import com.amorgens.wallet.domain.Wallet
 import com.amorgens.wallet.domain.WalletUIState
 import com.amorgens.wallet.presentation.formatter
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.util.UUID
 import javax.inject.Inject
 
 
 @HiltViewModel
-class WalletViewModel @Inject constructor(private val walletService: WalletService) : ViewModel(){
-    val defaultSingleNote = Wallet(
+class WalletViewModel @Inject constructor(
+    private val walletService: WalletService,
+    private val walletRepository: WalletRepository
+) : ViewModel(){
+    val defaultSingleWallet = Wallet(
         "",
         "",
         "",
-        ""
+        "0.00"
     )
-    val _singleWallet = MutableStateFlow(defaultSingleNote)
+    val _singleWallet = MutableStateFlow(defaultSingleWallet)
     val singleWallet = _singleWallet.asStateFlow()
+
+    private val _allWallets = MutableStateFlow(listOf(defaultSingleWallet))
+    val allWallets = _allWallets.asStateFlow()
 
     val _walletUIState = MutableStateFlow(WalletUIState(
         isCreateWalletButtonLoading = false,
@@ -39,7 +47,12 @@ class WalletViewModel @Inject constructor(private val walletService: WalletServi
         createWalletSuccess = false,
         createWalletError = false,
         createWalletErrorMessage = "",
-        createWalletSuccessMessage = ""
+        createWalletSuccessMessage = "",
+        isSuccess = false,
+        errorMessage = "",
+        successMessage = "",
+        isAddWalletButtonLoading = false,
+        isAddWalletDone = false
     ))
     val walletUIState = _walletUIState.asStateFlow()
 
@@ -82,6 +95,55 @@ class WalletViewModel @Inject constructor(private val walletService: WalletServi
 
     }
 
+    fun getBalanceRemote(getWalletReq:GetBalanceReq){
+        val gson= Gson()
+        val reqString = gson.toJson(getWalletReq)
+        val message = formatter("GetBalance", reqString)
+
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                try{
+                    val resp = walletService.sendData(message)
+                    val respPack = resp.split("\n")
+                    Log.d("XXX RESPONSE", resp)
+                    if(respPack[0] == "1"){
+                        // success
+                        _walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
+
+                        // save wallet data to database
+                        val wallet = Wallet(UUID.randomUUID().toString(),getWalletReq.address, getWalletReq.address, respPack[2])
+                        walletRepository.insertWallet(wallet)
+
+                        // trigger back navigation
+                        updateIsAddWalletDone(true)
+
+                    }else{
+                        // error
+                        _walletUIState.update { it.copy(isError = true, errorMessage = respPack.get(1)) }
+                    }
+                }catch (exception:Exception){
+                    Log.d("XXX Yola", exception.toString())
+                    _walletUIState.update { it.copy(isError = true, errorMessage ="Network Error") }
+
+                }
+
+            }
+
+            updateIsAddWalletButtonLoading(false)
+
+        }
+    }
+
+
+    // get all wallets in local db
+    fun getAllWallets(){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+               _allWallets.value= walletRepository.getAllWallets().first()
+            }
+        }
+    }
+
     fun updateUIStateData(data:WalletUIState){
         _walletUIState.value = data
     }
@@ -89,15 +151,29 @@ class WalletViewModel @Inject constructor(private val walletService: WalletServi
     fun updateIsCreateWalletButtonLoading(data:Boolean){
         _walletUIState.update { it.copy(isCreateWalletButtonLoading = data) }
     }
+    fun updateIsAddWalletButtonLoading(data:Boolean){
+        _walletUIState.update { it.copy(isAddWalletButtonLoading = data)}
+    }
     fun updateCreateWalletScreenNavigateBack(data:Boolean){
         _walletUIState.update { it.copy(createWalletScreenNavigateBack = data) }
     }
 
-    fun clearSuccessData(){
+    fun updateIsAddWalletDone(data:Boolean){
+        _walletUIState.update { it.copy(isAddWalletDone = data) }
+    }
+
+    fun clearCreateWalletSuccessData(){
         _walletUIState.update { it.copy(createWalletSuccess = false, createWalletSuccessMessage = "") }
     }
-    fun clearErrorData(){
+    fun clearCreateWalletErrorData(){
         _walletUIState.update { it.copy(createWalletError = false, createWalletErrorMessage = "") }
+    }
+
+    fun clearSuccess(){
+        _walletUIState.update { it.copy(isSuccess = false, successMessage = "") }
+    }
+    fun clearError(){
+        _walletUIState.update { it.copy(isError = false, errorMessage = "") }
     }
 
 

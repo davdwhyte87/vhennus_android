@@ -21,18 +21,29 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.airbnb.lottie.parser.IntegerParser
 import com.amorgens.NavScreen
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
+import com.amorgens.wallet.data.WalletViewModel
 
 
 @Composable
-fun WalletScreen(navController: NavController){
+fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel){
+    // get all wallets
+    walletViewModel.getAllWallets()
+    val wallets = walletViewModel.allWallets.collectAsState().value
+
+    var totalBalance = 0.0f
+    wallets.forEachIndexed { index, wallet ->
+        totalBalance += wallet.balance.toFloat()
+    }
     GeneralScaffold(topBar = { HomeTopBar("Wallets", navController) }, floatingActionButton = {  }) {
         var isExpanded = remember {
             mutableStateOf(false)
@@ -58,7 +69,7 @@ fun WalletScreen(navController: NavController){
                         verticalArrangement = Arrangement.spacedBy(10.dp)
 
                     ) {
-                        Text(text = "2,000,000",
+                        Text(text = totalBalance.toString(),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.surface
                         )
@@ -98,6 +109,7 @@ fun WalletScreen(navController: NavController){
             }
 
             Row {
+
                 val menus = listOf(WalletMenu("Add", Icons.Default.Add),
                     WalletMenu("New", Icons.Default.AddCard)
                 )
@@ -116,7 +128,7 @@ fun WalletScreen(navController: NavController){
             }
 
 
-            WalletList(navController)
+            WalletList(navController,wallets)
         }
     }
 }

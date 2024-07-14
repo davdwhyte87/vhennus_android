@@ -22,11 +22,11 @@ import com.amorgens.wallet.domain.Wallet
 
 
 @Composable
-fun WalletList(navController: NavController){
-    val wallets = listOf(
-        Wallet("","Jerrybon", "Jerrybon22", "8909393"),
-                Wallet("","Norebu", "Greenvile", "459330939")
-    )
+fun WalletList(navController: NavController, wallets:List<Wallet>){
+//    val wallets = listOf(
+//        Wallet("","Jerrybon", "Jerrybon22", "8909393"),
+//                Wallet("","Norebu", "Greenvile", "459330939")
+//    )
     LazyColumn {
         items(wallets){wallet->
             WalletListItem(wallet = wallet, navController)

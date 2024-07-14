@@ -64,11 +64,11 @@ fun NewWalletScreen(navController:NavController, walletViewModel: WalletViewMode
     // show toast for success and error
     if (walletUIState.value.createWalletSuccess){
         Toast.makeText(LocalContext.current, walletUIState.value.createWalletSuccessMessage, Toast.LENGTH_SHORT).show()
-        walletViewModel.clearSuccessData()
+        walletViewModel.clearCreateWalletSuccessData()
     }
     if (walletUIState.value.createWalletError){
         Toast.makeText(LocalContext.current, walletUIState.value.createWalletErrorMessage, Toast.LENGTH_SHORT).show()
-        walletViewModel.clearErrorData()
+        walletViewModel.clearCreateWalletErrorData()
     }
     LaunchedEffect(walletUIState.value) {
         Log.d("XXX UPDATE", "Updated")
