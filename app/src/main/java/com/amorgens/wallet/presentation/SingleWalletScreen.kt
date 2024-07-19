@@ -1,5 +1,7 @@
 package com.amorgens.wallet.presentation
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,14 +14,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.sharp.Cloud
 import androidx.compose.material.icons.sharp.ContentCopy
 import androidx.compose.material.icons.sharp.Rocket
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,9 +35,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.amorgens.NavScreen
+import com.amorgens.ui.AnimatedPreloader
 import com.amorgens.ui.BackTopBar
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
@@ -46,20 +53,47 @@ fun SingleWalletScreen(
     navController: NavController,
     walletViewModel: WalletViewModel
 ){
+    // reset all ui data
+    LaunchedEffect(true) {
+       walletViewModel.resetUIState()
+    }
     // get single wallet from remote server
     LaunchedEffect(key1 = null){
         walletViewModel.getWalletRemote(GetWalletReq(address))
     }
     val singleWallet = walletViewModel.singleWalletC.collectAsState().value
+    val uiState = walletViewModel.walletUIState.collectAsState().value
 
+
+    // handle errors
+    if (uiState.isError){
+        Log.d("XXXXX GOT ERROR", "YEt")
+        Toast.makeText(LocalContext.current,uiState.errorMessage, Toast.LENGTH_SHORT).show()
+        //walletViewModel.clearError()
+    }
 
     GeneralScaffold(topBar = { BackTopBar("Wallet", navController) }, floatingActionButton = {  }) {
         var isExpanded = remember {
             mutableStateOf(false)
         }
         Column(
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // page loader
+            if (uiState.isSingleWalletPageLoading){
+                AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.primary)
+            }else {
+                if(uiState.isError){
+                    IconButton(onClick = {
+                        walletViewModel.getWalletRemote(GetWalletReq(address))
+                    }) {
+                        Icon(imageVector = Icons.Outlined.Refresh, contentDescription = "Refresh page")
+                    }
+                }
+            }
+
+            // elevated card to show balance
             ElevatedCard(
                 shape = RoundedCornerShape(10.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),

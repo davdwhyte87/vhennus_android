@@ -21,6 +21,7 @@ fun BackTopBar(pageName:String, navController: NavController){
         title = { Text(text = pageName, textAlign = TextAlign.Center) },
         navigationIcon = {
             IconButton(onClick = {
+
                 navController.popBackStack()
             }) {
                 Icon(imageVector = Icons.Sharp.ArrowBackIosNew ,

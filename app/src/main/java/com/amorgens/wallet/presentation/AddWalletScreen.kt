@@ -115,7 +115,7 @@ fun AddWalletScreen(navController: NavController, walletViewModel: WalletViewMod
 
                     ) {
                         if(walletUIState.value.isAddWalletButtonLoading){
-                            AnimatedPreloader(modifier = Modifier.size(size = 50.dp))
+                            AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
                         }else {
                             Text(text = "Add")
                             Icon(imageVector = Icons.Sharp.Add, contentDescription = "Add" )

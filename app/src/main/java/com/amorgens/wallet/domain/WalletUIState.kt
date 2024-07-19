@@ -13,6 +13,6 @@ data class WalletUIState (
     val errorMessage:String,
     val successMessage:String,
     val isAddWalletButtonLoading:Boolean,
-    val isAddWalletDone:Boolean
-
+    val isAddWalletDone:Boolean,
+    val isSingleWalletPageLoading: Boolean,
 )

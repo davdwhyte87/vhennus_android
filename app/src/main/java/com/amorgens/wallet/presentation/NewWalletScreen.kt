@@ -147,7 +147,7 @@ fun NewWalletScreen(navController:NavController, walletViewModel: WalletViewMode
                     ) {
                         Log.d("XXXXCC WalletButton Loading", walletUIState.value.isCreateWalletButtonLoading.toString())
                         if(walletUIState.value.isCreateWalletButtonLoading){
-                            AnimatedPreloader(modifier = Modifier.size(size = 50.dp))
+                            AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
                         }else {
                             Icon(imageVector = Icons.Sharp.AddCard, contentDescription = "Create" )
                             Text(text = "Create")

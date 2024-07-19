@@ -66,7 +66,7 @@ class WalletViewModel @Inject constructor(
     private val _allWallets = MutableStateFlow(listOf(defaultSingleWallet))
     val allWallets = _allWallets.asStateFlow()
 
-    val _walletUIState = MutableStateFlow(WalletUIState(
+    val defaultUIState = WalletUIState(
         isCreateWalletButtonLoading = false,
         isError = false,
         isCreateWalletDone = false,
@@ -79,8 +79,10 @@ class WalletViewModel @Inject constructor(
         errorMessage = "",
         successMessage = "",
         isAddWalletButtonLoading = false,
-        isAddWalletDone = false
-    ))
+        isAddWalletDone = false,
+        isSingleWalletPageLoading = false
+    )
+    val _walletUIState = MutableStateFlow(defaultUIState)
     val walletUIState = _walletUIState.asStateFlow()
 
 
@@ -208,6 +210,9 @@ class WalletViewModel @Inject constructor(
     }
 
     fun getWalletRemote(getWalletReq:GetWalletReq){
+        // change loading state
+        _walletUIState.update { it.copy(isSingleWalletPageLoading = true) }
+
         val gson= Gson()
         val reqString = gson.toJson(getWalletReq)
         val message = formatter("GetWalletData", reqString)
@@ -218,9 +223,11 @@ class WalletViewModel @Inject constructor(
                     val respPack = resp.split("\n")
                     Log.d("XXX RESPONSE", resp)
                     if(respPack[0] == "1"){
+                        _walletUIState.update { it.copy(isSingleWalletPageLoading = false) }
                         // success
                         _walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
-
+                        // clear error
+                        clearError()
                         // convert response data to object
                         val walletC = gson.fromJson(respPack[2], WalletC::class.java)
                         Log.d("Converted OBJ XXX", walletC.toString())
@@ -230,11 +237,14 @@ class WalletViewModel @Inject constructor(
                         // trigger back navigation
                         updateIsAddWalletDone(true)
 
+
                     }else{
+                        _walletUIState.update { it.copy(isSingleWalletPageLoading = false) }
                         // error
                         _walletUIState.update { it.copy(isError = true, errorMessage = respPack.get(1)) }
                     }
                 }catch (exception:Exception){
+                    _walletUIState.update { it.copy(isSingleWalletPageLoading = false) }
                     Log.d("XXX Yola", exception.toString())
                     _walletUIState.update { it.copy(isError = true, errorMessage ="Network Error") }
 
@@ -269,6 +279,11 @@ class WalletViewModel @Inject constructor(
 
     fun updateIsAddWalletDone(data:Boolean){
         _walletUIState.update { it.copy(isAddWalletDone = data) }
+    }
+
+    fun resetUIState(){
+        Log.d("RESET UI XXXXX","yes")
+        _walletUIState.value =  defaultUIState
     }
 
     fun clearCreateWalletSuccessData(){

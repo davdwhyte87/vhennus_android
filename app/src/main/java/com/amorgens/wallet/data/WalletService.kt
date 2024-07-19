@@ -12,24 +12,28 @@ class WalletService {
         val ipData = address.split(":")
         val host = ipData.get(0)
         val port = Integer.parseInt(ipData.get(1))
-
-
-        val connection = Socket(host, port)
-        // get writer
-        val writer = connection.getOutputStream()
-        // send data
-        writer.write(message.toByteArray())
-
-        // receieve response
-        val reader = Scanner(connection.getInputStream())
         var data = ""
+        try {
+            val connection = Socket(host, port)
+            // get writer
+            val writer = connection.getOutputStream()
+            // send data
+            writer.write(message.toByteArray())
 
-        while (reader.hasNext()){
-            data += reader.nextLine()+"\n"
+            // receieve response
+            val reader = Scanner(connection.getInputStream())
+
+
+            while (reader.hasNext()){
+                data += reader.nextLine()+"\n"
+            }
+            reader.close()
+            writer.close()
+            connection.close()
+        }catch (e:Exception){
+
         }
-        reader.close()
-        writer.close()
-        connection.close()
+
         return data
     }
 }

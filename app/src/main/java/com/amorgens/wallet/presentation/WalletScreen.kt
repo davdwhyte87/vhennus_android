@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,10 @@ import java.util.Locale
 
 @Composable
 fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel){
+    // reset all ui data
+    LaunchedEffect(true) {
+        walletViewModel.resetUIState()
+    }
     // get all wallets
     walletViewModel.getAllWallets()
     val wallets = walletViewModel.allWallets.collectAsState().value
