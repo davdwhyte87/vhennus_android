@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,7 +28,9 @@ fun WalletList(navController: NavController, wallets:List<Wallet>){
 //        Wallet("","Jerrybon", "Jerrybon22", "8909393"),
 //                Wallet("","Norebu", "Greenvile", "459330939")
 //    )
-    LazyColumn {
+    LazyColumn(
+        modifier = Modifier.padding(bottom = 200.dp).fillMaxHeight()
+    ) {
         items(wallets){wallet->
             WalletListItem(wallet = wallet, navController)
         }

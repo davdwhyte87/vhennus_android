@@ -1,10 +1,12 @@
 package com.amorgens.wallet.presentation
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,6 +34,11 @@ import com.amorgens.NavScreen
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
 import com.amorgens.wallet.data.WalletViewModel
+import java.io.File.separator
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 
 
 @Composable
@@ -40,15 +47,31 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
     walletViewModel.getAllWallets()
     val wallets = walletViewModel.allWallets.collectAsState().value
 
-    var totalBalance = 0.0f
+    var totalBalance = BigDecimal("0.0")
+
     wallets.forEachIndexed { index, wallet ->
-        totalBalance += wallet.balance.toFloat()
+        var bigDecimal = BigDecimal("0.0")
+        try {
+            bigDecimal = BigDecimal(wallet.balance)
+        }catch (e:Exception){
+            bigDecimal = BigDecimal("0.0")
+            Log.d("Bigdecimal XXXX", e.toString())
+        }
+        // Set precision (scale) and rounding mode
+        val scaledBigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_UP)
+
+        // Convert to Float or Double if needed
+        val floatValue = scaledBigDecimal.toFloat()
+        totalBalance = totalBalance.add(scaledBigDecimal)
+        //Log.d("XXDECIMAL", "${scaledBigDecimal}")
     }
+    Log.d("XXFLOAT ${wallets[0].balance}", "totalBalance")
     GeneralScaffold(topBar = { HomeTopBar("Wallets", navController) }, floatingActionButton = {  }) {
         var isExpanded = remember {
             mutableStateOf(false)
         }
         Column  (
+            modifier = Modifier.fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ){
             ElevatedCard(
@@ -69,7 +92,7 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
                         verticalArrangement = Arrangement.spacedBy(10.dp)
 
                     ) {
-                        Text(text = totalBalance.toString(),
+                        Text(text =String.format("%,.2f", totalBalance) ,
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.surface
                         )

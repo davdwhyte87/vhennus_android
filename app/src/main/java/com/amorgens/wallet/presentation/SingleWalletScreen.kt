@@ -23,6 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -34,10 +36,23 @@ import com.amorgens.NavScreen
 import com.amorgens.ui.BackTopBar
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
+import com.amorgens.wallet.data.WalletViewModel
+import com.amorgens.wallet.domain.GetWalletReq
 
 
 @Composable
-fun SingleWalletScreen(address: String, navController: NavController){
+fun SingleWalletScreen(
+    address: String,
+    navController: NavController,
+    walletViewModel: WalletViewModel
+){
+    // get single wallet from remote server
+    LaunchedEffect(key1 = null){
+        walletViewModel.getWalletRemote(GetWalletReq(address))
+    }
+    val singleWallet = walletViewModel.singleWalletC.collectAsState().value
+
+
     GeneralScaffold(topBar = { BackTopBar("Wallet", navController) }, floatingActionButton = {  }) {
         var isExpanded = remember {
             mutableStateOf(false)
@@ -64,7 +79,7 @@ fun SingleWalletScreen(address: String, navController: NavController){
 
                     ) {
                         Text(
-                            text = "2,000,000",
+                            text = String.format("%,.2f", singleWallet.chain.chain.last().balance),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.surface
                         )
@@ -134,7 +149,7 @@ fun SingleWalletScreen(address: String, navController: NavController){
 
             // transactionlist
 
-            TransactionList()
+            TransactionList(singleWallet.chain.chain)
 
         }
     }

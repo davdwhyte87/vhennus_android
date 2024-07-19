@@ -18,18 +18,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.amorgens.NavScreen
 import com.amorgens.ui.theme.Green
+import com.amorgens.wallet.domain.Block
 import com.amorgens.wallet.domain.Transaction
 
 
 @Composable
-fun  TransactionList(){
-    val transactions = listOf(
-        Transaction("", "Renuubomi", "300", "34th, may, 2024"),
-        Transaction("", "Lumannie", "4,9900", "3th, Joune, 2024"),
-        Transaction("", "Gerrinu_899", "4,9900", "3th, Joune, 2024")
-    )
+fun  TransactionList(blocks: List<Block>){
+//    val transactions = listOf(
+//        Transaction("", "Renuubomi", "300", "34th, may, 2024"),
+//        Transaction("", "Lumannie", "4,9900", "3th, Joune, 2024"),
+//        Transaction("", "Gerrinu_899", "4,9900", "3th, Joune, 2024")
+//    )
 
-    transactions.forEachIndexed { index, transaction ->
+    blocks.forEachIndexed { index, block ->
+        val transaction = Transaction(block.id,block.receiver_address, block.sender_address,block.amount.toString(), block.date_created)
+
         TransactionListItem(transaction = transaction) {
             // nothing
         }
@@ -54,7 +57,7 @@ fun TransactionListItem( transaction: Transaction, onclick:()->Unit){
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = transaction.receiverAddress,
+                text = transaction.senderAddress,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.secondary
             )

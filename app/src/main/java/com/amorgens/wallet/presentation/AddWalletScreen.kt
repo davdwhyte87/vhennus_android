@@ -36,6 +36,7 @@ import com.amorgens.ui.BackTopBar
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.wallet.data.WalletViewModel
 import com.amorgens.wallet.domain.GetBalanceReq
+import com.amorgens.wallet.domain.GetWalletReq
 
 
 @Composable
@@ -103,8 +104,8 @@ fun AddWalletScreen(navController: NavController, walletViewModel: WalletViewMod
 
                     Button(onClick = {
                         walletViewModel.updateIsAddWalletButtonLoading(true)
-                        val getBalanceReq = GetBalanceReq(address = walletAddress.value)
-                        walletViewModel.getBalanceRemote(getBalanceReq)
+                        val getWalletreq = GetWalletReq(address = walletAddress.value)
+                        walletViewModel.addWallet(getWalletreq)
                     },
                         modifier = Modifier.size(width = 200.dp, height = 50.dp),
                         colors = ButtonDefaults.buttonColors(
