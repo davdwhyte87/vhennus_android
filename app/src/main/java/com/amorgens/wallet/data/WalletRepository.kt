@@ -10,6 +10,10 @@ class WalletRepository @Inject constructor(private val walletDAO: WalletDAO) {
         return walletDAO.insertWallet(wallet)
     }
 
+    suspend fun updateWallet(wallet: Wallet){
+        return walletDAO.updateWallet(wallet)
+    }
+
     suspend fun getAllWallets():Flow<List<Wallet>>{
         return walletDAO.getAllWallet()
     }

@@ -31,7 +31,7 @@ fun AppNav(navController:NavHostController, walletViewModel: WalletViewModel){
         composable(route=NavScreen.TransferScreen.route+"/{address}"){ navBackStack->
             val address = navBackStack.arguments?.getString("address")
             if (address != null){
-                TransferScreen( navController, address)
+                TransferScreen( navController, address, walletViewModel)
             }
         }
         

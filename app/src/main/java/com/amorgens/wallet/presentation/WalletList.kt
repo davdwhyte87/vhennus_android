@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.amorgens.NavScreen
 import com.amorgens.wallet.domain.Wallet
+import java.math.BigDecimal
 
 
 @Composable
@@ -40,6 +41,12 @@ fun WalletList(navController: NavController, wallets:List<Wallet>){
 
 @Composable
 fun WalletListItem(wallet: Wallet, navController: NavController){
+    var amount = BigDecimal("0.0")
+    try {
+        amount = BigDecimal(wallet.balance)
+    }catch (e:Exception){
+
+    }
     ElevatedCard(
         shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
@@ -57,7 +64,7 @@ fun WalletListItem(wallet: Wallet, navController: NavController){
                 color = MaterialTheme.colorScheme.secondary
             )
             Column {
-                Text(text = wallet.balance+"Kc",
+                Text(text = String.format("%,.2f", amount)+"Kc",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )

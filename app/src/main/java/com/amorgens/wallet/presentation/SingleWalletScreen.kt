@@ -58,7 +58,7 @@ fun SingleWalletScreen(
        walletViewModel.resetUIState()
     }
     // get single wallet from remote server
-    LaunchedEffect(key1 = null){
+    LaunchedEffect(true){
         walletViewModel.getWalletRemote(GetWalletReq(address))
     }
     val singleWallet = walletViewModel.singleWalletC.collectAsState().value
@@ -183,7 +183,7 @@ fun SingleWalletScreen(
 
             // transactionlist
 
-            TransactionList(singleWallet.chain.chain)
+            TransactionList(address, singleWallet.chain.chain)
 
         }
     }

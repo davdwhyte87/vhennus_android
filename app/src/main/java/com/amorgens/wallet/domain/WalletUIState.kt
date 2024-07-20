@@ -15,4 +15,6 @@ data class WalletUIState (
     val isAddWalletButtonLoading:Boolean,
     val isAddWalletDone:Boolean,
     val isSingleWalletPageLoading: Boolean,
+    val isTransferButtonLoading:Boolean,
+    val isSyncingLocalWallet:Boolean
 )

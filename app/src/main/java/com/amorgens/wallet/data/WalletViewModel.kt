@@ -8,6 +8,7 @@ import com.amorgens.wallet.domain.Chain
 import com.amorgens.wallet.domain.CreateWalletReq
 import com.amorgens.wallet.domain.GetBalanceReq
 import com.amorgens.wallet.domain.GetWalletReq
+import com.amorgens.wallet.domain.TransferReq
 import com.amorgens.wallet.domain.Wallet
 import com.amorgens.wallet.domain.WalletC
 import com.amorgens.wallet.domain.WalletUIState
@@ -80,7 +81,9 @@ class WalletViewModel @Inject constructor(
         successMessage = "",
         isAddWalletButtonLoading = false,
         isAddWalletDone = false,
-        isSingleWalletPageLoading = false
+        isSingleWalletPageLoading = false,
+        isTransferButtonLoading = false,
+        isSyncingLocalWallet = false
     )
     val _walletUIState = MutableStateFlow(defaultUIState)
     val walletUIState = _walletUIState.asStateFlow()
@@ -108,7 +111,7 @@ class WalletViewModel @Inject constructor(
                     if(respPack.get(0) == "1"){
                         // success
                         _walletUIState.update { it.copy(createWalletSuccess = true, createWalletSuccessMessage = respPack.get(1)) }
-
+                        _walletUIState.update { it.copy(createWalletError = false, createWalletErrorMessage = "" )}
                         // add wallet locally
                         // save wallet data to database
                         val wallet = Wallet("",createWalletRequest.wallet_name,createWalletRequest.address, BigDecimal("0.0").toString())
@@ -116,10 +119,15 @@ class WalletViewModel @Inject constructor(
 
                     }else{
                         _walletUIState.update { it.copy(createWalletError = true, createWalletErrorMessage = respPack.get(1)) }
+                        clearSuccess()
+                        _walletUIState.update { it.copy(createWalletSuccess = false, createWalletSuccessMessage = "" )}
                     }
                 }catch (exception:IOException){
                     println("ERROR XXXX"+ exception.toString())
                     Log.d("ERROR XXXX", exception.toString())
+                    _walletUIState.update { it.copy(createWalletError = true, createWalletErrorMessage = exception.toString()) }
+                    clearSuccess()
+                    _walletUIState.update { it.copy(createWalletSuccess = false, createWalletSuccessMessage = "" )}
                 }
             }
             updateIsCreateWalletButtonLoading(false)
@@ -181,7 +189,7 @@ class WalletViewModel @Inject constructor(
                     if(respPack[0] == "1"){
                         // success
                         _walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
-
+                        clearError()
                         // convert response data to object
                         val walletC = gson.fromJson(respPack[2], WalletC::class.java)
                         Log.d("Converted OBJ XXX", walletC.toString())
@@ -199,11 +207,12 @@ class WalletViewModel @Inject constructor(
                     }else{
                         // error
                         _walletUIState.update { it.copy(isError = true, errorMessage = respPack.get(1)) }
+                        clearSuccess()
                     }
                 }catch (exception:Exception){
                     Log.d("XXX Yola", exception.toString())
                     _walletUIState.update { it.copy(isError = true, errorMessage ="Network Error") }
-
+                    clearSuccess()
                 }
             }
         }
@@ -225,7 +234,7 @@ class WalletViewModel @Inject constructor(
                     if(respPack[0] == "1"){
                         _walletUIState.update { it.copy(isSingleWalletPageLoading = false) }
                         // success
-                        _walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
+                        //_walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
                         // clear error
                         clearError()
                         // convert response data to object
@@ -234,6 +243,12 @@ class WalletViewModel @Inject constructor(
 
                         // update single wallet variable
                         _singleWalletC.value = walletC
+
+
+                        // update wallet data locally
+                        val wallet = Wallet(walletC.id,walletC.address, getWalletReq.address, walletC.chain.chain.last().balance.toString())
+                        walletRepository.updateWallet(wallet)
+
                         // trigger back navigation
                         updateIsAddWalletDone(true)
 
@@ -242,11 +257,108 @@ class WalletViewModel @Inject constructor(
                         _walletUIState.update { it.copy(isSingleWalletPageLoading = false) }
                         // error
                         _walletUIState.update { it.copy(isError = true, errorMessage = respPack.get(1)) }
+                        clearSuccess()
                     }
                 }catch (exception:Exception){
                     _walletUIState.update { it.copy(isSingleWalletPageLoading = false) }
                     Log.d("XXX Yola", exception.toString())
                     _walletUIState.update { it.copy(isError = true, errorMessage ="Network Error") }
+                    clearSuccess()
+                }
+            }
+        }
+    }
+
+    fun transfer(transferReq: TransferReq){
+        // change loading state
+        _walletUIState.update { it.copy(isTransferButtonLoading = true) }
+
+        val gson= Gson()
+        val reqString = gson.toJson(transferReq)
+        val message = formatter("Transfer", reqString)
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                try{
+                    val resp = walletService.sendData(message)
+                    val respPack = resp.split("\n")
+                    Log.d("XXX RESPONSE", resp)
+                    if(respPack[0] == "1"){
+                        _walletUIState.update { it.copy(isTransferButtonLoading = false) }
+                        // success
+                        _walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
+                        // clear error
+                        clearError()
+                        // we do nothing with the data part of the response
+
+
+                        // trigger back navigation
+
+
+
+                    }else{
+                        _walletUIState.update { it.copy(isTransferButtonLoading = false) }
+                        // error
+                        _walletUIState.update { it.copy(isError = true, errorMessage = respPack[2]) }
+                        clearSuccess()
+                    }
+                }catch (exception:Exception){
+                    _walletUIState.update { it.copy(isTransferButtonLoading = false) }
+                    Log.d("XXX Yola", exception.toString())
+                    _walletUIState.update { it.copy(isError = true, errorMessage ="Network Error") }
+                    clearSuccess()
+                }
+            }
+        }
+    }
+
+
+    // run through a list of users wallets and get the wallet address data remotely
+    fun updateWalletsLocal(addresses: List<String>){
+        _walletUIState.update { it.copy(isSyncingLocalWallet = true) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                addresses.forEachIndexed { index, address ->
+                    val gson= Gson()
+                    val reqString = gson.toJson(GetWalletReq(address))
+                    val message = formatter("GetWalletData", reqString)
+                    try{
+                        val resp = walletService.sendData(message)
+                        val respPack = resp.split("\n")
+                        Log.d("XXX RESPONSE", resp)
+                        if(respPack[0] == "1"){
+
+                            _walletUIState.update { it.copy(isSyncingLocalWallet = false) }
+                            // success
+                            //_walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
+                            // clear error
+                            clearError()
+
+                            // convert response data to object
+                            val walletC = gson.fromJson(respPack[2], WalletC::class.java)
+                            Log.d("Converted OBJ XXX", walletC.toString())
+
+                            // update wallet data locally
+                            val wallet = Wallet(walletC.id,walletC.address, address, walletC.chain.chain.last().balance.toString())
+                            walletRepository.updateWallet(wallet)
+
+                        }else{
+                            _walletUIState.update { it.copy(isSyncingLocalWallet = false) }
+
+                            // error
+                            _walletUIState.update { it.copy(isError = true, errorMessage = respPack.get(1)) }
+                            clearSuccess()
+                        }
+                    }catch (exception:Exception) {
+                        _walletUIState.update { it.copy(isSyncingLocalWallet = false) }
+                        Log.d("XXX Yola", exception.toString())
+                        _walletUIState.update {
+                            it.copy(
+                                isError = true,
+                                errorMessage = "Network Error"
+                            )
+                        }
+                        clearSuccess()
+                    }
 
                 }
             }
@@ -304,15 +416,6 @@ class WalletViewModel @Inject constructor(
 }
 
 
-sealed class WalletUIEvent{
-    object CreateWalletScreenNavigateBack:WalletUIEvent()
-}
-fun onEvent(event: WalletUIEvent){
-    when(event){
-        WalletUIEvent.CreateWalletScreenNavigateBack->{
 
-        }
-    }
-}
 
 

@@ -1,6 +1,7 @@
 package com.amorgens.wallet.presentation
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -28,10 +30,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.airbnb.lottie.parser.IntegerParser
 import com.amorgens.NavScreen
+import com.amorgens.ui.AnimatedPreloader
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
 import com.amorgens.wallet.data.WalletViewModel
@@ -48,9 +52,36 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
     LaunchedEffect(true) {
         walletViewModel.resetUIState()
     }
+
     // get all wallets
-    walletViewModel.getAllWallets()
+    LaunchedEffect(Unit) {
+        walletViewModel.getAllWallets()
+    }
+
+
     val wallets = walletViewModel.allWallets.collectAsState().value
+
+    // update wallet locally
+    LaunchedEffect(Unit) {
+        walletViewModel.getAllWallets()
+        val walletNames = mutableListOf<String>()
+
+        wallets.forEachIndexed { index, wallet ->
+            walletNames.add(wallet.walletAddress)
+        }
+        Log.d("WALLET NAMES XXXX", walletNames.toString())
+        walletViewModel.updateWalletsLocal(walletNames)
+    }
+
+    val walletUIState = walletViewModel.walletUIState.collectAsState().value
+
+
+    // show error toast if loading wallets data fails
+    if (walletUIState.isError){
+        Log.d("XXXXX GOT ERROR", "YEt")
+        Toast.makeText(LocalContext.current,walletUIState.errorMessage, Toast.LENGTH_SHORT).show()
+        walletViewModel.clearError()
+    }
 
     var totalBalance = BigDecimal("0.0")
 
@@ -79,6 +110,8 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
             modifier = Modifier.fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ){
+
+
             ElevatedCard(
                 shape = RoundedCornerShape(10.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
@@ -155,6 +188,11 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
                 }
             }
 
+            Log.d("Syncing?? XXX", walletUIState.isSyncingLocalWallet.toString())
+            if (walletUIState.isSyncingLocalWallet){
+
+                AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.primary)
+            }
 
             WalletList(navController,wallets)
         }

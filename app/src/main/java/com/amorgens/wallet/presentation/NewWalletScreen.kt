@@ -130,7 +130,7 @@ fun NewWalletScreen(navController:NavController, walletViewModel: WalletViewMode
                         //Log.d("XXXXCC New UI state ", newWalletUIState.isCreateWalletButtonLoading.toString())
                         //walletViewModel.updateUIStateData(newWalletUIState)
                         // view model call to create wallet
-                        val createWalletReq = CreateWalletReq(walletAddress.value, walletPassPhrase.value,walletName.value)
+                        val createWalletReq = CreateWalletReq(walletAddress.value.lowercase(), walletPassPhrase.value,walletName.value)
                         walletViewModel.createWallet(createWalletReq)
                         // update ui state
                         //newWalletUIState = walletUIState.value.copy(isCreateWalletButtonLoading = false)

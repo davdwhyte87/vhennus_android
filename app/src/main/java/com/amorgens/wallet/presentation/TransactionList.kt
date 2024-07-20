@@ -18,12 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.amorgens.NavScreen
 import com.amorgens.ui.theme.Green
+import com.amorgens.ui.theme.Red
 import com.amorgens.wallet.domain.Block
 import com.amorgens.wallet.domain.Transaction
+import java.math.BigDecimal
 
 
 @Composable
-fun  TransactionList(blocks: List<Block>){
+fun  TransactionList(address:String, blocks: List<Block>){
 //    val transactions = listOf(
 //        Transaction("", "Renuubomi", "300", "34th, may, 2024"),
 //        Transaction("", "Lumannie", "4,9900", "3th, Joune, 2024"),
@@ -33,14 +35,20 @@ fun  TransactionList(blocks: List<Block>){
     blocks.forEachIndexed { index, block ->
         val transaction = Transaction(block.id,block.receiver_address, block.sender_address,block.amount.toString(), block.date_created)
 
-        TransactionListItem(transaction = transaction) {
+        TransactionListItem(address, transaction = transaction) {
             // nothing
         }
     }
 }
 
 @Composable
-fun TransactionListItem( transaction: Transaction, onclick:()->Unit){
+fun TransactionListItem(address:String, transaction: Transaction, onclick:()->Unit){
+    var amount = BigDecimal("0.0")
+    try {
+        amount = BigDecimal(transaction.amount)
+    }catch (e:Exception){
+
+    }
     ElevatedCard(
         shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
@@ -57,16 +65,18 @@ fun TransactionListItem( transaction: Transaction, onclick:()->Unit){
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = transaction.senderAddress,
+                text = if(transaction.senderAddress == address){transaction.receiverAddress}else{transaction.senderAddress},
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.secondary
             )
             Column (
                 horizontalAlignment = Alignment.End
             ){
-                Text(text = transaction.amount+"Kc",
+                Text(text = String.format("%,.2f", amount)+"Kc",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Green
+                    color = if(transaction.senderAddress == address){
+                        Red}else{
+                        Green}
                 )
                 Text(text = transaction.dateTime,
                     style = MaterialTheme.typography.bodyMedium,

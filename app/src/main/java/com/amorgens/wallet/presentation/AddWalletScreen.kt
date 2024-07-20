@@ -68,7 +68,7 @@ fun AddWalletScreen(navController: NavController, walletViewModel: WalletViewMod
 //    LaunchedEffect(walletUIState.value) {
 //        Log.d("XXX UPDATE", "Updated")
 //    }
-    GeneralScaffold(topBar = { BackTopBar(pageName = "New Wallet", navController = navController) }, floatingActionButton = { /*TODO*/ }) {
+    GeneralScaffold(topBar = { BackTopBar(pageName = "Add Wallet", navController = navController) }, floatingActionButton = { /*TODO*/ }) {
 
         Column {
             Text(text = "Add an existing wallet")
