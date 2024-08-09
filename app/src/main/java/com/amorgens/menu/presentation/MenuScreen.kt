@@ -16,6 +16,7 @@ import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.GeneralTopBar
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.amorgens.NavScreen
 import com.amorgens.menu.domain.MenuItemData
 
 @Composable
@@ -36,7 +37,7 @@ fun MenuScreen(navController: NavController){
                 ),
                 MenuItemData(
                     title = "Shop Coins",
-                    route = "shop",
+                    route = NavScreen.ShopCoinsScreen.route,
                     icon = Icons.Outlined.ShoppingCart
                 ),
                 MenuItemData(

@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCard
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavDeepLinkRequest
 import com.airbnb.lottie.parser.IntegerParser
 import com.amorgens.NavScreen
 import com.amorgens.ui.AnimatedPreloader
@@ -101,7 +103,7 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
         totalBalance = totalBalance.add(scaledBigDecimal)
         //Log.d("XXDECIMAL", "${scaledBigDecimal}")
     }
-    Log.d("XXFLOAT ${wallets[0].balance}", "totalBalance")
+    Log.d("XXFLOAT ${wallets.getOrNull(0)?.balance}", "totalBalance")
     GeneralScaffold(topBar = { HomeTopBar("Wallets", navController) }, floatingActionButton = {  }) {
         var isExpanded = remember {
             mutableStateOf(false)
@@ -171,8 +173,10 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
 
             Row {
 
-                val menus = listOf(WalletMenu("Add", Icons.Default.Add),
-                    WalletMenu("New", Icons.Default.AddCard)
+                val menus = listOf(
+                    WalletMenu("Add", Icons.Default.Add),
+                    WalletMenu("New", Icons.Default.AddCard),
+                    WalletMenu("Orders", Icons.Default.Storage)
                 )
                 menus.forEachIndexed { index, walletMenu ->
                     WalletMenuItem(iconImage = walletMenu.icon , menuTitle = walletMenu.name) {
@@ -182,6 +186,10 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
 
                         if (index ==1){
                             navController.navigate(NavScreen.NewWalletScreen.route)
+                        }
+
+                        if (index==2){
+                            navController.navigate(NavScreen.MyOrdersScreen.route)
                         }
 
                     }

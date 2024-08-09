@@ -5,6 +5,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.amorgens.home.presentation.HomeScreen
+import com.amorgens.trade.data.OrderViewModel
+import com.amorgens.trade.presentation.ShopCoinsScreen
+import com.amorgens.trade.presentation.createSellOrderScreen
+import com.amorgens.trade.presentation.myOrdersScreen
+import com.amorgens.trade.presentation.singleOrderScreen
+import com.amorgens.trade.presentation.singleSellOrderScreen
 import com.amorgens.wallet.data.WalletViewModel
 import com.amorgens.wallet.presentation.AddWalletScreen
 import com.amorgens.wallet.presentation.NewWalletScreen
@@ -13,7 +19,11 @@ import com.amorgens.wallet.presentation.TransferScreen
 import com.amorgens.wallet.presentation.WalletScreen
 
 @Composable
-fun AppNav(navController:NavHostController, walletViewModel: WalletViewModel){
+fun AppNav(
+    navController:NavHostController,
+    walletViewModel: WalletViewModel,
+    orderViewModel: OrderViewModel
+){
 
     NavHost(navController = navController, startDestination = NavScreen.HomeScreen.route) {
         composable(route=NavScreen.HomeScreen.route){
@@ -34,9 +44,20 @@ fun AppNav(navController:NavHostController, walletViewModel: WalletViewModel){
                 TransferScreen( navController, address, walletViewModel)
             }
         }
+
+        composable(route=NavScreen.SingleOrderScreen.route+"/{id}"){navBackStack->
+            val id = navBackStack.arguments?.getString("id")
+            if(id!=null){
+                singleOrderScreen(navController, orderViewModel, id)
+            }
+        }
         
         composable(route=NavScreen.NewWalletScreen.route){
             NewWalletScreen(navController = navController, walletViewModel)
+        }
+
+        composable(route=NavScreen.CreateSellOrderScreen.route){
+            createSellOrderScreen(navController, orderViewModel)
         }
 
 
@@ -44,5 +65,16 @@ fun AppNav(navController:NavHostController, walletViewModel: WalletViewModel){
             AddWalletScreen(navController = navController, walletViewModel)
         }
 
+        // jut him kin mute turn the
+        composable(route=NavScreen.ShopCoinsScreen.route){
+            ShopCoinsScreen(navController,orderViewModel )
+        }
+
+        composable(route=NavScreen.SingleSellOrderScreen.route){
+            singleSellOrderScreen(navController )
+        }
+        composable(route=NavScreen.MyOrdersScreen.route){
+            myOrdersScreen(navController )
+        }
     }
 }

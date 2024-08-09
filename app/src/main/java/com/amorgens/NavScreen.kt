@@ -32,4 +32,29 @@ sealed class NavScreen(
         route = "new_wallet",
         title = "New Wallet"
     )
+
+    object ShopCoinsScreen:NavScreen(
+        route = "shop_coins",
+        title = "Shop Coins"
+    )
+
+    object  SingleOrderScreen: NavScreen(
+        route = "single_buy_order",
+        title = "Buy Order"
+    )
+
+    object CreateSellOrderScreen:NavScreen(
+        route = "create_sell_order",
+        title = "Create Sell Order"
+    )
+
+    object SingleSellOrderScreen:NavScreen(
+        route = "single_sell_order",
+        title = "Sell Order"
+    )
+
+    object MyOrdersScreen:NavScreen(
+        route = "my_orders",
+        title = "My Orders"
+    )
 }

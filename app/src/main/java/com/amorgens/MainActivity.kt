@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.amorgens.home.presentation.HomeScreen
+import com.amorgens.trade.data.OrderViewModel
 import com.amorgens.ui.theme.AmorgensTheme
 import com.amorgens.wallet.data.WalletViewModel
 import dagger.hilt.EntryPoint
@@ -26,6 +27,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val walletViewModel:WalletViewModel = hiltViewModel()
+            val orderViewModel:OrderViewModel = hiltViewModel()
+
             val navController = rememberNavController()
             AmorgensTheme(darkTheme = false) {
                 // A surface container using the 'background' color from the theme
@@ -34,7 +37,10 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
 
-                    AppNav(navController =navController, walletViewModel )
+                    AppNav(navController =navController,
+                        walletViewModel ,
+                        orderViewModel
+                    )
                 }
             }
         }
