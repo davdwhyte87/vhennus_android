@@ -4,6 +4,7 @@ package com.amorgens.trade.data
 import com.amorgens.trade.domain.RequestHeader
 import com.amorgens.trade.domain.requests.CreateSellOrderReq
 import com.amorgens.trade.domain.response.GenericResp
+import com.amorgens.trade.domain.response.MyBuyOrdersResp
 import com.amorgens.trade.domain.response.MySellOrdersResponse
 import com.amorgens.trade.domain.response.SingleSellOrderResp
 import retrofit2.Response
@@ -26,4 +27,13 @@ interface APIService {
 
     @GET("api/v1/auth/sell_order/{id}")
     suspend fun getSingleSellOrder(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<SingleSellOrderResp>
+
+    @GET("api/v1/auth/buy_order/my_orders")
+    suspend fun getMyBuyOrders(@HeaderMap header:Map<String,String>):Response<MyBuyOrdersResp>
+
+    @GET("api/v1/auth/sell_order/cancel/{id}")
+    suspend fun cancelSellOrder(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<SingleSellOrderResp>
+    @GET("api/v1/auth/sell_order/cancel/{id}")
+    suspend fun cancelBuyOrder(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<SingleSellOrderResp>
+
 }

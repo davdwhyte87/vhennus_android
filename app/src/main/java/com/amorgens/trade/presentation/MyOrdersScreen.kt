@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.ThumbDown
@@ -28,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.amorgens.NavScreen
 import com.amorgens.trade.data.OrderViewModel
+import com.amorgens.trade.domain.BuyOrder
 import com.amorgens.trade.domain.SellOrder
 import com.amorgens.ui.BackTopBar
 import com.amorgens.ui.GeneralScaffold
@@ -55,7 +58,10 @@ fun myOrdersScreen(
         ordersViewModel.resetSuccessAndError()
     }
     GeneralScaffold(topBar = { BackTopBar(pageName = "My Orders", navController ) }, floatingActionButton = { /*TODO*/ }) {
-        Column {
+        val scrollState = rememberScrollState()
+        Column(
+            modifier = Modifier.verticalScroll(scrollState)
+        ) {
             Text(text = "Sell Orders",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.secondary
@@ -63,17 +69,19 @@ fun myOrdersScreen(
 
 
             LaunchedEffect(true) {
-                //ordersViewModel.login(context)
+                ordersViewModel.login(context)
                 ordersViewModel.getMySellOrders()
+                ordersViewModel.getMyBuyOrders()
             }
             val sellOrders =ordersViewModel.mySellOrder.collectAsState()
+            val buyOrders = ordersViewModel.myBuyOrders.collectAsState()
             mySellOrdersList(navController, sellOrders.value, ordersViewModel)
             Text(text = "Buy Orders",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(bottom = 20.dp)
             )
-            myBuyOrdersList(navController )
+            myBuyOrdersList(navController, buyOrders.value, ordersViewModel)
         }
     }
 }
@@ -104,7 +112,7 @@ fun mySellOrderListItem(
         modifier = Modifier
             .padding(top = 10.dp)
             .clickable(onClick = {
-                navController.navigate(NavScreen.SingleSellOrderScreen.route+"/"+order.id)
+                navController.navigate(NavScreen.SingleSellOrderScreen.route + "/" + order.id)
             }),
     ) {
         Column(
@@ -153,22 +161,30 @@ fun mySellOrderListItem(
 
 
 @Composable
-fun myBuyOrdersList(navController: NavController){
+fun myBuyOrdersList(
+    navController: NavController,
+    buyOrders:List<BuyOrder>,
+    ordersViewModel: OrderViewModel
+){
     val items = listOf(1, 2)
-    items.forEachIndexed { index,   i ->
-        myBuyOrderListItem(navController)
+    buyOrders.forEachIndexed { index,   buyOrder ->
+        myBuyOrderListItem(navController, buyOrder, ordersViewModel )
     }
 }
 
 @Composable
-fun myBuyOrderListItem(navController: NavController){
+fun myBuyOrderListItem(
+    navController: NavController,
+    buyOrder:BuyOrder,
+    ordersViewModel: OrderViewModel
+){
     Card(
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = Gray),
         modifier = Modifier
             .padding(top = 10.dp)
             .clickable(onClick = {
-                navController.navigate(NavScreen.SingleOrderScreen.route + "/djkomod")
+                navController.navigate(NavScreen.SingleOrderScreen.route + "/"+buyOrder.id)
             }),
     ) {
         Column(
@@ -187,24 +203,24 @@ fun myBuyOrderListItem(navController: NavController){
             ){
                 // username and limit
                 Column {
-                    Text(text = "Uremzinke_100",
+                    Text(text = buyOrder.user_name,
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.secondary
                     )
-                    Text(text = "Limit : Min 200,000 - Max 5,000,000",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+//                    Text(text = "Limit : Min 200,000 - Max 5,000,000",
+//                        style = MaterialTheme.typography.bodySmall,
+//                        color = MaterialTheme.colorScheme.secondary
+//                    )
                 }
                 // amount and value
                 Column (
 
                 ) {
-                    Text(text = "200,000 Kc",
+                    Text(text =String.format("%,.2f", buyOrder.amount )+ " Kc",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.secondary
                     )
-                    Text(text = "NGN 5,000,000",
+                    Text(text = "NGN "+String.format("%,.2f", ordersViewModel.getExchangeValue(buyOrder.amount)),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.secondary
                     )

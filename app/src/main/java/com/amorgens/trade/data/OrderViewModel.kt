@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.amorgens.trade.domain.BuyOrder
 import com.amorgens.trade.domain.SellOrder
 import com.amorgens.trade.domain.TradeUIState
 import com.amorgens.trade.domain.requests.CreateSellOrderReq
@@ -45,6 +46,9 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
 
     private val _singleSellOrder = MutableStateFlow(SellOrder())
     val singleSellOrder = _singleSellOrder.asStateFlow()
+
+    private val _myBuyOrders = MutableStateFlow(listOf(BuyOrder()))
+    val myBuyOrders = _myBuyOrders.asStateFlow()
 
     fun sayHello(){
         viewModelScope.launch {
@@ -162,6 +166,154 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
                             return@withContext
                         }
                         _mySellOrders.value = data
+                        Log.d("GET ORDERS XXXX", data.toString())
+                    }else if (resp.code()==401){
+                        _tradeUIState.update { it.copy(isSuccess = false,
+                            isError = true,
+                            errorMessage = "You are not authorized"
+                        ) }
+                    }
+                    else{
+                        _tradeUIState.update { it.copy(isSuccess = false,
+                            isError = true,
+                            errorMessage = resp.body()?.message ?:""
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _tradeUIState.update { it.copy(isSuccess = false,
+                        isError = true,
+                        errorMessage = "Network Error"
+                    ) }
+                    _tradeUIState.update { it.copy(isLoading = false) }
+                }
+                _tradeUIState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+
+    fun getMyBuyOrders(){
+        _tradeUIState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val masterKey = MasterKey.Builder(application)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build()
+
+                val sharedPreferences = EncryptedSharedPreferences.create(
+                    application,
+                    "secure_prefs",
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+
+                val token = sharedPreferences.getString("auth_token", null)
+                if (token.isNullOrBlank()) {
+                    _tradeUIState.update {
+                        it.copy(
+                            isSuccess = false,
+                            isError = true,
+                            errorMessage = "You are not authorized"
+                        )
+                    }
+                    _tradeUIState.update { it.copy(isLoading = false) }
+                    return@withContext
+                }
+
+                try {
+                    val resp = apiService.getMyBuyOrders( mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        _tradeUIState.update { it.copy(isSuccess = true,
+                            isError = false) }
+                        val data = resp.body()?.data
+                        if (data.isNullOrEmpty()){
+                            _tradeUIState.update {
+                                it.copy(
+                                    isSuccess = false,
+                                    isError = true,
+                                    errorMessage = "No Orders"
+                                )
+                            }
+                            _tradeUIState.update { it.copy(isLoading = false) }
+                            return@withContext
+                        }
+                        _myBuyOrders.value = data
+                        Log.d("GET ORDERS XXXX", data.toString())
+                    }else if (resp.code()==401){
+                        _tradeUIState.update { it.copy(isSuccess = false,
+                            isError = true,
+                            errorMessage = "You are not authorized"
+                        ) }
+                    }
+                    else{
+                        _tradeUIState.update { it.copy(isSuccess = false,
+                            isError = true,
+                            errorMessage = resp.body()?.message ?:""
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _tradeUIState.update { it.copy(isSuccess = false,
+                        isError = true,
+                        errorMessage = "Network Error"
+                    ) }
+                    _tradeUIState.update { it.copy(isLoading = false) }
+                }
+                _tradeUIState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+
+    fun cancelOrder(){
+        _tradeUIState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val masterKey = MasterKey.Builder(application)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build()
+
+                val sharedPreferences = EncryptedSharedPreferences.create(
+                    application,
+                    "secure_prefs",
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+
+                val token = sharedPreferences.getString("auth_token", null)
+                if (token.isNullOrBlank()) {
+                    _tradeUIState.update {
+                        it.copy(
+                            isSuccess = false,
+                            isError = true,
+                            errorMessage = "You are not authorized"
+                        )
+                    }
+                    _tradeUIState.update { it.copy(isLoading = false) }
+                    return@withContext
+                }
+
+                try {
+                    val resp = apiService.getMyBuyOrders( mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        _tradeUIState.update { it.copy(isSuccess = true,
+                            isError = false) }
+                        val data = resp.body()?.data
+                        if (data.isNullOrEmpty()){
+                            _tradeUIState.update {
+                                it.copy(
+                                    isSuccess = false,
+                                    isError = true,
+                                    errorMessage = "No Orders"
+                                )
+                            }
+                            _tradeUIState.update { it.copy(isLoading = false) }
+                            return@withContext
+                        }
+                        _myBuyOrders.value = data
                         Log.d("GET ORDERS XXXX", data.toString())
                     }else if (resp.code()==401){
                         _tradeUIState.update { it.copy(isSuccess = false,

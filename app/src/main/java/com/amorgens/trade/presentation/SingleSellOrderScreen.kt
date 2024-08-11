@@ -33,6 +33,7 @@ import androidx.navigation.NavController
 import com.amorgens.NavScreen
 import com.amorgens.trade.data.OrderViewModel
 import com.amorgens.trade.domain.BuyOrder
+import com.amorgens.ui.BackTopBar
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
 import com.amorgens.ui.theme.Black
@@ -55,7 +56,7 @@ fun singleSellOrderScreen(
 
     val singleSellOrder = orderViewModel.singleSellOrder.collectAsState()
 
-    GeneralScaffold(topBar = { HomeTopBar(pageName = "Sell Order", navController ) }, floatingActionButton = { /*TODO*/ }) {
+    GeneralScaffold(topBar = { BackTopBar(pageName = "Sell Order", navController ) }, floatingActionButton = { /*TODO*/ }) {
 
         val isExpanded = remember {
             mutableStateOf(false)
