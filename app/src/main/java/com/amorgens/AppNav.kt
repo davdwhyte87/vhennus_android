@@ -70,11 +70,14 @@ fun AppNav(
             ShopCoinsScreen(navController,orderViewModel )
         }
 
-        composable(route=NavScreen.SingleSellOrderScreen.route){
-            singleSellOrderScreen(navController )
+        composable(route=NavScreen.SingleSellOrderScreen.route+ "/{id}"){navBackStack->
+            val id = navBackStack.arguments?.getString("id")
+            if(id!=null) {
+                singleSellOrderScreen(navController,orderViewModel, id)
+            }
         }
         composable(route=NavScreen.MyOrdersScreen.route){
-            myOrdersScreen(navController )
+            myOrdersScreen(navController,orderViewModel )
         }
     }
 }

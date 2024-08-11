@@ -96,16 +96,6 @@ fun createSellOrderScreen(navController:NavController, orderViewModel: OrderView
                     .fillMaxWidth()
                     .padding(end = 16.dp)
             )
-            OutlinedTextField(value = maxAmount.value,
-                onValueChange = {
-                    maxAmount.value = it
-                },
-                shape = RoundedCornerShape(20.dp),
-                placeholder = { Text(text = "Max Amount") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 16.dp)
-            )
             // button
             Button(onClick = {
 
@@ -118,7 +108,6 @@ fun createSellOrderScreen(navController:NavController, orderViewModel: OrderView
                orderViewModel.createSellOrder(CreateSellOrderReq(
                    BigDecimal(amount.value),
                    BigDecimal(minAmount.value),
-                   BigDecimal(maxAmount.value),
                    Currency.NGN,
                    PaymentMethod.Bank,
                    "1f83c5e0-660d-4a25-843a-e643ad16c82e"

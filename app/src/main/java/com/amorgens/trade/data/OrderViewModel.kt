@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.amorgens.trade.domain.SellOrder
 import com.amorgens.trade.domain.TradeUIState
 import com.amorgens.trade.domain.requests.CreateSellOrderReq
 import com.amorgens.trade.domain.requests.Currency
@@ -30,7 +31,6 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
     val _createSellOrderReq = MutableStateFlow(CreateSellOrderReq(
         BigDecimal("0.00"),
         BigDecimal("0.00"),
-        BigDecimal("0.00"),
         Currency.USD,
         PaymentMethod.Bank,
         ""
@@ -39,6 +39,13 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
 
     private val _tradeUIState = MutableStateFlow(TradeUIState())
     val tradeUIState = _tradeUIState.asStateFlow()
+
+    private val _mySellOrders = MutableStateFlow(listOf(SellOrder()))
+    val mySellOrder = _mySellOrders.asStateFlow()
+
+    private val _singleSellOrder = MutableStateFlow(SellOrder())
+    val singleSellOrder = _singleSellOrder.asStateFlow()
+
     fun sayHello(){
         viewModelScope.launch {
             try{
@@ -107,6 +114,154 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
 
     }
 
+
+    fun getMySellOrders(){
+        _tradeUIState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val masterKey = MasterKey.Builder(application)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build()
+
+                val sharedPreferences = EncryptedSharedPreferences.create(
+                    application,
+                    "secure_prefs",
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+
+                val token = sharedPreferences.getString("auth_token", null)
+                if (token.isNullOrBlank()) {
+                    _tradeUIState.update {
+                        it.copy(
+                            isSuccess = false,
+                            isError = true,
+                            errorMessage = "You are not authorized"
+                        )
+                    }
+                    _tradeUIState.update { it.copy(isLoading = false) }
+                    return@withContext
+                }
+
+                try {
+                    val resp = apiService.getMySellOrders( mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        _tradeUIState.update { it.copy(isSuccess = true,
+                            isError = false) }
+                        val data = resp.body()?.data
+                        if (data.isNullOrEmpty()){
+                            _tradeUIState.update {
+                                it.copy(
+                                    isSuccess = false,
+                                    isError = true,
+                                    errorMessage = "No Orders"
+                                )
+                            }
+                            _tradeUIState.update { it.copy(isLoading = false) }
+                            return@withContext
+                        }
+                        _mySellOrders.value = data
+                        Log.d("GET ORDERS XXXX", data.toString())
+                    }else if (resp.code()==401){
+                        _tradeUIState.update { it.copy(isSuccess = false,
+                            isError = true,
+                            errorMessage = "You are not authorized"
+                        ) }
+                    }
+                    else{
+                        _tradeUIState.update { it.copy(isSuccess = false,
+                            isError = true,
+                            errorMessage = resp.body()?.message ?:""
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _tradeUIState.update { it.copy(isSuccess = false,
+                        isError = true,
+                        errorMessage = "Network Error"
+                    ) }
+                    _tradeUIState.update { it.copy(isLoading = false) }
+                }
+                _tradeUIState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    fun getSingleSellOrders(id:String){
+        _tradeUIState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val masterKey = MasterKey.Builder(application)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build()
+
+                val sharedPreferences = EncryptedSharedPreferences.create(
+                    application,
+                    "secure_prefs",
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+
+                val token = sharedPreferences.getString("auth_token", null)
+                if (token.isNullOrBlank()) {
+                    _tradeUIState.update {
+                        it.copy(
+                            isSuccess = false,
+                            isError = true,
+                            errorMessage = "You are not authorized"
+                        )
+                    }
+                    _tradeUIState.update { it.copy(isLoading = false) }
+                    return@withContext
+                }
+
+                try {
+                    val resp = apiService.getSingleSellOrder(id, mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        _tradeUIState.update { it.copy(isSuccess = true,
+                            isError = false) }
+                        val data = resp.body()?.data ?: SellOrder()
+                        if (data.created_at.isBlank()){
+                            _tradeUIState.update {
+                                it.copy(
+                                    isSuccess = false,
+                                    isError = true,
+                                    errorMessage = "Not found"
+                                )
+                            }
+                            _tradeUIState.update { it.copy(isLoading = false) }
+                            return@withContext
+                        }
+                        _singleSellOrder.value = data
+                        Log.d("GET ORDERS XXXX", data.toString())
+                    }else if (resp.code()==401){
+                        _tradeUIState.update { it.copy(isSuccess = false,
+                            isError = true,
+                            errorMessage = "You are not authorized"
+                        ) }
+                    }
+                    else{
+                        _tradeUIState.update { it.copy(isSuccess = false,
+                            isError = true,
+                            errorMessage = resp.body()?.message ?:""
+                        ) }
+                        Log.d("SINGLE ORDER ERROR XXXX", resp.toString())
+                    }
+
+                }catch (e:Exception){
+                    _tradeUIState.update { it.copy(isSuccess = false,
+                        isError = true,
+                        errorMessage = "Network Error"
+                    ) }
+                    _tradeUIState.update { it.copy(isLoading = false) }
+                }
+                _tradeUIState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
     fun resetSuccessAndError(){
         _tradeUIState.update { it.copy(
             isCreateSellOrderSuccess = false,
@@ -132,6 +287,24 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
         editor.putString("auth_token",
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiVXNlciIsImVtYWlsIjoicm9sYW5kQHguY29tIiwidXNlcl9uYW1lIjoicm9sYW5kIGNvc2UiLCJleHAiOjE3NTMyMTIyMjB9.bwaKbzQJaVMaR0kAqfZp4NfJdgRbCOA4jGQGUGciwP4")
         editor.apply()
+    }
+
+    // get the current excahnge rate
+    fun getExchangeValue(amount:BigDecimal):BigDecimal{
+        val sharedPreferences = application.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
+        try {
+            val rate = BigDecimal( sharedPreferences.getString("NGN", "0.5"))
+            return rate.multiply(amount)
+        }catch (e:Exception){
+            return BigDecimal("0.00")
+        }
+    }
+
+    // set excahnge rate
+    fun setExchangeRate(key:String, value:String){
+        val sharedPreferences = application.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
+        val edit = sharedPreferences.edit()
+        edit.putString(key, value).apply()
     }
 
 }

@@ -22,6 +22,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -29,6 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.amorgens.NavScreen
+import com.amorgens.trade.data.OrderViewModel
+import com.amorgens.trade.domain.BuyOrder
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
 import com.amorgens.ui.theme.Black
@@ -39,7 +43,18 @@ import com.amorgens.ui.theme.Red
 
 
 @Composable
-fun singleSellOrderScreen(navController: NavController){
+fun singleSellOrderScreen(
+    navController: NavController,
+    orderViewModel: OrderViewModel,
+    id:String
+){
+
+    LaunchedEffect(true) {
+        orderViewModel.getSingleSellOrders(id)
+    }
+
+    val singleSellOrder = orderViewModel.singleSellOrder.collectAsState()
+
     GeneralScaffold(topBar = { HomeTopBar(pageName = "Sell Order", navController ) }, floatingActionButton = { /*TODO*/ }) {
 
         val isExpanded = remember {
@@ -53,15 +68,16 @@ fun singleSellOrderScreen(navController: NavController){
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "35,000",
+                    text = String.format("%,.2f",singleSellOrder.value.amount),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.secondary
                 )
+
                 Box(
                     modifier = Modifier.clickable(onClick = {
                         if (isExpanded.value) isExpanded.value =
                             false else isExpanded.value = true
-                    })
+                    }).padding(start = 10.dp, end = 10.dp)
                 ) {
                     Row {
                         Icon(
@@ -69,7 +85,7 @@ fun singleSellOrderScreen(navController: NavController){
                             contentDescription = ""
                         )
                         Text(
-                            text = "USD",
+                            text = "NGN",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -78,8 +94,14 @@ fun singleSellOrderScreen(navController: NavController){
                 DropdownMenu(
                     expanded = isExpanded.value,
                     onDismissRequest = { isExpanded.value = false }) {
-                    DropdownMenuItem(text = { Text(text = "USD") }, onClick = { })
+                    DropdownMenuItem(text = { Text(text = "NGN") }, onClick = { })
                 }
+
+                Text(
+                    text = String.format("%,.2f",orderViewModel.getExchangeValue(singleSellOrder.value.amount)),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.secondary
+                )
             }
 
             Text(text = "Payment Information",
@@ -93,9 +115,12 @@ fun singleSellOrderScreen(navController: NavController){
                 Column (
                     modifier = Modifier.padding(10.dp)
                 ) {
-                    Text(text = "Account Number: 829839830")
-                    Text(text = "Account Name: Derick Jones")
-                    Text(text = "bank Name: WUINM")
+
+
+                    Text(text = "Account Number: "+ singleSellOrder.value.payment_method_data?.account_number)
+                    Text(text = "Account Name: "+ singleSellOrder.value.payment_method_data?.account_name)
+                    Text(text = "Bank Name: " + singleSellOrder.value.payment_method_data?.bank_name)
+
                 }
             }
 
@@ -104,105 +129,113 @@ fun singleSellOrderScreen(navController: NavController){
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(bottom = 20.dp)
             )
-            allBuyOrderListItem(navController )
+            allBuyOrderListItem(navController, singleSellOrder.value.buy_orders)
         }
     }
 }
 
 @Composable
-fun allBuyOrderListItem(navController: NavController){
-    Card(
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = Gray),
-        modifier = Modifier
-            .padding(top = 10.dp)
-            .clickable(onClick = {
-                navController.navigate(NavScreen.SingleOrderScreen.route+"/djkomod")
-            }),
-    ) {
-        Column(
-            modifier= Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+fun allBuyOrderListItem(
+    navController: NavController,
+    buyOrders : List<BuyOrder>
+){
+    buyOrders.forEachIndexed { index, buyOrder ->
+        Card(
+            shape = RoundedCornerShape(10.dp),
+            colors = CardDefaults.cardColors(containerColor = Gray),
+            modifier = Modifier
+                .padding(top = 10.dp)
+                .clickable(onClick = {
+                    navController.navigate(NavScreen.SingleOrderScreen.route + "/"+buyOrder.id)
+                }),
         ) {
-
-            // is online or offline
-            Row(
+            Column(
+                modifier= Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(imageVector = Icons.Filled.Circle,
-                    contentDescription = "",
-                    tint = Green,
-                    modifier = Modifier.size(20.dp).padding(2.dp)
-                )
-                Text(text = "Online", color = MaterialTheme.colorScheme.secondary)
-            }
-            // order information
-            Row  (
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ){
-                // username and limit
-                Column {
-                    Text(text = "Uremzinke_100",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Text(text = "Limit : Min 200,000 - Max 5,000,000",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-                // amount and value
-                Column (
 
+                // is online or offline
+                Row(
                 ) {
-                    Text(text = "200,000 Kc",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.secondary
+                    Icon(imageVector = Icons.Filled.Circle,
+                        contentDescription = "",
+                        tint = Green,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(2.dp)
                     )
-                    Text(text = "NGN 5,000,000",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-
+                    Text(text = "Online", color = MaterialTheme.colorScheme.secondary)
                 }
-            }
-            // ratings
-            Row (
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ){
-                // rating up
-                Row (
-                    modifier = Modifier.padding(5.dp)
+                // order information
+                Row  (
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ){
-                    Icon(imageVector = Icons.Filled.ThumbUp,
-                        contentDescription = "rating",
-                        tint = Black,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(text = "100",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+                    // username and limit
+                    Column {
+                        Text(text = buyOrder.user_name,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Text(text = "Limit : Min 200,000 - Max 5,000,000",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                    // amount and value
+                    Column (
+
+                    ) {
+                        Text(text = "200,000 Kc",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Text(text = "NGN 5,000,000",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+
+                    }
                 }
-                //reting down
+                // ratings
                 Row (
-                    modifier = Modifier.padding(5.dp)
-                ) {
-                    Icon(imageVector = Icons.Filled.ThumbDown,
-                        contentDescription = "rating",
-                        tint = Red,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(text = "2",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ){
+                    // rating up
+                    Row (
+                        modifier = Modifier.padding(5.dp)
+                    ){
+                        Icon(imageVector = Icons.Filled.ThumbUp,
+                            contentDescription = "rating",
+                            tint = Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(text = "100",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                    //reting down
+                    Row (
+                        modifier = Modifier.padding(5.dp)
+                    ) {
+                        Icon(imageVector = Icons.Filled.ThumbDown,
+                            contentDescription = "rating",
+                            tint = Red,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(text = "2",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
                 }
             }
         }
     }
+
 
 }
