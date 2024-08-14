@@ -103,7 +103,7 @@ fun createSellOrderScreen(navController:NavController, orderViewModel: OrderView
                     return@Button
                 }
                 // lgoin with token, this is temporary
-                orderViewModel.login(context)
+                orderViewModel.login()
 
                orderViewModel.createSellOrder(CreateSellOrderReq(
                    BigDecimal(amount.value),
@@ -141,10 +141,10 @@ fun formValidation(context:Context ,minAmount:String, maxAmount:String, amount:S
         Toast.makeText(context, "invalid min amount", Toast.LENGTH_SHORT).show()
         return false
     }
-    if(maxAmount.isBlank() || maxAmount.isEmpty()){
-        Toast.makeText(context, "invalid max amount", Toast.LENGTH_SHORT).show()
-        return false
-    }
+//    if(maxAmount.isBlank() || maxAmount.isEmpty()){
+//        Toast.makeText(context, "invalid max amount", Toast.LENGTH_SHORT).show()
+//        return false
+//    }
     if(amount.isBlank() || amount.isEmpty()){
         Toast.makeText(context, "invalid min amount", Toast.LENGTH_SHORT).show()
         return false
@@ -153,7 +153,7 @@ fun formValidation(context:Context ,minAmount:String, maxAmount:String, amount:S
     try {
         BigDecimal(amount)
         BigDecimal(minAmount)
-        BigDecimal(maxAmount)
+//        BigDecimal(maxAmount)
 
 
     }catch (e:Exception){

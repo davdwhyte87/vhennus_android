@@ -46,6 +46,9 @@ fun myOrdersScreen(
     navController: NavController,
     ordersViewModel: OrderViewModel
 ){
+    // clear ui data
+    ordersViewModel.resetSuccessAndError()
+
     val context = LocalContext.current
     val tradeStateUI = ordersViewModel.tradeUIState.collectAsState()
 
@@ -53,10 +56,10 @@ fun myOrdersScreen(
         Toast.makeText(LocalContext.current, tradeStateUI.value.errorMessage, Toast.LENGTH_SHORT).show()
         ordersViewModel.resetSuccessAndError()
     }
-    if (tradeStateUI.value.isSuccess){
-        //Toast.makeText(LocalContext.current, , Toast.LENGTH_SHORT).show()
-        ordersViewModel.resetSuccessAndError()
-    }
+//    if (tradeStateUI.value.isSuccess){
+//        //Toast.makeText(LocalContext.current, , Toast.LENGTH_SHORT).show()
+//        ordersViewModel.resetSuccessAndError()
+//    }
     GeneralScaffold(topBar = { BackTopBar(pageName = "My Orders", navController ) }, floatingActionButton = { /*TODO*/ }) {
         val scrollState = rememberScrollState()
         Column(
@@ -69,7 +72,7 @@ fun myOrdersScreen(
 
 
             LaunchedEffect(true) {
-                ordersViewModel.login(context)
+                ordersViewModel.login()
                 ordersViewModel.getMySellOrders()
                 ordersViewModel.getMyBuyOrders()
             }
@@ -95,8 +98,12 @@ fun mySellOrdersList(
     ordersViewModel: OrderViewModel
 ){
     val items = listOf(1, 2)
-    sellOrders.forEachIndexed { index,   i ->
-        mySellOrderListItem(navController, i, ordersViewModel)
+    if(sellOrders.count() == 1){
+        sellOrders.forEachIndexed { index,   i ->
+            mySellOrderListItem(navController, i, ordersViewModel)
+        }
+    }else{
+        Text(text = "No sell orders")
     }
 }
 
@@ -167,8 +174,12 @@ fun myBuyOrdersList(
     ordersViewModel: OrderViewModel
 ){
     val items = listOf(1, 2)
-    buyOrders.forEachIndexed { index,   buyOrder ->
-        myBuyOrderListItem(navController, buyOrder, ordersViewModel )
+    if (buyOrders.count() <1) {
+        buyOrders.forEachIndexed { index, buyOrder ->
+            myBuyOrderListItem(navController, buyOrder, ordersViewModel)
+        }
+    }else{
+        Text(text = "No buy order")
     }
 }
 
@@ -184,7 +195,7 @@ fun myBuyOrderListItem(
         modifier = Modifier
             .padding(top = 10.dp)
             .clickable(onClick = {
-                navController.navigate(NavScreen.SingleOrderScreen.route + "/"+buyOrder.id)
+                navController.navigate(NavScreen.SingleOrderScreen.route + "/" + buyOrder.id)
             }),
     ) {
         Column(

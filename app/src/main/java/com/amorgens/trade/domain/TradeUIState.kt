@@ -9,5 +9,15 @@ data class TradeUIState(
     val isSuccess:Boolean = false,
     val errorMessage:String = "",
     val successMessage:String = "",
-    val isLoading:Boolean = false
+    val isLoading:Boolean = false,
+    val isLoadingGetSingleBuyOrderPage:Boolean = false,
+    val isGetBuyOrderPageError:Boolean = false,
+    val isGetBuyOrderPageSuccess:Boolean = false,
+    val getBuyOrderPageErrorMessage:String = "",
+
+
+    val isConfirmBuyOrderButtonLoading:Boolean = false,
+    val isConfirmBuyOrderSuccess: Boolean = false,
+    val isConfirmBuyOrderError: Boolean = false,
+    val confirmBuyOrderErrorMessage:String = ""
 )

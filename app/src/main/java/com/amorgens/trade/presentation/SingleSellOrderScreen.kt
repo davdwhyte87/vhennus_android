@@ -1,5 +1,6 @@
 package com.amorgens.trade.presentation
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,8 @@ import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -28,11 +31,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.amorgens.NavScreen
 import com.amorgens.trade.data.OrderViewModel
 import com.amorgens.trade.domain.BuyOrder
+import com.amorgens.ui.AnimatedPreloader
 import com.amorgens.ui.BackTopBar
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
@@ -49,18 +54,32 @@ fun singleSellOrderScreen(
     orderViewModel: OrderViewModel,
     id:String
 ){
-
+    // clear UI data
+    orderViewModel.resetSuccessAndError()
+    val isCancelButtonEnabled = remember { mutableStateOf(true) }
     LaunchedEffect(true) {
         orderViewModel.getSingleSellOrders(id)
     }
+    val tradeStateUI = orderViewModel.tradeUIState.collectAsState()
+    if(tradeStateUI.value.isError){
+        Toast.makeText(LocalContext.current, tradeStateUI.value.errorMessage, Toast.LENGTH_SHORT).show()
+        orderViewModel.resetSuccessAndError()
+    }
+//    if(tradeStateUI.value.isSuccess){
+//        Toast.makeText(LocalContext.current, "Ok", Toast.LENGTH_SHORT).show()
+//        orderViewModel.resetSuccessAndError()
+//    }
 
     val singleSellOrder = orderViewModel.singleSellOrder.collectAsState()
-
+    if (singleSellOrder.value.is_closed){
+        isCancelButtonEnabled.value = false
+    }
     GeneralScaffold(topBar = { BackTopBar(pageName = "Sell Order", navController ) }, floatingActionButton = { /*TODO*/ }) {
 
         val isExpanded = remember {
             mutableStateOf(false)
         }
+
         Column {
 
             Row(
@@ -75,10 +94,12 @@ fun singleSellOrderScreen(
                 )
 
                 Box(
-                    modifier = Modifier.clickable(onClick = {
-                        if (isExpanded.value) isExpanded.value =
-                            false else isExpanded.value = true
-                    }).padding(start = 10.dp, end = 10.dp)
+                    modifier = Modifier
+                        .clickable(onClick = {
+                            if (isExpanded.value) isExpanded.value =
+                                false else isExpanded.value = true
+                        })
+                        .padding(start = 10.dp, end = 10.dp)
                 ) {
                     Row {
                         Icon(
@@ -103,6 +124,27 @@ fun singleSellOrderScreen(
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.secondary
                 )
+
+                Button(
+                    onClick = {
+                        orderViewModel.cancelSellOrder(id)
+                        isCancelButtonEnabled.value= false
+                              },
+                    colors = ButtonDefaults.buttonColors(containerColor = Red),
+                    enabled = isCancelButtonEnabled.value
+                ) {
+
+
+                    if(tradeStateUI.value.isLoading){
+                        AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
+                    }else {
+                        Text(text = "Cancel",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.surface
+                        )
+                    }
+
+                }
             }
 
             Text(text = "Payment Information",
@@ -130,7 +172,7 @@ fun singleSellOrderScreen(
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(bottom = 20.dp)
             )
-            allBuyOrderListItem(navController, singleSellOrder.value.buy_orders)
+            allBuyOrderListItem(navController, singleSellOrder.value.buy_orders, orderViewModel)
         }
     }
 }
@@ -138,7 +180,8 @@ fun singleSellOrderScreen(
 @Composable
 fun allBuyOrderListItem(
     navController: NavController,
-    buyOrders : List<BuyOrder>
+    buyOrders : List<BuyOrder>,
+    orderViewModel: OrderViewModel
 ){
     buyOrders.forEachIndexed { index, buyOrder ->
         Card(
@@ -147,7 +190,7 @@ fun allBuyOrderListItem(
             modifier = Modifier
                 .padding(top = 10.dp)
                 .clickable(onClick = {
-                    navController.navigate(NavScreen.SingleOrderScreen.route + "/"+buyOrder.id)
+                    navController.navigate(NavScreen.SingleOrderScreen.route + "/" + buyOrder.id)
                 }),
         ) {
             Column(
@@ -181,7 +224,7 @@ fun allBuyOrderListItem(
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.secondary
                         )
-                        Text(text = "Limit : Min 200,000 - Max 5,000,000",
+                        Text(text = "",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -190,11 +233,11 @@ fun allBuyOrderListItem(
                     Column (
 
                     ) {
-                        Text(text = "200,000 Kc",
+                        Text(text = String.format("%,.2f", buyOrder.amount) + " Kc",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.secondary
                         )
-                        Text(text = "NGN 5,000,000",
+                        Text(text = "NGN "+String.format("%,.2f", orderViewModel.getExchangeValue(buyOrder.amount)),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.secondary
                         )
