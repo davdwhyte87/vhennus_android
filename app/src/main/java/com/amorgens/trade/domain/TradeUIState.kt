@@ -10,14 +10,44 @@ data class TradeUIState(
     val errorMessage:String = "",
     val successMessage:String = "",
     val isLoading:Boolean = false,
-    val isLoadingGetSingleBuyOrderPage:Boolean = false,
-    val isGetBuyOrderPageError:Boolean = false,
-    val isGetBuyOrderPageSuccess:Boolean = false,
-    val getBuyOrderPageErrorMessage:String = "",
+    val isGetSingleBuyOrderPageLoading:Boolean = false,
+    val isGetSingleBuyOrderPageError:Boolean = false,
+    val isGetSingleBuyOrderPageSuccess:Boolean = false,
+    val getSingleBuyOrderPageErrorMessage:String = "",
 
 
     val isConfirmBuyOrderButtonLoading:Boolean = false,
     val isConfirmBuyOrderSuccess: Boolean = false,
     val isConfirmBuyOrderError: Boolean = false,
-    val confirmBuyOrderErrorMessage:String = ""
+    val confirmBuyOrderErrorMessage:String = "",
+
+    val isGetOpenOrdersPageLoading: Boolean = false,
+    val isGetOpenOrdersPageSuccess:Boolean = false,
+    val isGetOpenOrdersPageError:Boolean = false,
+    val getOpenOrdersPageErrorMessage: String = "",
+
+    val isCreateBuyOrderButtonLoading: Boolean = false,
+    val isCreateBuyOrderSuccess:Boolean = false,
+    val isCreateBuyOrderError:Boolean = false,
+    val createBuyOrderErrorMessage:String = "",
+
+
+    val isCancelBuyOrderButtonLoading:Boolean = false,
+    val isCancelBuyOrderError:Boolean= false,
+    val isCancelBuyOrderSuccess:Boolean = false,
+    val cancelBuyOrderError:String = "",
+
+    val isGetAllOrderMessagesLoading:Boolean = false,
+    val isGetAllOrderMessagesSuccess:Boolean = false,
+    val isGetAllOrderMessagesError:Boolean= false,
+    val getAllOrderMessagesErrorMessage:String = "",
+
+    val isCreateOrderMessageButtonLoading:Boolean = false,
+    val isCreateOrderMessageSuccess:Boolean = false,
+    val isCreateOrderMessagesError:Boolean = false,
+    val createOrderMessageErrorMessage:String = ""
+
+
+
+
 )

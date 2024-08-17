@@ -72,7 +72,7 @@ fun myOrdersScreen(
 
 
             LaunchedEffect(true) {
-                ordersViewModel.login()
+                //ordersViewModel.login()
                 ordersViewModel.getMySellOrders()
                 ordersViewModel.getMyBuyOrders()
             }
@@ -98,7 +98,7 @@ fun mySellOrdersList(
     ordersViewModel: OrderViewModel
 ){
     val items = listOf(1, 2)
-    if(sellOrders.count() == 1){
+    if(sellOrders.count() >1){
         sellOrders.forEachIndexed { index,   i ->
             mySellOrderListItem(navController, i, ordersViewModel)
         }
@@ -174,8 +174,9 @@ fun myBuyOrdersList(
     ordersViewModel: OrderViewModel
 ){
     val items = listOf(1, 2)
-    if (buyOrders.count() <1) {
+    if (buyOrders.count() >=1) {
         buyOrders.forEachIndexed { index, buyOrder ->
+
             myBuyOrderListItem(navController, buyOrder, ordersViewModel)
         }
     }else{

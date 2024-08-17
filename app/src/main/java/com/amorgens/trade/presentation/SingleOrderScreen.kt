@@ -38,6 +38,7 @@ import androidx.navigation.NavController
 import com.amorgens.trade.data.OrderViewModel
 import com.amorgens.trade.domain.BuyOrder
 import com.amorgens.trade.domain.SellOrder
+import com.amorgens.trade.domain.requests.CreateOrderMessageReq
 import com.amorgens.ui.AnimatedPreloader
 import com.amorgens.ui.BackTopBar
 import com.amorgens.ui.GeneralScaffold
@@ -65,8 +66,9 @@ fun singleOrderScreen(
 
     LaunchedEffect(true) {
         // get buy order
-        orderViewModel.resetSuccessAndError()
         orderViewModel.getSingleBuyOrder(id)
+        orderViewModel.resetSuccessAndError()
+        orderViewModel.getOrderMessages(id)
         orderViewModel.getUserName()
 
     }
@@ -74,7 +76,10 @@ fun singleOrderScreen(
     val singleBuyOrder = orderViewModel.singleBuyOrder.collectAsState()
     val userName = orderViewModel.userName.collectAsState()
     val singleSellOrder = orderViewModel.singleSellOrder.collectAsState()
+    val messages = orderViewModel.orderMessages.collectAsState()
 
+
+    // get the sell order
     LaunchedEffect(singleBuyOrder.value.id) {
         orderViewModel.getSingleSellOrders(singleBuyOrder.value.sell_order_id)
     }
@@ -82,6 +87,12 @@ fun singleOrderScreen(
         Toast.makeText(LocalContext.current, tradeStateUI.value.confirmBuyOrderErrorMessage, Toast.LENGTH_SHORT).show()
         orderViewModel.resetSingleOrderScreenState()
 
+    }
+
+    if(tradeStateUI.value.isCancelBuyOrderError){
+        Toast.makeText(LocalContext.current, tradeStateUI.value.cancelBuyOrderError, Toast.LENGTH_SHORT).show()
+        orderViewModel.resetSingleOrderScreenState()
+        orderViewModel.getSingleBuyOrder(id)
     }
 
     if(tradeStateUI.value.isConfirmBuyOrderSuccess){
@@ -98,7 +109,7 @@ fun singleOrderScreen(
             Row {
                 // confirm button
                 Button(onClick = {
-                    orderViewModel.login()
+                    //orderViewModel.login()
                     if (userName.value == singleBuyOrder.value.user_name){
                         orderViewModel.buyerConfirmBuyOrder(singleBuyOrder.value.id)
                     }else{
@@ -126,13 +137,14 @@ fun singleOrderScreen(
                 // cancel button
                 if (userName.value == singleBuyOrder.value.user_name){
                     Button(onClick = {
-                        orderViewModel.cancelSellOrder(id)
+                        Log.d("CANCEL SELL ORDER ERROR", id.toString())
+                        orderViewModel.cancelBuyOrder(id)
                     },
                         colors = ButtonDefaults.buttonColors(containerColor = Red)
                     ) {
 
 
-                        if(tradeStateUI.value.isLoading){
+                        if(tradeStateUI.value.isCancelBuyOrderButtonLoading){
                             AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
                         }else {
                             Text(text = "Cancel",
@@ -171,7 +183,8 @@ fun singleOrderScreen(
                         ) {
                             Text(text = "Account Number: "+ (singleSellOrder.value.payment_method_data?.account_number))
                             Text(text = "Account Name: "+ singleSellOrder.value.payment_method_data?.account_name)
-                            Text(text = "bank Name: "+ singleSellOrder.value.payment_method_data?.bank_name)
+                            Text(text = "Bank Name: "+ singleSellOrder.value.payment_method_data?.bank_name)
+                            Text(text = "Seller User Name: "+ singleSellOrder.value.user_name)
                         }
                     }
 
@@ -188,30 +201,19 @@ fun singleOrderScreen(
                     .padding(top = 40.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Card (
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .align(Alignment.End),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiary)
-                ) {
-                    Text(text = "Only way I can soo this going  is if t becomes cleanr that at thjen end of the day thekk ",
-                        color = MaterialTheme.colorScheme.secondary,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(15.dp)
-                    )
-                }
-
-                Card (
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .align(Alignment.Start),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Text(text = "Only way I can soo this going  is if t becomes cleanr that at thjen end of the day thekk ",
-                        color = MaterialTheme.colorScheme.surface,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(15.dp)
-                    )
+                messages.value.forEachIndexed { index, orderMessage ->
+                    Card (
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .align(if(orderMessage.sender_user_name == userName.value) Alignment.End else Alignment.Start),
+                        colors = CardDefaults.cardColors(containerColor =if(orderMessage.sender_user_name == userName.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary)
+                    ) {
+                        Text(text = orderMessage.text,
+                            color = if(orderMessage.sender_user_name == userName.value) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.secondary ,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(15.dp)
+                        )
+                    }
                 }
             }
 
@@ -230,11 +232,25 @@ fun singleOrderScreen(
                         .fillMaxWidth(0.8f)
                         .padding(end = 16.dp)
                 )
-                Button(onClick = { },
+                Button(onClick = {
+                    orderViewModel.createOrderMessage(CreateOrderMessageReq(
+                         receiver_user_name = if(singleBuyOrder.value.user_name == userName.value) singleSellOrder.value.user_name else singleBuyOrder.value.user_name,
+                         singleBuyOrder.value.id,
+                         message.value,
+                         ""
+                    ))
+                    message.value = ""
+
+                },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text(text = singleBuyOrder.value.user_name,
-                        color = MaterialTheme.colorScheme.surface)
+                    if(tradeStateUI.value.isCreateOrderMessageButtonLoading){
+                        AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
+                    }else {
+                        Text(text = "Send",
+                            color = MaterialTheme.colorScheme.surface)
+                    }
+
                 }
 
             }

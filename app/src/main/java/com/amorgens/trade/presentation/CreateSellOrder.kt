@@ -56,12 +56,12 @@ fun createSellOrderScreen(navController:NavController, orderViewModel: OrderView
 
     if(tradeStateUI.value.isCreateSellOrderError){
         Toast.makeText(LocalContext.current, tradeStateUI.value.createSellOrderErrorMessage, Toast.LENGTH_SHORT).show()
-        orderViewModel.resetSuccessAndError()
+        orderViewModel.resetCreateSellOrderScreen()
     }
     if(tradeStateUI.value.isCreateSellOrderSuccess){
         Toast.makeText(LocalContext.current, "Created!", Toast.LENGTH_SHORT).show()
 
-        orderViewModel.resetSuccessAndError()
+        orderViewModel.resetCreateSellOrderScreen()
         navController.popBackStack()
     }
 
@@ -103,7 +103,7 @@ fun createSellOrderScreen(navController:NavController, orderViewModel: OrderView
                     return@Button
                 }
                 // lgoin with token, this is temporary
-                orderViewModel.login()
+                //orderViewModel.login()
 
                orderViewModel.createSellOrder(CreateSellOrderReq(
                    BigDecimal(amount.value),

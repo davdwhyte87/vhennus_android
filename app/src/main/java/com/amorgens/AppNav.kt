@@ -1,6 +1,8 @@
 package com.amorgens
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -78,6 +80,24 @@ fun AppNav(
         }
         composable(route=NavScreen.MyOrdersScreen.route){
             myOrdersScreen(navController,orderViewModel )
+        }
+
+        
+    }
+}
+fun NavGraphBuilder.protectedComposable(
+    navController: NavHostController,
+    isLoggedIn: Boolean,
+    route: String,
+    content: @Composable () -> Unit
+){
+    composable(route) {
+        if (isLoggedIn) {
+            content()
+        } else {
+            navController.navigate("login") {
+                popUpTo("home") { inclusive = false }
+            }
         }
     }
 }

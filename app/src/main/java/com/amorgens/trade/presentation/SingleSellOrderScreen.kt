@@ -31,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -205,7 +206,7 @@ fun allBuyOrderListItem(
                 ) {
                     Icon(imageVector = Icons.Filled.Circle,
                         contentDescription = "",
-                        tint = Green,
+                        tint = getColorTradeStatus(buyOrder),
                         modifier = Modifier
                             .size(20.dp)
                             .padding(2.dp)
@@ -282,4 +283,18 @@ fun allBuyOrderListItem(
     }
 
 
+}
+
+fun getColorTradeStatus(buyOrder: BuyOrder):Color{
+    if (buyOrder.is_seller_confirmed && buyOrder.is_buyer_confirmed){
+        return  Color.Blue
+    }
+    if (buyOrder.is_canceled || buyOrder.is_reported){
+        return Red
+    }
+    if (buyOrder.is_buyer_confirmed || buyOrder.is_seller_confirmed){
+        return  Color.Green
+    }
+
+    return Gray
 }
