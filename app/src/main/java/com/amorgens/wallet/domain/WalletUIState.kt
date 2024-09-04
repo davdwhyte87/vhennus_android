@@ -1,20 +1,25 @@
 package com.amorgens.wallet.domain
 
 data class WalletUIState (
-    val isCreateWalletButtonLoading:Boolean,
-    val isCreateWalletDone: Boolean,
-    val createWalletScreenNavigateBack:Boolean,
-    val createWalletSuccess:Boolean,
-    val createWalletSuccessMessage: String,
-    val createWalletError: Boolean,
-    val createWalletErrorMessage:String,
-    val isError:Boolean,
-    val isSuccess:Boolean,
-    val errorMessage:String,
-    val successMessage:String,
-    val isAddWalletButtonLoading:Boolean,
-    val isAddWalletDone:Boolean,
-    val isSingleWalletPageLoading: Boolean,
-    val isTransferButtonLoading:Boolean,
-    val isSyncingLocalWallet:Boolean
+    val isCreateWalletButtonLoading:Boolean = false,
+    val isCreateWalletDone: Boolean = false,
+    val createWalletScreenNavigateBack:Boolean = false,
+    val createWalletSuccess:Boolean = false,
+    val createWalletSuccessMessage: String ="",
+    val createWalletError: Boolean = false,
+    val createWalletErrorMessage:String ="",
+    val isError:Boolean = false,
+    val isSuccess:Boolean = false,
+    val errorMessage:String ="",
+    val successMessage:String ="",
+
+    val isAddWalletDone:Boolean = false,
+    val isSingleWalletPageLoading: Boolean = false,
+    val isTransferButtonLoading:Boolean = false,
+    val isSyncingLocalWallet:Boolean = false,
+
+    val isAddWalletButtonLoading:Boolean = false,
+    val isAddWalletSuccess:Boolean = false,
+    val isAddWalletError:Boolean = false,
+    val addWalletErrorMessage:String=""
 )

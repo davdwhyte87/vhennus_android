@@ -29,7 +29,7 @@ fun GeneralScaffold(topBar: @Composable () -> Unit, floatingActionButton: @Compo
             floatingActionButton()
         },
 
-        floatingActionButtonPosition = FabPosition.Center,
+        floatingActionButtonPosition = FabPosition.EndOverlay,
     ) { it ->
         Box(modifier = Modifier.padding(it).padding(start = 15.dp, end = 15.dp)) {
             screenView()

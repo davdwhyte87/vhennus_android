@@ -27,6 +27,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +54,13 @@ fun TransferScreen(
     walletAddress:String,
     walletViewModel: WalletViewModel
 ){
+    // clear model data
+    DisposableEffect(true) {
+        //walletViewModel.clearModelData()
+        onDispose {
+            walletViewModel.clearModelData()
+        }
+    }
     // reset all ui data
     LaunchedEffect(true) {
         walletViewModel.resetUIState()

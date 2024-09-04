@@ -7,12 +7,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.amorgens.general.data.APIService
+import com.amorgens.general.data.GetUserToken
 import com.amorgens.trade.domain.BuyOrder
 import com.amorgens.trade.domain.OrderMessage
+import com.amorgens.trade.domain.PaymentMethodData
 import com.amorgens.trade.domain.SellOrder
 import com.amorgens.trade.domain.TradeUIState
 import com.amorgens.trade.domain.requests.CreateBuyOrderReq
 import com.amorgens.trade.domain.requests.CreateOrderMessageReq
+import com.amorgens.trade.domain.requests.CreatePaymentMethod
 import com.amorgens.trade.domain.requests.CreateSellOrderReq
 import com.amorgens.trade.domain.requests.Currency
 import com.amorgens.trade.domain.requests.PaymentMethod
@@ -31,29 +35,31 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class OrderViewModel @Inject constructor(private val apiService: APIService,
-    private val application: Application
+class OrderViewModel @Inject constructor(
+    private val apiService: APIService,
+    private val application: Application,
+    private val getUserToken: GetUserToken
     ) :ViewModel(){
 
-    val _createSellOrderReq = MutableStateFlow(CreateSellOrderReq(
-        BigDecimal("0.00"),
-        BigDecimal("0.00"),
-        Currency.USD,
-        PaymentMethod.Bank,
-        ""
-    ))
-    val createSellOrderReq = _createSellOrderReq.asStateFlow()
+//    val _createSellOrderReq = MutableStateFlow(CreateSellOrderReq(
+//        BigDecimal("0.00"),
+//        BigDecimal("0.00"),
+//        Currency.USD,
+//        PaymentMethod.Bank,
+//        ""
+//    ))
+//    val createSellOrderReq = _createSellOrderReq.asStateFlow()
 
     private val _tradeUIState = MutableStateFlow(TradeUIState())
     val tradeUIState = _tradeUIState.asStateFlow()
 
-    private val _mySellOrders = MutableStateFlow(listOf(SellOrder()))
+    private val _mySellOrders = MutableStateFlow<List<SellOrder>>(emptyList())
     val mySellOrder = _mySellOrders.asStateFlow()
 
     private val _singleSellOrder = MutableStateFlow(SellOrder())
     val singleSellOrder = _singleSellOrder.asStateFlow()
 
-    private val _myBuyOrders = MutableStateFlow(listOf(BuyOrder()))
+    private val _myBuyOrders = MutableStateFlow<List<BuyOrder>>(emptyList())
     val myBuyOrders = _myBuyOrders.asStateFlow()
 
     private val _singleBuyOrder = MutableStateFlow(BuyOrder())
@@ -71,6 +77,9 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
     private val _orderMessages = MutableStateFlow(listOf(OrderMessage()))
     val orderMessages = _orderMessages.asStateFlow()
 
+    private val _paymentMethodDatas = MutableStateFlow(listOf(PaymentMethodData()))
+    val paymentMethodDatas = _paymentMethodDatas.asStateFlow()
+
     fun sayHello(){
         viewModelScope.launch {
             try{
@@ -83,25 +92,28 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
         }
     }
 
+    fun clearModelData(){
+        _tradeUIState.value = TradeUIState()
+        _orderMessages.value = listOf(OrderMessage())
+        _openSellOrders.value = listOf(SellOrder())
+        _singleBuyOrder.value = BuyOrder()
+        _myBuyOrders.value = listOf(BuyOrder())
+        _paymentMethodDatas.value = listOf(PaymentMethodData())
+        _singleSellOrder.value = SellOrder()
+        _mySellOrders.value = listOf(SellOrder())
+        _buyOrder.value = BuyOrder()
+
+    }
+
     fun createSellOrder(data:CreateSellOrderReq){
         _tradeUIState.update { it.copy(isCreateSellOrderButtonLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO){
-                val masterKey = MasterKey.Builder(application)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                    .build()
 
-                val sharedPreferences = EncryptedSharedPreferences.create(
-                    application,
-                    "secure_prefs",
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                )
-
-                val token = sharedPreferences.getString("auth_token", null)
-                if (token.isNullOrBlank()){
-                    _tradeUIState.update { it.copy(isCreateSellOrderSuccess = false,
+                val token = getUserToken.getUserToken()
+                if (token.isBlank()){
+                    _tradeUIState.update { it.copy(
+                        isCreateSellOrderSuccess = false,
                         isCreateSellOrderError = true,
                         createSellOrderErrorMessage = "You are not authorized"
                     ) }
@@ -112,7 +124,8 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
 
                     val resp = apiService.createSellOrder(data, mapOf("Authorization" to token))
                     if (resp.code() == 200 || resp.code()==201){
-                        _tradeUIState.update { it.copy(isCreateSellOrderSuccess = true,
+                        _tradeUIState.update { it.copy(
+                            isCreateSellOrderSuccess = true,
                             isCreateSellOrderError = false) }
                     }else if (resp.code()==401){
                         _tradeUIState.update { it.copy(isCreateSellOrderSuccess = false,
@@ -121,15 +134,24 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
                         ) }
                     }
                     else{
-                        _tradeUIState.update { it.copy(isCreateSellOrderSuccess = false,
+                        val respString = resp.errorBody()?.string()
+                        Log.d("CREATE ORDER RESPONSE", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                        _tradeUIState.update {
+                            it.copy(isCreateSellOrderSuccess = false,
                             isCreateSellOrderError = true,
-                            createSellOrderErrorMessage = resp.body()?.message ?:""
+                            createSellOrderErrorMessage = errorResp.message
                         ) }
+                        Log.d("CREATE ORDER ERROR", errorResp.server_message+" ")
                     }
                 }catch (e:Exception){
                     _tradeUIState.update { it.copy(isCreateSellOrderButtonLoading = false) }
                     _tradeUIState.update { it.copy(isCreateSellOrderSuccess = false,
                         isCreateSellOrderError = true, createSellOrderErrorMessage = "Network Error") }
+
+                    Log.d("CREATE ORDER ERROR", e.toString()+" ")
                 }
 
                 _tradeUIState.update { it.copy(isCreateSellOrderButtonLoading = false) }
@@ -139,25 +161,180 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
 
     }
 
+    fun addPaymentMethods(createPaymentMethod: CreatePaymentMethod){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                _tradeUIState.update { it.copy(
+                    isAddPaymentMethodLoading = true,
+                )}
+                try {
+                    val token = getUserToken()
+                    val resp = apiService.addPaymentMethods(createPaymentMethod, mapOf("Authorization" to token))
+                    if (resp.isSuccessful){
+                        val data =  resp.body()?.data
+                        if (data != null){
+                            val paymentMethodList = _paymentMethodDatas.value
+                            paymentMethodList.toMutableList().add(data)
+                            _paymentMethodDatas.value = paymentMethodList
+                        }
+                        //
+                        _tradeUIState.update { it.copy(
+                            isAddPaymentMethodLoading = false,
+                            isAddPaymentMethodsError = false,
+                            isAddPaymentMethodsSuccess = true,
+                            addPyamentMethodsErrorMessage = ""
+                        ) }
+
+                    }else{
+
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(resp.errorBody()?.string() , genericType)
+
+                        _tradeUIState.update { it.copy(
+                            isAddPaymentMethodLoading = false,
+                            isAddPaymentMethodsError = true,
+                            isAddPaymentMethodsSuccess = false,
+                            addPyamentMethodsErrorMessage = errorResp.message
+                        ) }
+
+                        Log.d("ADD PAYMENT METHODS",errorResp.server_message +"" )
+
+                    }
+                }catch (e:Exception){
+
+                    _tradeUIState.update { it.copy(
+                        isAddPaymentMethodLoading = false,
+                        isAddPaymentMethodsError = true,
+                        isAddPaymentMethodsSuccess = false,
+                        addPyamentMethodsErrorMessage = "Network error"
+                    ) }
+
+                    Log.d("ADD PAYMENT METHODS",e.toString() )
+                }
+
+                _tradeUIState.update { it.copy(
+                    isAddPaymentMethodLoading = false,
+                )}
+            }
+        }
+    }
+
+    fun getAllMyPaymentMethods(){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+
+                try {
+                    val token = getUserToken()
+                    val resp = apiService.getMyPaymentMethods(mapOf("Authorization" to token))
+                    if (resp.isSuccessful){
+                        val data =  resp.body()?.data
+                        if (data != null){
+                            _paymentMethodDatas.value = data
+                        }
+                        //
+                        _tradeUIState.update { it.copy(
+                            isGetPaymentMethodLoading = false,
+                            isGetPaymentMethodsError = true,
+                            isGetPaymentMethodsSuccess = false,
+                            getPyamentMethodsErrorMessage = ""
+                        ) }
+
+                    }else{
+
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(resp.errorBody()?.string() , genericType)
+
+                        _tradeUIState.update { it.copy(
+                            isGetPaymentMethodLoading = false,
+                            isGetPaymentMethodsError = true,
+                            isGetPaymentMethodsSuccess = false,
+                            getPyamentMethodsErrorMessage = errorResp.message
+                        ) }
+
+                        Log.d("GET PAYMENT METHODS",errorResp.server_message +"" )
+
+                    }
+                }catch (e:Exception){
+
+                    _tradeUIState.update { it.copy(
+                        isGetPaymentMethodLoading = false,
+                        isGetPaymentMethodsError = true,
+                        isGetPaymentMethodsSuccess = false,
+                        getPyamentMethodsErrorMessage = "Network error"
+                    ) }
+
+                    Log.d("GET PAYMENT METHODS",e.toString() )
+                }
+            }
+        }
+    }
+
+
+    fun deletePaymentMethods(id:String){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                _tradeUIState.update { it.copy(
+                    isDeletePaymentMethodButtonLoading = true,
+                )}
+                try {
+                    val token = getUserToken()
+                    val resp = apiService.deletePaymentMethod(id, mapOf("Authorization" to token))
+                    if (resp.isSuccessful){
+                        val data =  resp.body()?.data
+
+                        //
+                        _tradeUIState.update { it.copy(
+                            isDeletePaymentMethodButtonLoading = false,
+                            isDeletePaymentMethodSuccess = true,
+                            isDeletePaymentMethodError= false,
+                            deletePaymentMethodErrorMessage=""
+                        ) }
+
+                    }else{
+
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(resp.errorBody()?.string() , genericType)
+
+                        _tradeUIState.update { it.copy(
+                            isDeletePaymentMethodButtonLoading = false,
+                            isDeletePaymentMethodSuccess = false,
+                            isDeletePaymentMethodError= true,
+                            deletePaymentMethodErrorMessage=errorResp.message
+                        ) }
+
+                        Log.d("DELETE PAYMENT METHODS",errorResp.server_message +"" )
+
+                    }
+                }catch (e:Exception){
+
+                    _tradeUIState.update { it.copy(
+                        isDeletePaymentMethodButtonLoading = false,
+                        isDeletePaymentMethodSuccess = false,
+                        isDeletePaymentMethodError= true,
+                        deletePaymentMethodErrorMessage="Network error"
+                    ) }
+
+                    Log.d("DELETE PAYMENT METHODS",e.toString() )
+                }
+
+
+                _tradeUIState.update { it.copy(
+                    isDeletePaymentMethodButtonLoading = true,
+                )}
+            }
+        }
+    }
 
     fun getMySellOrders(){
         _tradeUIState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val masterKey = MasterKey.Builder(application)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                    .build()
 
-                val sharedPreferences = EncryptedSharedPreferences.create(
-                    application,
-                    "secure_prefs",
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                )
-
-                val token = sharedPreferences.getString("auth_token", null)
-                if (token.isNullOrBlank()) {
+                val token = getUserToken.getUserToken()
+                if (token.isBlank()) {
                     _tradeUIState.update {
                         it.copy(
                             isSuccess = false,
@@ -289,76 +466,66 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
 
 
     fun cancelSellOrder(id:String){
-        _tradeUIState.update { it.copy(isLoading = true) }
+        _tradeUIState.update { it.copy(isCancelSellOrderButtonLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val masterKey = MasterKey.Builder(application)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                    .build()
 
-                val sharedPreferences = EncryptedSharedPreferences.create(
-                    application,
-                    "secure_prefs",
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                )
 
-                val token = sharedPreferences.getString("auth_token", null)
-                if (token.isNullOrBlank()) {
+                val token = getUserToken()
+                if (token.isBlank()) {
                     _tradeUIState.update {
                         it.copy(
-                            isSuccess = false,
-                            isError = true,
-                            errorMessage = "You are not authorized"
+                          isCancelSellOrderButtonLoading = false,
+                            isCancelSellOrderError = true,
+                            isCancelSellOrderSuccess = false,
+                            cancelSellOrderErrorMessage = "Unauthorized"
                         )
                     }
-                    _tradeUIState.update { it.copy(isLoading = false) }
                     return@withContext
                 }
 
                 try {
                     val resp = apiService.cancelSellOrder(id, mapOf("Authorization" to token))
                     if (resp.code() == 200){
-                        _tradeUIState.update { it.copy(isSuccess = true,
-                            isError = false) }
-//                        val data = resp.body()?.data
-//                        if (data.isNullOrEmpty()){
-//                            _tradeUIState.update {
-//                                it.copy(
-//                                    isSuccess = false,
-//                                    isError = true,
-//                                    errorMessage = "No Orders"
-//                                )
-//                            }
-//                            _tradeUIState.update { it.copy(isLoading = false) }
-//                            return@withContext
-//                        }
+                        _tradeUIState.update { it.copy(
+                            isCancelSellOrderButtonLoading = false,
+                            isCancelSellOrderError = false,
+                            isCancelSellOrderSuccess = true,
+                            cancelSellOrderErrorMessage = ""
+                        ) }
 
-                        //Log.d("GET ORDERS XXXX", data.toString())
                     }else if (resp.code()==401){
-                        _tradeUIState.update { it.copy(isSuccess = false,
-                            isError = true,
-                            errorMessage = "You are not authorized"
+                        _tradeUIState.update { it.copy(
+                            isCancelSellOrderButtonLoading = false,
+                            isCancelSellOrderError = true,
+                            isCancelSellOrderSuccess = false,
+                            cancelSellOrderErrorMessage = "Unauthorized"
                         ) }
                     }
                     else{
-                        Log.d("CANCEL SELL ORDER ERROR", resp.toString())
-                        _tradeUIState.update { it.copy(isSuccess = false,
-                            isError = true,
-                            errorMessage = resp.body()?.message ?:""
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(resp.errorBody()?.string() , genericType)
+                        Log.d("CANCEL SELL ORDER ERROR", resp.errorBody()?.string()+"")
+                        _tradeUIState.update { it.copy(
+                            isCancelSellOrderButtonLoading = false,
+                            isCancelSellOrderError = true,
+                            isCancelSellOrderSuccess = false,
+                            cancelSellOrderErrorMessage = errorResp.message
                         ) }
 
                     }
 
                 }catch (e:Exception){
-                    _tradeUIState.update { it.copy(isSuccess = false,
-                        isError = true,
-                        errorMessage = "Network Error"
+                    _tradeUIState.update { it.copy(
+                        isCancelSellOrderButtonLoading = false,
+                        isCancelSellOrderError = true,
+                        isCancelSellOrderSuccess = false,
+                        cancelSellOrderErrorMessage = "Network Error"
                     ) }
-                    _tradeUIState.update { it.copy(isLoading = false) }
+                    Log.d("CANCEL SELL ORDER ERROR", e.toString()+"")
                 }
-                _tradeUIState.update { it.copy(isLoading = false) }
+                _tradeUIState.update { it.copy(isCancelBuyOrderButtonLoading = false) }
             }
         }
     }
@@ -440,31 +607,21 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
     }
 
     fun getSingleSellOrders(id:String){
-        _tradeUIState.update { it.copy(isLoading = true) }
+        _tradeUIState.update { it.copy(isGetSingleSellOrderPageLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val masterKey = MasterKey.Builder(application)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                    .build()
 
-                val sharedPreferences = EncryptedSharedPreferences.create(
-                    application,
-                    "secure_prefs",
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                )
 
-                val token = sharedPreferences.getString("auth_token", null)
-                if (token.isNullOrBlank()) {
+                val token =getUserToken()
+                if (token.isBlank()) {
                     _tradeUIState.update {
                         it.copy(
-                            isSuccess = false,
-                            isError = true,
-                            errorMessage = "You are not authorized"
+                           isGetSingleSellOrderPageLoading = false,
+                            isGetSingleSellOrderPageError = true,
+                            isGetSingleSellOrderPageSuccess = false,
+                            getSingleSellOrderPageErrorMessage = "Unauthorized"
                         )
                     }
-                    _tradeUIState.update { it.copy(isLoading = false) }
                     return@withContext
                 }
 
@@ -475,41 +632,51 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
                             isError = false) }
                         val data = resp.body()?.data ?: SellOrder()
                         if (data.created_at.isBlank()){
-                            _tradeUIState.update {
-                                it.copy(
-                                    isSuccess = false,
-                                    isError = true,
-                                    errorMessage = "Not found"
-                                )
-                            }
-                            _tradeUIState.update { it.copy(isLoading = false) }
+//                            _tradeUIState.update {
+//                                it.copy(
+//                                    isGetSingleSellOrderPageLoading = false,
+//                                    isGetSingleSellOrderPageError = true,
+//                                    isGetSingleSellOrderPageSuccess = false,
+//                                    getSingleSellOrderPageErrorMessage = ""
+//                                )
+//                            }
+
                             return@withContext
                         }
                         _singleSellOrder.value = data
                         Log.d("GET ORDERS XXXX", data.toString())
                     }else if (resp.code()==401){
-                        _tradeUIState.update { it.copy(isSuccess = false,
-                            isError = true,
-                            errorMessage = "You are not authorized"
+                        _tradeUIState.update { it.copy(
+                            isGetSingleSellOrderPageLoading = false,
+                            isGetSingleSellOrderPageError = true,
+                            isGetSingleSellOrderPageSuccess = false,
+                            getSingleSellOrderPageErrorMessage = "Unauthorized"
                         ) }
                     }
                     else{
-                        _tradeUIState.update { it.copy(isSuccess = false,
-                            isError = true,
-                            errorMessage = resp.body()?.message ?:""
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<SellOrder>>() {}.type
+                        val errorResp: GenericResp<SellOrder> = gson.fromJson(resp.errorBody()?.string() , genericType)
+                        _tradeUIState.update { it.copy(
+                            isGetSingleSellOrderPageLoading = false,
+                            isGetSingleSellOrderPageError = true,
+                            isGetSingleSellOrderPageSuccess = false,
+                            getSingleSellOrderPageErrorMessage = errorResp.message
                         ) }
-                        Log.d("SINGLE ORDER ERROR XXXX", resp.toString())
+                        Log.d("SINGLE ORDER ERROR XXXX", errorResp.server_message+"")
                     }
 
                 }catch (e:Exception){
-                    _tradeUIState.update { it.copy(isSuccess = false,
-                        isError = true,
-                        errorMessage = "Network Error"
+                    _tradeUIState.update { it.copy(
+                        isGetSingleSellOrderPageLoading = false,
+                        isGetSingleSellOrderPageError = true,
+                        isGetSingleSellOrderPageSuccess = false,
+                        getSingleSellOrderPageErrorMessage = "Network Error"
                     ) }
-                    _tradeUIState.update { it.copy(isLoading = false) }
+
                     Log.d("SINGLE ORDER ERROR XXXX", e.toString())
                 }
-                _tradeUIState.update { it.copy(isLoading = false) }
+                _tradeUIState.update { it.copy(isGetSingleSellOrderPageLoading = false) }
             }
         }
     }
@@ -532,6 +699,29 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
                 isCreateSellOrderButtonLoading = false
             )
         }
+    }
+
+    fun resetAddPaymentMethodScreen(){
+        _tradeUIState.update { it.copy(
+            isAddPaymentMethodLoading = false,
+            isAddPaymentMethodsSuccess = false,
+            isAddPaymentMethodsError = false,
+            addPyamentMethodsErrorMessage = ""
+        ) }
+    }
+
+    fun resetGetPaymentMethodScreen(){
+        _tradeUIState.update { it.copy(
+            isGetPaymentMethodLoading = false,
+            isGetPaymentMethodsSuccess = false,
+            isGetPaymentMethodsError = false,
+            getPyamentMethodsErrorMessage = "",
+
+            isDeletePaymentMethodSuccess = false,
+            isDeletePaymentMethodButtonLoading = false,
+            isDeletePaymentMethodError = false,
+            deletePaymentMethodErrorMessage = ""
+        ) }
     }
 
     fun resetCreateBuyOrderScreen(){
@@ -572,20 +762,9 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
         _tradeUIState.update { it.copy(isGetSingleBuyOrderPageLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val masterKey = MasterKey.Builder(application)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                    .build()
 
-                val sharedPreferences = EncryptedSharedPreferences.create(
-                    application,
-                    "secure_prefs",
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                )
-
-                val token = sharedPreferences.getString("auth_token", null)
-                if (token.isNullOrBlank()) {
+                val token = getUserToken.getUserToken()
+                if (token.isBlank()) {
                     _tradeUIState.update {
                         it.copy(
                             isGetSingleBuyOrderPageSuccess = false,
@@ -628,10 +807,15 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
                         ) }
                     }
                     else{
+                        val  respData =  resp.errorBody()?.string()
+                        Log.d("SIGNUP ERROR !", respData+"")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respData, genericType)
                         _tradeUIState.update { it.copy(
                             isGetSingleBuyOrderPageSuccess = false,
                             isGetSingleBuyOrderPageError = true,
-                            getSingleBuyOrderPageErrorMessage = resp.body()?.message ?:""
+                            getSingleBuyOrderPageErrorMessage = errorResp.message
 
                         ) }
                     }
@@ -874,20 +1058,10 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
         _tradeUIState.update { it.copy(isCreateBuyOrderButtonLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val masterKey = MasterKey.Builder(application)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                    .build()
 
-                val sharedPreferences = EncryptedSharedPreferences.create(
-                    application,
-                    "secure_prefs",
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                )
 
-                val token = sharedPreferences.getString("auth_token", null)
-                if (token.isNullOrBlank()) {
+                val token = getUserToken.getUserToken()
+                if (token.isBlank()) {
                     _tradeUIState.update {
                         it.copy(
                             isCreateBuyOrderSuccess = false,
@@ -928,14 +1102,19 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
                         ) }
                     }
                     else{
+                        val respData = resp.errorBody().toString()
+                        Log.d("CREATE BUY ORDER ERROR ", respData)
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respData , genericType)
                         _tradeUIState.update { it.copy(
                             isCreateBuyOrderSuccess = false,
                             isCreateBuyOrderError = true,
-                            createBuyOrderErrorMessage = resp.body()?.message ?: ""
+                            createBuyOrderErrorMessage = respData ?: ""
 
 
                         ) }
-                        Log.d("XXX CREATE BUY ORDER ", resp.body().toString())
+                        Log.d("XXX CREATE BUY ORDER ERROR", resp.body().toString())
                     }
 
                 }catch (e:Exception){
@@ -1154,6 +1333,15 @@ class OrderViewModel @Inject constructor(private val apiService: APIService,
         val sharedPreferences = application.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
         val edit = sharedPreferences.edit()
         edit.putString(key, value).apply()
+    }
+
+    fun resetSingleSellOrderScreenUI(){
+        _tradeUIState.update { it.copy(
+            isCancelSellOrderSuccess = false,
+            isCancelSellOrderButtonLoading = false,
+            isCancelSellOrderError = false,
+            cancelSellOrderErrorMessage = ""
+        ) }
     }
 
     fun getUserName(){

@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.sharp.Add
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.sharp.AddCard
 import androidx.compose.material.icons.sharp.Rocket
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -23,11 +26,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -52,6 +58,13 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun NewWalletScreen(navController:NavController, walletViewModel: WalletViewModel){
+    // clear model data
+    DisposableEffect(true) {
+        //walletViewModel.clearModelData()
+        onDispose {
+            walletViewModel.clearModelData()
+        }
+    }
     val walletUIState = walletViewModel.walletUIState.collectAsState()
     val scope = rememberCoroutineScope()
 
@@ -86,6 +99,11 @@ fun NewWalletScreen(navController:NavController, walletViewModel: WalletViewMode
             val walletName = remember{
                 mutableStateOf("")
             }
+            val vcIDUserName = remember{
+                mutableStateOf("")
+            }
+            var checked by remember { mutableStateOf(false) }
+
             Box(modifier = Modifier.fillMaxWidth()){
                 Column (
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -98,6 +116,17 @@ fun NewWalletScreen(navController:NavController, walletViewModel: WalletViewMode
                         },
                         shape = RoundedCornerShape(20.dp),
                         placeholder = { Text(text = "Wallet Name") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 16.dp)
+                    )
+
+                    OutlinedTextField(value = vcIDUserName.value,
+                        onValueChange = {
+                            vcIDUserName.value = it
+                        },
+                        shape = RoundedCornerShape(20.dp),
+                        placeholder = { Text(text = "VcID Username") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(end = 16.dp)
@@ -123,6 +152,12 @@ fun NewWalletScreen(navController:NavController, walletViewModel: WalletViewMode
                             .fillMaxWidth()
                             .padding(end = 16.dp)
                     )
+                    Checkbox(
+                        checked = checked,
+                        onCheckedChange = { checked = it }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "Use Vhenncoin ID. This allows you to use your VCID password.")
                     Button(onClick = {
                         // loading button
                         walletViewModel.updateIsCreateWalletButtonLoading(true)
@@ -130,7 +165,12 @@ fun NewWalletScreen(navController:NavController, walletViewModel: WalletViewMode
                         //Log.d("XXXXCC New UI state ", newWalletUIState.isCreateWalletButtonLoading.toString())
                         //walletViewModel.updateUIStateData(newWalletUIState)
                         // view model call to create wallet
-                        val createWalletReq = CreateWalletReq(walletAddress.value.lowercase(), walletPassPhrase.value,walletName.value)
+                        val createWalletReq = CreateWalletReq(walletAddress.value.lowercase(),
+                            walletPassPhrase.value,
+                            walletName.value,
+                            vcIDUserName.value,
+                            checked
+                        )
                         walletViewModel.createWallet(createWalletReq)
                         // update ui state
                         //newWalletUIState = walletUIState.value.copy(isCreateWalletButtonLoading = false)

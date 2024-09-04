@@ -69,7 +69,8 @@ import java.math.BigDecimal
 fun sellOrderList(
     navController: NavController,
     openOrders:List<SellOrder>,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    address:String
 ){
     val orders = listOf(1,9,90,0)
     LazyColumn(
@@ -78,7 +79,7 @@ fun sellOrderList(
             .fillMaxHeight()
     ) {
         items(openOrders){order->
-           sellOrderListItem(navController, order, orderViewModel)
+           sellOrderListItem(navController, order, orderViewModel, address)
         }
     }
 }
@@ -89,7 +90,8 @@ fun sellOrderList(
 fun sellOrderListItem(
     navController: NavController,
     order:SellOrder,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    address:String
 ){
     val modalBottomSheetState = rememberModalBottomSheetState(
 
@@ -162,7 +164,7 @@ fun sellOrderListItem(
                             //orderViewModel.login()
 
                             orderViewModel.createBuyOrder(
-                                CreateBuyOrderReq(BigDecimal(amount.value), order.id)
+                                CreateBuyOrderReq(BigDecimal(amount.value), order.id, address)
                             )
                         },
                             colors = ButtonDefaults.buttonColors(

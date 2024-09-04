@@ -9,6 +9,25 @@ android {
     namespace = "com.amorgens"
     compileSdk = 34
 
+    flavorDimensions +="environment"
+    productFlavors {
+
+        create("prod") {
+            dimension = "environment"
+            // Additional configurations for this flavor
+            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
+            buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.224.183:3000\"")
+        }
+        create("dev") {
+            dimension = "environment"
+            // Additional configurations for this flavor
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
+            buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.224.183:3000\"")
+
+        }
+    }
     defaultConfig {
         applicationId = "com.amorgens"
         minSdk = 28
@@ -31,6 +50,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+
+        debug {
+
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -42,6 +65,7 @@ android {
     buildFeatures {
         compose = true
         viewBinding = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -51,6 +75,8 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+
 
 }
 

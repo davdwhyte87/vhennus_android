@@ -12,5 +12,6 @@ data class PaymentMethodData(
     val other:String = "",
     val paypal_email:String = "",
     val venmo_username: String = "",
-    val skrill_email:String =  ""
+    val skrill_email:String =  "",
+    val name:String = ""
 )

@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
+import com.amorgens.auth.data.AuthViewModel
+import com.amorgens.feed.data.FeedViewModel
 import com.amorgens.home.presentation.HomeScreen
 import com.amorgens.trade.data.OrderViewModel
 import com.amorgens.ui.theme.AmorgensTheme
@@ -28,7 +30,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val walletViewModel:WalletViewModel = hiltViewModel()
             val orderViewModel:OrderViewModel = hiltViewModel()
-
+            val authViewModel:AuthViewModel = hiltViewModel()
+            val feedViewModel:FeedViewModel = hiltViewModel()
             val navController = rememberNavController()
             AmorgensTheme(darkTheme = false) {
                 // A surface container using the 'background' color from the theme
@@ -36,11 +39,13 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-
                     AppNav(navController =navController,
                         walletViewModel ,
-                        orderViewModel
+                        orderViewModel,
+                        authViewModel,
+                        feedViewModel
                     )
+
                 }
             }
         }
@@ -57,3 +62,6 @@ class MainActivity : ComponentActivity() {
 //        Greeting("Android")
 //    }
 //}
+
+//amara101 12345
+// drake_drizy

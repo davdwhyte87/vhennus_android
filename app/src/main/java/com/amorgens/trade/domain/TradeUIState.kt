@@ -10,10 +10,22 @@ data class TradeUIState(
     val errorMessage:String = "",
     val successMessage:String = "",
     val isLoading:Boolean = false,
+
     val isGetSingleBuyOrderPageLoading:Boolean = false,
     val isGetSingleBuyOrderPageError:Boolean = false,
     val isGetSingleBuyOrderPageSuccess:Boolean = false,
     val getSingleBuyOrderPageErrorMessage:String = "",
+
+    val isGetSingleSellOrderPageLoading:Boolean = false,
+    val isGetSingleSellOrderPageError:Boolean = false,
+    val isGetSingleSellOrderPageSuccess:Boolean = false,
+    val getSingleSellOrderPageErrorMessage:String = "",
+
+    val isCancelSellOrderButtonLoading: Boolean = false,
+    val isCancelSellOrderSuccess:Boolean = false,
+    val isCancelSellOrderError:Boolean = false,
+    val cancelSellOrderErrorMessage:String = "",
+
 
 
     val isConfirmBuyOrderButtonLoading:Boolean = false,
@@ -45,9 +57,22 @@ data class TradeUIState(
     val isCreateOrderMessageButtonLoading:Boolean = false,
     val isCreateOrderMessageSuccess:Boolean = false,
     val isCreateOrderMessagesError:Boolean = false,
-    val createOrderMessageErrorMessage:String = ""
+    val createOrderMessageErrorMessage:String = "",
 
 
+    val isGetPaymentMethodLoading:Boolean= false,
+    val isGetPaymentMethodsSuccess:Boolean = false,
+    val isGetPaymentMethodsError:Boolean = false,
+    val getPyamentMethodsErrorMessage:String = "",
 
+    val isAddPaymentMethodLoading:Boolean= false,
+    val isAddPaymentMethodsSuccess:Boolean = false,
+    val isAddPaymentMethodsError:Boolean = false,
+    val addPyamentMethodsErrorMessage:String = "",
+
+    val isDeletePaymentMethodButtonLoading:Boolean = false,
+    val isDeletePaymentMethodSuccess:Boolean=false,
+    val isDeletePaymentMethodError:Boolean= false,
+    val deletePaymentMethodErrorMessage:String=""
 
 )

@@ -30,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +40,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.NavDeepLinkRequest
 import com.amorgens.NavScreen
@@ -56,14 +60,31 @@ fun SingleWalletScreen(
     navController: NavController,
     walletViewModel: WalletViewModel
 ){
+    val lifecycleOwner = LocalLifecycleOwner.current
+    // clear model data
+    DisposableEffect(true) {
+        //walletViewModel.clearModelData()
+
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                walletViewModel.getWalletRemote(GetWalletReq(address))
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            walletViewModel.clearModelData()
+        }
+    }
     // reset all ui data
     LaunchedEffect(true) {
+        // clear state data
        walletViewModel.resetUIState()
     }
     // get single wallet from remote server
-    LaunchedEffect(true){
-        walletViewModel.getWalletRemote(GetWalletReq(address))
-    }
+//    LaunchedEffect(true){
+//        walletViewModel.getWalletRemote(GetWalletReq(address))
+//    }
     val singleWallet = walletViewModel.singleWalletC.collectAsState().value
     val uiState = walletViewModel.walletUIState.collectAsState().value
 
@@ -181,10 +202,10 @@ fun SingleWalletScreen(
                                 navController.navigate(NavScreen.TransferScreen.route+"/${address}")
                             }
                             "Buy"->{
-                                navController.navigate(NavScreen.ShopCoinsScreen.route)
+                                navController.navigate(NavScreen.ShopCoinsScreen.route+"/${address}")
                             }
                             "Sell"->{
-                                navController.navigate(NavScreen.CreateSellOrderScreen.route)
+                                navController.navigate(NavScreen.CreateSellOrderScreen.route+"/"+address)
                             }
                             "Copy"->{}
                         }

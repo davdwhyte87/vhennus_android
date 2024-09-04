@@ -29,3 +29,4 @@ data class SingleBuyOrdersResp(
     val message: String,
     val data:BuyOrder
 )
+

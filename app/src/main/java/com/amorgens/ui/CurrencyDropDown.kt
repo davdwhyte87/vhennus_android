@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
@@ -45,7 +46,7 @@ fun currencyDropDown(title:String){
                     contentDescription = ""
                 )
                 Text(
-                    text = "USD",
+                    text = "NGN",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.surface
                 )
@@ -55,12 +56,10 @@ fun currencyDropDown(title:String){
         DropdownMenu(
             expanded = isExpanded.value,
             onDismissRequest = { isExpanded.value = false }) {
-            DropdownMenuItem(text = { Text(text = "USD") }, onClick = {
-
-            })
             DropdownMenuItem(text = { Text(text = "NGN") }, onClick = {
 
             })
+
         }
     }
 }

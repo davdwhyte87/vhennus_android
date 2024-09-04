@@ -10,13 +10,11 @@ import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.ChatBubble
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -28,7 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import com.amorgens.NavScreen
+import com.amorgens.feed.data.FeedViewModel
 import com.amorgens.feed.presentation.FeedScreen
 import com.amorgens.home.presentation.components.BottomNavItem
 import com.amorgens.menu.presentation.MenuScreen
@@ -37,7 +35,7 @@ import com.amorgens.ui.theme.Purple
 // home screen will have buttom navigation and will contains four screens
 
 @Composable
-fun HomeScreen(navController: NavController){
+fun HomeScreen(navController: NavController, feedViewModel: FeedViewModel){
     var selectedTabIndex by remember {
         mutableIntStateOf(0)
     }
@@ -93,7 +91,7 @@ fun HomeScreen(navController: NavController){
             .fillMaxWidth()
             .weight(1f)) {
             if(it == 0){
-                FeedScreen()
+                FeedScreen(navController, feedViewModel)
             }
             if(it == 1){
 

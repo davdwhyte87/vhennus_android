@@ -21,12 +21,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.amorgens.NavScreen
 import com.amorgens.trade.data.OrderViewModel
@@ -46,20 +50,35 @@ fun myOrdersScreen(
     navController: NavController,
     ordersViewModel: OrderViewModel
 ){
-    // clear ui data
-    ordersViewModel.resetSuccessAndError()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(true) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                ordersViewModel.getMySellOrders()
+                ordersViewModel.getMyBuyOrders()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            ordersViewModel.clearModelData()
+        }
+    }
+
+    val sellOrders =ordersViewModel.mySellOrder.collectAsState()
+    val buyOrders = ordersViewModel.myBuyOrders.collectAsState()
+
 
     val context = LocalContext.current
     val tradeStateUI = ordersViewModel.tradeUIState.collectAsState()
 
-    if(tradeStateUI.value.isError){
-        Toast.makeText(LocalContext.current, tradeStateUI.value.errorMessage, Toast.LENGTH_SHORT).show()
-        ordersViewModel.resetSuccessAndError()
-    }
-//    if (tradeStateUI.value.isSuccess){
-//        //Toast.makeText(LocalContext.current, , Toast.LENGTH_SHORT).show()
+//    if(tradeStateUI.value.isError){
+//        Toast.makeText(LocalContext.current, tradeStateUI.value.errorMessage, Toast.LENGTH_SHORT).show()
 //        ordersViewModel.resetSuccessAndError()
 //    }
+
+
     GeneralScaffold(topBar = { BackTopBar(pageName = "My Orders", navController ) }, floatingActionButton = { /*TODO*/ }) {
         val scrollState = rememberScrollState()
         Column(
@@ -71,13 +90,6 @@ fun myOrdersScreen(
             )
 
 
-            LaunchedEffect(true) {
-                //ordersViewModel.login()
-                ordersViewModel.getMySellOrders()
-                ordersViewModel.getMyBuyOrders()
-            }
-            val sellOrders =ordersViewModel.mySellOrder.collectAsState()
-            val buyOrders = ordersViewModel.myBuyOrders.collectAsState()
             mySellOrdersList(navController, sellOrders.value, ordersViewModel)
             Text(text = "Buy Orders",
                 style = MaterialTheme.typography.titleLarge,
@@ -98,7 +110,7 @@ fun mySellOrdersList(
     ordersViewModel: OrderViewModel
 ){
     val items = listOf(1, 2)
-    if(sellOrders.count() >1){
+    if(sellOrders.isNotEmpty()){
         sellOrders.forEachIndexed { index,   i ->
             mySellOrderListItem(navController, i, ordersViewModel)
         }
@@ -174,7 +186,7 @@ fun myBuyOrdersList(
     ordersViewModel: OrderViewModel
 ){
     val items = listOf(1, 2)
-    if (buyOrders.count() >=1) {
+    if (buyOrders.isNotEmpty()) {
         buyOrders.forEachIndexed { index, buyOrder ->
 
             myBuyOrderListItem(navController, buyOrder, ordersViewModel)

@@ -57,4 +57,37 @@ sealed class NavScreen(
         route = "my_orders",
         title = "My Orders"
     )
+
+    object PreLoginScreen:NavScreen(
+        route = "pre_login",
+        title = "Pre Login"
+    )
+
+    object LoginScreen:NavScreen(
+        route = "login",
+        title = "Login"
+    )
+    object SignupScreen:NavScreen(
+        route = "signup",
+        title = "Signup"
+    )
+    object LogoutScreen:NavScreen(
+        route = "logout",
+        title = "Logout"
+    )
+
+    object MyPaymentMethodsScreen:NavScreen(
+        route = "my_payment_method",
+        title = "My Payment Method"
+    )
+
+    object CreatePaymentMethodScreen:NavScreen(
+        route = "create_payment_method",
+        title = "Create Payment Method"
+    )
+
+    object CreatePostScreen:NavScreen(
+        route = "create_post",
+        title = "Create Post"
+    )
 }

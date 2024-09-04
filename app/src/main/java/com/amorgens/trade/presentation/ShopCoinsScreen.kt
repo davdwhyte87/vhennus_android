@@ -17,12 +17,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.amorgens.trade.data.OrderViewModel
 import com.amorgens.ui.AnimatedPreloader
@@ -30,21 +35,38 @@ import com.amorgens.ui.BackTopBar
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
 import com.amorgens.wallet.domain.CreateWalletReq
+import com.amorgens.wallet.presentation.getExchangeValue
+import java.math.BigDecimal
 
 
 @Composable
 fun ShopCoinsScreen(
     navController: NavController,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    address:String
 ){
+    val lifecycleOwner = LocalLifecycleOwner.current
+    // clear model data
+    DisposableEffect(true) {
+       // orderViewModel.clearModelData()
+
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                orderViewModel.getOpenOrders()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            orderViewModel.clearModelData()
+        }
+    }
 
     val amount = remember {
         mutableStateOf("")
     }
 
-    LaunchedEffect(true) {
-        orderViewModel.getOpenOrders()
-    }
+
 
     val openOrders = orderViewModel.openSellOrders.collectAsState()
 
@@ -64,7 +86,8 @@ fun ShopCoinsScreen(
                     .fillMaxWidth()
                     .padding(end = 16.dp)
             )
-            Text(text = "21,000 NGN")
+            Text(text = "1 Vhenncoin =="+getExchangeValue(LocalContext.current, BigDecimal("1"))+ "NGN")
+
 
             // button
             Button(onClick = {
@@ -80,7 +103,7 @@ fun ShopCoinsScreen(
 
             // sell order list
 
-            sellOrderList(navController, openOrders.value, orderViewModel)
+            sellOrderList(navController, openOrders.value, orderViewModel, address)
 
         }
     }

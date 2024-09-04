@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -34,6 +35,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.amorgens.trade.data.OrderViewModel
 import com.amorgens.trade.domain.BuyOrder
@@ -53,7 +57,30 @@ fun singleOrderScreen(
     orderViewModel: OrderViewModel,
     id: String
 ){
-    orderViewModel.resetSingleOrderScreenState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val tradeStateUI = orderViewModel.tradeUIState.collectAsState()
+    val singleBuyOrder = orderViewModel.singleBuyOrder.collectAsState()
+    val userName = orderViewModel.userName.collectAsState()
+    val singleSellOrder = orderViewModel.singleSellOrder.collectAsState()
+    val messages = orderViewModel.orderMessages.collectAsState()
+
+    DisposableEffect(true) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                orderViewModel.getSingleBuyOrder(id)
+                orderViewModel.getOrderMessages(id)
+                orderViewModel.getUserName()
+                Log.d("XXX SINGLE SELL ORDER ID", singleBuyOrder.value.sell_order_id)
+                orderViewModel.getSingleSellOrders(singleBuyOrder.value.sell_order_id)
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            orderViewModel.clearModelData()
+        }
+    }
+
     val isExpanded = remember {
         mutableStateOf(false)
     }
@@ -64,25 +91,11 @@ fun singleOrderScreen(
     }
 
 
-    LaunchedEffect(true) {
-        // get buy order
-        orderViewModel.getSingleBuyOrder(id)
-        orderViewModel.resetSuccessAndError()
-        orderViewModel.getOrderMessages(id)
-        orderViewModel.getUserName()
-
-    }
-    val tradeStateUI = orderViewModel.tradeUIState.collectAsState()
-    val singleBuyOrder = orderViewModel.singleBuyOrder.collectAsState()
-    val userName = orderViewModel.userName.collectAsState()
-    val singleSellOrder = orderViewModel.singleSellOrder.collectAsState()
-    val messages = orderViewModel.orderMessages.collectAsState()
 
 
-    // get the sell order
-    LaunchedEffect(singleBuyOrder.value.id) {
-        orderViewModel.getSingleSellOrders(singleBuyOrder.value.sell_order_id)
-    }
+
+
+
     if(tradeStateUI.value.isConfirmBuyOrderError){
         Toast.makeText(LocalContext.current, tradeStateUI.value.confirmBuyOrderErrorMessage, Toast.LENGTH_SHORT).show()
         orderViewModel.resetSingleOrderScreenState()

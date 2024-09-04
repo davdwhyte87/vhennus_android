@@ -1,5 +1,6 @@
 package com.amorgens.wallet.data
 
+import com.amorgens.BuildConfig
 import java.net.Socket
 import java.util.Scanner
 
@@ -7,7 +8,8 @@ class WalletService {
 
     // send data to network via TCP
     suspend fun sendData(message:String ):String{
-        val address = "10.0.2.2:100"
+        val address = BuildConfig.BLOCKCHAIN_URL
+
         // split ip string
         val ipData = address.split(":")
         val host = ipData.get(0)

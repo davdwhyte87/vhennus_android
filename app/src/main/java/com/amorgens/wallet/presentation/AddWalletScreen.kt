@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -41,23 +42,32 @@ import com.amorgens.wallet.domain.GetWalletReq
 
 @Composable
 fun AddWalletScreen(navController: NavController, walletViewModel: WalletViewModel){
+    // clear model data
+    DisposableEffect(true) {
+        //walletViewModel.clearModelData()
+        onDispose {
+            walletViewModel.clearModelData()
+        }
+    }
     val walletUIState = walletViewModel.walletUIState.collectAsState()
 
+    //navController.popBackStack()
     // navigate back to previous screen after crating wallet and reset the navigate screen switch
-    if(walletUIState.value.isAddWalletDone){
-        navController.popBackStack()
-        walletViewModel.updateIsAddWalletDone(false)
+    if(walletUIState.value.isAddWalletSuccess){
+
     }
+    val context = LocalContext.current
 
     // show toast for success and error
-    if (walletUIState.value.isSuccess){
-        Toast.makeText(LocalContext.current, walletUIState.value.successMessage, Toast.LENGTH_SHORT).show()
-        walletViewModel.clearSuccess()
+    LaunchedEffect(walletUIState.value.isAddWalletSuccess) {
+        if (walletUIState.value.isAddWalletSuccess){
+            Toast.makeText(context, "Wallet Added Successfully", Toast.LENGTH_SHORT).show()
+            navController.popBackStack()
+        }
     }
-    if (walletUIState.value.isError){
-        Log.d("XXXXX GOT ERROR", "YEt")
-        Toast.makeText(LocalContext.current,walletUIState.value.errorMessage, Toast.LENGTH_SHORT).show()
-        walletViewModel.clearError()
+
+    if (walletUIState.value.isAddWalletError){
+        Toast.makeText(LocalContext.current,walletUIState.value.addWalletErrorMessage, Toast.LENGTH_SHORT).show()
     }
     val walletAddress = remember {
         mutableStateOf("")
@@ -103,7 +113,6 @@ fun AddWalletScreen(navController: NavController, walletViewModel: WalletViewMod
                     )
 
                     Button(onClick = {
-                        walletViewModel.updateIsAddWalletButtonLoading(true)
                         val getWalletreq = GetWalletReq(address = walletAddress.value)
                         walletViewModel.addWallet(getWalletreq)
                     },

@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.amorgens.NavScreen
 import com.amorgens.trade.data.OrderViewModel
@@ -55,17 +59,43 @@ fun singleSellOrderScreen(
     orderViewModel: OrderViewModel,
     id:String
 ){
+    val lifecycleOwner = LocalLifecycleOwner.current
+    // clear model data
+    DisposableEffect(true) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                orderViewModel.getSingleSellOrders(id)
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            orderViewModel.clearModelData()
+        }
+    }
     // clear UI data
     orderViewModel.resetSuccessAndError()
     val isCancelButtonEnabled = remember { mutableStateOf(true) }
-    LaunchedEffect(true) {
-        orderViewModel.getSingleSellOrders(id)
-    }
+//    LaunchedEffect(true) {
+//        orderViewModel.getSingleSellOrders(id)
+//    }
     val tradeStateUI = orderViewModel.tradeUIState.collectAsState()
-    if(tradeStateUI.value.isError){
-        Toast.makeText(LocalContext.current, tradeStateUI.value.errorMessage, Toast.LENGTH_SHORT).show()
+    if(tradeStateUI.value.isGetSingleSellOrderPageError){
+        Toast.makeText(LocalContext.current, tradeStateUI.value.getSingleSellOrderPageErrorMessage, Toast.LENGTH_SHORT).show()
         orderViewModel.resetSuccessAndError()
     }
+
+    if(tradeStateUI.value.isCancelSellOrderError){
+        Toast.makeText(LocalContext.current, tradeStateUI.value.cancelSellOrderErrorMessage, Toast.LENGTH_SHORT).show()
+        orderViewModel.resetSingleSellOrderScreenUI()
+    }
+
+    if (tradeStateUI.value.isCancelSellOrderSuccess){
+        Toast.makeText(LocalContext.current, "Order Cancelled", Toast.LENGTH_SHORT).show()
+        orderViewModel.getSingleSellOrders(id)
+        orderViewModel.resetSingleSellOrderScreenUI()
+    }
+
 //    if(tradeStateUI.value.isSuccess){
 //        Toast.makeText(LocalContext.current, "Ok", Toast.LENGTH_SHORT).show()
 //        orderViewModel.resetSuccessAndError()
@@ -129,14 +159,14 @@ fun singleSellOrderScreen(
                 Button(
                     onClick = {
                         orderViewModel.cancelSellOrder(id)
-                        isCancelButtonEnabled.value= false
+                        //isCancelButtonEnabled.value= false
                               },
                     colors = ButtonDefaults.buttonColors(containerColor = Red),
-                    enabled = isCancelButtonEnabled.value
+                    enabled = !singleSellOrder.value.is_closed
                 ) {
 
 
-                    if(tradeStateUI.value.isLoading){
+                    if(tradeStateUI.value.isCancelSellOrderButtonLoading){
                         AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
                     }else {
                         Text(text = "Cancel",

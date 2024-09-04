@@ -8,7 +8,10 @@ data class CreateSellOrderReq(
     //val max_amount:BigDecimal,
     val currency:Currency,
     val payment_method:PaymentMethod,
-    val payment_method_id:String
+    val payment_method_id:String,
+    val wallet_address:String,
+    val phone_number:String,
+    val password:String
 )
 
 enum class Currency{

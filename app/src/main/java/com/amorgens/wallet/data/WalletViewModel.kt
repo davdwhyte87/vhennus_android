@@ -1,5 +1,7 @@
 package com.amorgens.wallet.data
 
+import android.app.Application
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,72 +33,42 @@ import javax.inject.Inject
 @HiltViewModel
 class WalletViewModel @Inject constructor(
     private val walletService: WalletService,
-    private val walletRepository: WalletRepository
+    private val walletRepository: WalletRepository,
+    private val application: Application
 ) : ViewModel(){
-    val defaultSingleWallet = Wallet(
-        "",
-        "",
-        "",
-        "0.00"
-    )
-    val _singleWallet = MutableStateFlow(defaultSingleWallet)
+    val defaultSingleWallet = Wallet()
+
+    private val _singleWallet = MutableStateFlow(defaultSingleWallet)
     val singleWallet = _singleWallet.asStateFlow()
-    val _singleWalletC = MutableStateFlow(WalletC(
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        false,
-        Chain(listOf(
-            Block(
-            "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                BigDecimal("0.0"),
-                "", BigDecimal("0.00"),
-                "",
-            ))),
-    ))
+
+    private val _singleWalletC = MutableStateFlow(WalletC())
     val singleWalletC = _singleWalletC.asStateFlow()
+
     private val _allWallets = MutableStateFlow(listOf(defaultSingleWallet))
     val allWallets = _allWallets.asStateFlow()
 
-    val defaultUIState = WalletUIState(
-        isCreateWalletButtonLoading = false,
-        isError = false,
-        isCreateWalletDone = false,
-        createWalletScreenNavigateBack = false,
-        createWalletSuccess = false,
-        createWalletError = false,
-        createWalletErrorMessage = "",
-        createWalletSuccessMessage = "",
-        isSuccess = false,
-        errorMessage = "",
-        successMessage = "",
-        isAddWalletButtonLoading = false,
-        isAddWalletDone = false,
-        isSingleWalletPageLoading = false,
-        isTransferButtonLoading = false,
-        isSyncingLocalWallet = false
-    )
+    private val _userName = MutableStateFlow("")
+    val userName = _userName.asStateFlow()
+
+    val defaultUIState = WalletUIState()
     val _walletUIState = MutableStateFlow(defaultUIState)
     val walletUIState = _walletUIState.asStateFlow()
 
 
 
+    fun clearModelData(){
+        _walletUIState.value = WalletUIState()
+        _singleWalletC.value = WalletC()
+        _allWallets.value = emptyList()
+        _singleWallet.value = Wallet()
+
+    }
 
 
     fun updateSingleWallet(wallet:Wallet){
         _singleWallet.value = wallet
     }
     fun createWallet(createWalletRequest:CreateWalletReq){
-
         val gson= Gson()
         val reqString = gson.toJson(createWalletRequest)
         val message = formatter("CreateWallet", reqString)
@@ -114,7 +86,7 @@ class WalletViewModel @Inject constructor(
                         _walletUIState.update { it.copy(createWalletError = false, createWalletErrorMessage = "" )}
                         // add wallet locally
                         // save wallet data to database
-                        val wallet = Wallet("",createWalletRequest.wallet_name,createWalletRequest.address, BigDecimal("0.0").toString())
+                        val wallet = Wallet("",createWalletRequest.wallet_name,createWalletRequest.address, BigDecimal("0.0"), getUserName(application))
                         walletRepository.insertWallet(wallet)
 
                     }else{
@@ -153,7 +125,7 @@ class WalletViewModel @Inject constructor(
                         _walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
 
                         // save wallet data to database
-                        val wallet = Wallet(UUID.randomUUID().toString(),getWalletReq.address, getWalletReq.address, respPack[2])
+                        val wallet = Wallet(UUID.randomUUID().toString(),getWalletReq.address, getWalletReq.address,BigDecimal(respPack[2]),getUserName(application) )
                         walletRepository.insertWallet(wallet)
 
                         // trigger back navigation
@@ -176,20 +148,28 @@ class WalletViewModel @Inject constructor(
         }
     }
 
+    fun getUserName(application:Context):String{
+        val mshared = application.getSharedPreferences("user_data", Context.MODE_PRIVATE)
+        _userName.value = mshared.getString("user_name","").toString()
+        return  _userName.value
+    }
+
     fun addWallet(getWalletReq:GetWalletReq){
         val gson= Gson()
         val reqString = gson.toJson(getWalletReq)
         val message = formatter("GetWalletData", reqString)
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
+                _walletUIState.update { it.copy(isAddWalletButtonLoading = true) }
                 try{
                     val resp = walletService.sendData(message)
                     val respPack = resp.split("\n")
                     Log.d("XXX RESPONSE", resp)
                     if(respPack[0] == "1"){
                         // success
-                        _walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
-                        clearError()
+
+//                        _walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
+//                        clearError()
                         // convert response data to object
                         val walletC = gson.fromJson(respPack[2], WalletC::class.java)
                         Log.d("Converted OBJ XXX", walletC.toString())
@@ -198,21 +178,39 @@ class WalletViewModel @Inject constructor(
                         //_singleWalletC.value = walletC
                         // trigger back navigation
                         // save wallet data to database
-                        val wallet = Wallet(walletC.id,walletC.address, getWalletReq.address, walletC.chain.chain.last().balance.toString())
+                        val wallet = Wallet(walletC.id,walletC.address, getWalletReq.address, walletC.chain.chain.last().balance, getUserName(application))
                         walletRepository.insertWallet(wallet)
 
-                        // trigger back navigation
-                        updateIsAddWalletDone(true)
-
+                        // update ui state
+                        _walletUIState.update { it.copy(
+                            isAddWalletButtonLoading = false,
+                            isAddWalletSuccess = true,
+                            isAddWalletError = false,
+                            isAddWalletDone = true,
+                            addWalletErrorMessage = ""
+                        ) }
                     }else{
+
                         // error
-                        _walletUIState.update { it.copy(isError = true, errorMessage = respPack.get(1)) }
-                        clearSuccess()
+                        _walletUIState.update { it.copy(
+                            isAddWalletButtonLoading = false,
+                            isAddWalletSuccess = false,
+                            isAddWalletError = true,
+                            isAddWalletDone = false,
+                            addWalletErrorMessage =  respPack.get(1)
+                        ) }
+                        Log.d("GET WALLET ERROR ", respPack.get(1) )
+
                     }
                 }catch (exception:Exception){
                     Log.d("XXX Yola", exception.toString())
-                    _walletUIState.update { it.copy(isError = true, errorMessage ="Network Error") }
-                    clearSuccess()
+                    _walletUIState.update { it.copy(
+                        isAddWalletButtonLoading = false,
+                        isAddWalletSuccess = false,
+                        isAddWalletError = true,
+                        isAddWalletDone = false,
+                        addWalletErrorMessage =  exception.toString()
+                    ) }
                 }
             }
         }
@@ -246,7 +244,7 @@ class WalletViewModel @Inject constructor(
 
 
                         // update wallet data locally
-                        val wallet = Wallet(walletC.id,walletC.address, getWalletReq.address, walletC.chain.chain.last().balance.toString())
+                        val wallet = Wallet(walletC.id,walletC.address, getWalletReq.address, walletC.chain.chain.last().balance, getUserName(application))
                         walletRepository.updateWallet(wallet)
 
                         // trigger back navigation
@@ -338,7 +336,7 @@ class WalletViewModel @Inject constructor(
                             Log.d("Converted OBJ XXX", walletC.toString())
 
                             // update wallet data locally
-                            val wallet = Wallet(walletC.id,walletC.address, address, walletC.chain.chain.last().balance.toString())
+                            val wallet = Wallet(walletC.id,walletC.address, address, walletC.chain.chain.last().balance, getUserName(application))
                             walletRepository.updateWallet(wallet)
 
                         }else{
@@ -366,15 +364,22 @@ class WalletViewModel @Inject constructor(
     }
 
 
-    // get all wallets in local db
+    // get all wallets in local db for the logged in user
     fun getAllWallets(){
         viewModelScope.launch {
             withContext(Dispatchers.IO){
-               _allWallets.value= walletRepository.getAllWallets().first()
+                try {
+                    _allWallets.value= walletRepository.getAllWallets2(getUserName(application)).first()
+                }catch (e:Exception){
+
+                    Log.d("GET ALL WALLETS ERROR", e.toString())
+                }
+
             }
         }
     }
 
+    // amara101_sigil
     fun updateUIStateData(data:WalletUIState){
         _walletUIState.value = data
     }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +45,11 @@ fun MenuScreen(navController: NavController){
                     title = "Music",
                     route = "music",
                     icon = Icons.Outlined.Headphones
+                ),
+                MenuItemData(
+                    title = "Logout",
+                    route = "logout",
+                    icon = Icons.Outlined.Close
                 )
             )
            LazyVerticalGrid(
