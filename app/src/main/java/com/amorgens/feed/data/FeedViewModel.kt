@@ -2,6 +2,7 @@ package com.amorgens.feed.data
 
 import android.app.Application
 import android.util.Log
+import androidx.compose.ui.util.trace
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amorgens.feed.domain.CreatePostReq
@@ -9,11 +10,14 @@ import com.amorgens.feed.domain.FeedUIState
 import com.amorgens.feed.domain.Post
 import com.amorgens.general.data.APIService
 import com.amorgens.general.data.GetUserToken
+import com.amorgens.general.domain.SystemData
+import com.amorgens.general.utils.CLog
 import com.amorgens.trade.domain.response.GenericResp
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -38,9 +42,42 @@ class  FeedViewModel @Inject constructor(
     private val _feedUIState = MutableStateFlow(FeedUIState())
     val feedUIState= _feedUIState.asStateFlow()
 
+    private val _systemData = MutableStateFlow(SystemData())
+    val systemData = _systemData.asStateFlow()
+
 
     fun clearModelData(){
         _feedUIState.value = FeedUIState()
+    }
+
+    fun getSystemData(){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                try{
+
+                    val resp = apiService.getSystemData()
+                    if (resp.isSuccessful){
+                        val systemData = resp.body()?.data
+                        if (systemData == null){
+                            CLog.error("ERROR GETTING SYSTEM DATA", " Did not get any data")
+                            return@withContext
+                        }
+                        _systemData.value = systemData
+                    }else{
+                        val errData = resp.errorBody()?.string()
+                        CLog.error("ERROR GETTING SYSTEM DATA", resp.code().toString()+"err data")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(errData, genericType)
+                        CLog.error("ERROR GETTING SYSTEM DATA", errorResp.message)
+
+                    }
+                }catch (e:Exception){
+                    CLog.error("ERROR GETTING SYSTEM DATA", e.toString())
+                }
+
+            }
+        }
     }
 
     fun success(){
@@ -60,10 +97,10 @@ class  FeedViewModel @Inject constructor(
                     ) }
                     return@withContext
                 }
-                Log.d("XXX TOKEN", token)
+                CLog.error("XXX TOKEN", token)
                 try {
                     val resp = apiService.createPost(post, mapOf("Authorization" to token))
-                    Log.d("CREATE POST ",resp.body().toString())
+                    CLog.error("CREATE POST ",resp.body().toString())
                     if (resp.isSuccessful){
                         val newPost = resp.body()?.data
                         if (newPost != null){
@@ -87,7 +124,7 @@ class  FeedViewModel @Inject constructor(
                             isCreatePostSuccess = false,
                             createPostErrorMessage = errorResp.message
                         ) }
-                        Log.d("XX ERROR CREATING POST ", errorResp.server_message+"")
+                        CLog.error("XX ERROR CREATING POST ", errorResp.server_message+"")
                     }
 
 
@@ -98,7 +135,7 @@ class  FeedViewModel @Inject constructor(
                         isCreatePostSuccess = false,
                         createPostErrorMessage = e.toString()
                     ) }
-                   Log.d("XX ERROR CREATING POST ", e.toString())
+                   CLog.error("XX ERROR CREATING POST ", e.toString())
                 }
 
             }
@@ -133,7 +170,7 @@ class  FeedViewModel @Inject constructor(
                             getFeedErrorMessage = ""
                         ) }
                     }else{
-                        //Log.d("XX ERROR CREATING POST ", resp.errorBody()?.string() +"")
+                        //CLog.error("XX ERROR CREATING POST ", resp.errorBody()?.string() +"")
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<String>>() {}.type
                         val errorResp: GenericResp<String> = gson.fromJson(resp.errorBody()?.string() , genericType)
@@ -143,7 +180,7 @@ class  FeedViewModel @Inject constructor(
                             isFeedLoadingSuccess  = false,
                             getFeedErrorMessage = errorResp.message
                         ) }
-                        Log.d("XX ERROR CREATING POST ", errorResp.server_message+"")
+                        CLog.error("XX ERROR CREATING POST ", errorResp.server_message+"")
                     }
 
 
@@ -154,7 +191,7 @@ class  FeedViewModel @Inject constructor(
                         isFeedLoadingSuccess  = false,
                         getFeedErrorMessage = e.toString()
                     ) }
-                    Log.d("XX ERROR CREATING POST ", e.toString())
+                    CLog.error("XX ERROR CREATING POST ", e.toString())
                 }
 
             }

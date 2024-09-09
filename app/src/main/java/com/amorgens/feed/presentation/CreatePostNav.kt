@@ -36,8 +36,8 @@ fun createPostNav(
 ){
     val feedUIState = feedViewModel.feedUIState.collectAsState()
 
-    if(feedUIState.value.isCreatePostError){
-        navController.popBackStack()
+    if(feedUIState.value.isCreatePostSuccess){
+        navController.navigateUp()
     }
 
     CenterAlignedTopAppBar(
@@ -46,16 +46,16 @@ fun createPostNav(
             Text(text = "Cancel",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable (onClick = {navController.popBackStack()})
+                modifier = Modifier.clickable (onClick = {navController.navigateUp()})
             )
         },
         actions = {
             Button(onClick = {
                 onClick()
-                navController.popBackStack()
+                //navController.popBackStack()
             }) {
                 if(feedUIState.value.isCreatePostLoading){
-                    AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
+                    AnimatedPreloader(modifier = Modifier.size(size = 30.dp), MaterialTheme.colorScheme.surface)
                 }else {
                     Text(text = "Post", style = MaterialTheme.typography.titleLarge)
                 }

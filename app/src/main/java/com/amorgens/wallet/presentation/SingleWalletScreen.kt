@@ -1,5 +1,6 @@
 package com.amorgens.wallet.presentation
 
+import android.content.ClipboardManager
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -38,7 +39,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -96,6 +99,8 @@ fun SingleWalletScreen(
         //walletViewModel.clearError()
     }
 
+    val clipboardManager: androidx.compose.ui.platform.ClipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
     GeneralScaffold(topBar = { BackTopBar("Wallet", navController) }, floatingActionButton = {  }) {
         var isExpanded = remember {
             mutableStateOf(false)
@@ -207,7 +212,10 @@ fun SingleWalletScreen(
                             "Sell"->{
                                 navController.navigate(NavScreen.CreateSellOrderScreen.route+"/"+address)
                             }
-                            "Copy"->{}
+                            "Copy"->{
+                                clipboardManager.setText(AnnotatedString(address))
+                                Toast.makeText(context, "Address Copied!", Toast.LENGTH_SHORT).show()
+                            }
                         }
 
                     }

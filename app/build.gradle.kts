@@ -22,7 +22,6 @@ android {
             dimension = "environment"
             // Additional configurations for this flavor
             applicationIdSuffix = ".dev"
-            versionNameSuffix = "-dev"
             buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
             buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.224.183:3000\"")
 
@@ -144,6 +143,9 @@ dependencies {
 
     // crypto shared
     implementation ("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // sentry
+    implementation (libs.sentry.android)
 
 }
 

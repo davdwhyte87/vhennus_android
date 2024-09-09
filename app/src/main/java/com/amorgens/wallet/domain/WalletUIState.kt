@@ -15,11 +15,15 @@ data class WalletUIState (
 
     val isAddWalletDone:Boolean = false,
     val isSingleWalletPageLoading: Boolean = false,
-    val isTransferButtonLoading:Boolean = false,
     val isSyncingLocalWallet:Boolean = false,
 
     val isAddWalletButtonLoading:Boolean = false,
     val isAddWalletSuccess:Boolean = false,
     val isAddWalletError:Boolean = false,
-    val addWalletErrorMessage:String=""
+    val addWalletErrorMessage:String="",
+
+    val isTransferSuccessful:Boolean = false,
+    val isTransferError:Boolean = false,
+    val isTransferButtonLoading:Boolean = false,
+    val transferErrorMessage:String = " "
 )

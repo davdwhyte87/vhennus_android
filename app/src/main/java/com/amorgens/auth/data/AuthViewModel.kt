@@ -110,7 +110,8 @@ class AuthViewModel  @Inject constructor(
                         ) }
                         // save token to local
                         loginMani(resp.body()?.data ?: "")
-
+                        // save username to device
+                        saveUserName(data.user_name)
                         Log.d("LOGIN RESP", resp.body().toString())
 
                     }else{
@@ -208,6 +209,20 @@ class AuthViewModel  @Inject constructor(
         val editor = sharedPreferences.edit()
         editor.remove("auth_token")
         editor.apply()
+
+        // clear username
+        val mshared = application.getSharedPreferences("user_data", Context.MODE_PRIVATE)
+        val uNameeEdit = mshared.edit()
+        uNameeEdit.remove("user_name")
+        uNameeEdit.apply()
+    }
+
+
+    fun saveUserName(userName:String){
+        val mshared = application.getSharedPreferences("user_data", Context.MODE_PRIVATE)
+        val edit = mshared.edit()
+        edit.putString("user_name", userName)
+        edit.apply()
     }
 
     fun resetSignupUIState(){

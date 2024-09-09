@@ -37,16 +37,6 @@ fun MenuScreen(navController: NavController){
                     icon = Icons.Outlined.AccountBalanceWallet
                 ),
                 MenuItemData(
-                    title = "Shop Coins",
-                    route = NavScreen.ShopCoinsScreen.route,
-                    icon = Icons.Outlined.ShoppingCart
-                ),
-                MenuItemData(
-                    title = "Music",
-                    route = "music",
-                    icon = Icons.Outlined.Headphones
-                ),
-                MenuItemData(
                     title = "Logout",
                     route = "logout",
                     icon = Icons.Outlined.Close

@@ -5,6 +5,7 @@ import com.amorgens.auth.domain.LoginReq
 import com.amorgens.auth.domain.SignupReq
 import com.amorgens.feed.domain.CreatePostReq
 import com.amorgens.feed.domain.Post
+import com.amorgens.general.domain.SystemData
 import com.amorgens.trade.domain.BuyOrder
 import com.amorgens.trade.domain.OrderMessage
 import com.amorgens.trade.domain.PaymentMethodData
@@ -98,5 +99,10 @@ interface APIService {
 
     @GET("api/v1/auth/post/all")
     suspend fun getAllPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<Post>>>
+
+
+    // system data
+    @GET("get_system_data")
+    suspend fun getSystemData():Response<GenericResp<SystemData>>
 
 }

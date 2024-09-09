@@ -61,10 +61,6 @@ fun TransferScreen(
             walletViewModel.clearModelData()
         }
     }
-    // reset all ui data
-    LaunchedEffect(true) {
-        walletViewModel.resetUIState()
-    }
 
     val walletUIState = walletViewModel._walletUIState.collectAsState().value
 
@@ -79,14 +75,14 @@ fun TransferScreen(
     }
 
     // show toast for success and error
-    if (walletUIState.isSuccess){
-        Toast.makeText(LocalContext.current, walletUIState.successMessage, Toast.LENGTH_SHORT).show()
-        walletViewModel.clearSuccess()
+
+    if (walletUIState.isTransferSuccessful){
+        Toast.makeText(LocalContext.current, "OK!", Toast.LENGTH_SHORT).show()
+        walletViewModel.clearModelData()
     }
-    if (walletUIState.isError){
-        Log.d("XXXXX GOT ERROR", "YEt")
-        Toast.makeText(LocalContext.current,walletUIState.errorMessage, Toast.LENGTH_SHORT).show()
-        walletViewModel.clearError()
+    if (walletUIState.isTransferError){
+        Toast.makeText(LocalContext.current,walletUIState.transferErrorMessage, Toast.LENGTH_SHORT).show()
+        walletViewModel.clearModelData()
     }
     GeneralScaffold(topBar = { BackTopBar(pageName = "Transfer", navController = navController) }, floatingActionButton = { /*TODO*/ }) {
 
@@ -103,8 +99,7 @@ fun TransferScreen(
                 ) {
                     OutlinedTextField(value = amount.value,
                         onValueChange = {
-                            val r_amount = BigDecimal(it)
-                            amount.value = r_amount.toString()
+                            amount.value =it
                                         },
                         shape = RoundedCornerShape(20.dp),
                         placeholder = { Text(text = "Amount")},
@@ -153,10 +148,9 @@ fun TransferScreen(
                         if(walletUIState.isTransferButtonLoading){
                             AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
                         }else {
-                            Text(text = "Add")
+                            Text(text = "Transfer")
                             Icon(imageVector = Icons.Sharp.Rocket, contentDescription = "Send" )
                         }
-
                     }
                 }
             }

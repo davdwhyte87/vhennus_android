@@ -71,7 +71,7 @@ fun singleOrderScreen(
                 orderViewModel.getOrderMessages(id)
                 orderViewModel.getUserName()
                 Log.d("XXX SINGLE SELL ORDER ID", singleBuyOrder.value.sell_order_id)
-                orderViewModel.getSingleSellOrders(singleBuyOrder.value.sell_order_id)
+
             }
         }
 
@@ -104,12 +104,16 @@ fun singleOrderScreen(
 
     if(tradeStateUI.value.isCancelBuyOrderError){
         Toast.makeText(LocalContext.current, tradeStateUI.value.cancelBuyOrderError, Toast.LENGTH_SHORT).show()
-        orderViewModel.resetSingleOrderScreenState()
+
+    }
+
+    if(tradeStateUI.value.isCancelBuyOrderSuccess){
+        Toast.makeText(LocalContext.current, "Order Cancelled!", Toast.LENGTH_SHORT).show()
         orderViewModel.getSingleBuyOrder(id)
     }
 
     if(tradeStateUI.value.isConfirmBuyOrderSuccess){
-        Toast.makeText(LocalContext.current, "Order confirmed", Toast.LENGTH_SHORT).show()
+        Toast.makeText(LocalContext.current, "Order Confirmed", Toast.LENGTH_SHORT).show()
         orderViewModel.resetSingleOrderScreenState()
         orderViewModel.getSingleBuyOrder(id)
     }
@@ -150,13 +154,12 @@ fun singleOrderScreen(
                 // cancel button
                 if (userName.value == singleBuyOrder.value.user_name){
                     Button(onClick = {
-                        Log.d("CANCEL SELL ORDER ERROR", id.toString())
+                        Log.d("CANCEL BUY ORDER ID", id.toString())
                         orderViewModel.cancelBuyOrder(id)
                     },
-                        colors = ButtonDefaults.buttonColors(containerColor = Red)
+                        colors = ButtonDefaults.buttonColors(containerColor = Red),
+                        enabled = !singleBuyOrder.value.is_canceled
                     ) {
-
-
                         if(tradeStateUI.value.isCancelBuyOrderButtonLoading){
                             AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
                         }else {
@@ -165,7 +168,6 @@ fun singleOrderScreen(
                                 color = MaterialTheme.colorScheme.surface
                             )
                         }
-
                     }
                 }
 

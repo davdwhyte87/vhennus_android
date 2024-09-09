@@ -27,5 +27,6 @@ data class SellOrder(
     val updated_at:String= "",
     val payment_method: PaymentMethod= PaymentMethod.Bank,
     val payment_method_id:String= "",
-    val payment_method_data: PaymentMethodData? = PaymentMethodData()
+    val payment_method_data: PaymentMethodData? = PaymentMethodData(),
+    val wallet_address:String = ""
 )

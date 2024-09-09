@@ -119,9 +119,9 @@ fun createSellOrderScreen(
                     .padding(end = 16.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
-            Text(text = "21,000 NGN")
-
-            currencyDropDown(title = "Currency")
+//            Text(text = "21,000 NGN")
+//
+//            currencyDropDown(title = "Currency")
 
             OutlinedTextField(value = minAmount.value,
                 onValueChange = {

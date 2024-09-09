@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -47,6 +48,7 @@ import com.amorgens.R.*
 import com.amorgens.feed.data.FeedViewModel
 import com.amorgens.feed.domain.Post
 import com.amorgens.ui.GeneralScaffold
+import kotlin.random.Random
 
 
 @Composable
@@ -88,7 +90,7 @@ fun FeedScreen(
     LazyColumn (
       modifier = Modifier.fillMaxSize()
     ) {
-      items(posts.value){post->
+      items(posts.value.reversed()){post->
         com.amorgens.feed.presentation.post(post = post)
       }
     }
@@ -104,12 +106,21 @@ fun post(post:Post){
     horizontalArrangement = Arrangement.spacedBy(10.dp)
   ){
     // profile pic
-    val painter = painterResource(id = drawable.profile)
+
+    val images =listOf(
+      drawable.p1,
+      drawable.p2,
+      drawable.p3,
+      drawable.p4,
+      drawable.p5
+    )
+    val randomImage = images[Random.nextInt(images.size)]
+    val painter = painterResource(id = randomImage)
     Image(
       painter,
       contentDescription = null,
       modifier = Modifier
-        .size(50.dp)
+        .size(40.dp)
         .clip(CircleShape)
     )
     // actual post
@@ -119,7 +130,7 @@ fun post(post:Post){
     ){
       Text(text = post.user_name, style=MaterialTheme.typography.titleLarge)
       Text(text = post.created_at, style=MaterialTheme.typography.bodySmall)
-      Text(text = post.text, style=MaterialTheme.typography.bodyLarge)
+      Text(text = post.text, style=MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
 
       Row(
         modifier = Modifier.fillMaxWidth(),
@@ -133,8 +144,11 @@ fun post(post:Post){
             contentColor = MaterialTheme.colorScheme.secondary
           )
         ) {
-          Icon(imageVector = Icons.Outlined.ModeComment, contentDescription = "Comment")
-          Text(text = "12")
+          Icon(imageVector = Icons.Outlined.ModeComment,
+            contentDescription = "Comment",
+            modifier = Modifier.size(16.dp)
+          )
+          Text(text = "12", style=MaterialTheme.typography.bodySmall)
         }
         Button(onClick = {  },
           colors = ButtonDefaults.buttonColors(
@@ -142,8 +156,11 @@ fun post(post:Post){
             contentColor = MaterialTheme.colorScheme.secondary
           )
         ) {
-          Icon(imageVector = Icons.Sharp.FavoriteBorder, contentDescription = "Like")
-          Text(text = "300")
+          Icon(imageVector = Icons.Sharp.FavoriteBorder,
+            contentDescription = "Like",
+            modifier = Modifier.size(16.dp)
+          )
+          Text(text = "300", style=MaterialTheme.typography.bodySmall)
         }
         Button(onClick = {  },
           colors = ButtonDefaults.buttonColors(
@@ -151,18 +168,21 @@ fun post(post:Post){
             contentColor = MaterialTheme.colorScheme.secondary,
           )
         ) {
-          Icon(imageVector = Icons.Outlined.RemoveRedEye, contentDescription = "Seen")
-          Text(text = "2,399")
+          Icon(imageVector = Icons.Outlined.RemoveRedEye,
+            contentDescription = "Seen",
+            modifier = Modifier.size(16.dp)
+          )
+          Text(text = "2,399", style=MaterialTheme.typography.bodySmall)
         }
       }
     }
   }
-  Spacer(
-    modifier = Modifier
-      .height(0.3.dp) // Set the height of the line
-      .fillMaxWidth() // Make the line fill the width of its parent
-      .background(Color.Gray) // Set the color of the line
-  )
+//  Spacer(
+//    modifier = Modifier
+//      .height(0.3.dp) // Set the height of the line
+//      .fillMaxWidth() // Make the line fill the width of its parent
+//      .background(Color.Gray) // Set the color of the line
+//  )
 }
 
 fun keyIn(context: Context, userName:String, token:String){

@@ -9,6 +9,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.amorgens.general.data.APIService
 import com.amorgens.general.data.GetUserToken
+import com.amorgens.general.utils.CLog
 import com.amorgens.trade.domain.BuyOrder
 import com.amorgens.trade.domain.OrderMessage
 import com.amorgens.trade.domain.PaymentMethodData
@@ -84,9 +85,9 @@ class OrderViewModel @Inject constructor(
         viewModelScope.launch {
             try{
                 val resp = apiService.sayHello();
-                Log.d("RESP HELLO XXXX", resp.toString())
+                CLog.error("RESP HELLO XXXX", resp.toString())
             }catch (e: Exception){
-                Log.d("Exception XXXX", e.toString())
+                CLog.error("Exception XXXX", e.toString())
             }
 
         }
@@ -94,10 +95,10 @@ class OrderViewModel @Inject constructor(
 
     fun clearModelData(){
         _tradeUIState.value = TradeUIState()
-        _orderMessages.value = listOf(OrderMessage())
-        _openSellOrders.value = listOf(SellOrder())
+        _orderMessages.value = emptyList<OrderMessage>()
+        _openSellOrders.value = emptyList<SellOrder>()
         _singleBuyOrder.value = BuyOrder()
-        _myBuyOrders.value = listOf(BuyOrder())
+        _myBuyOrders.value = emptyList<BuyOrder>()
         _paymentMethodDatas.value = listOf(PaymentMethodData())
         _singleSellOrder.value = SellOrder()
         _mySellOrders.value = listOf(SellOrder())
@@ -135,7 +136,7 @@ class OrderViewModel @Inject constructor(
                     }
                     else{
                         val respString = resp.errorBody()?.string()
-                        Log.d("CREATE ORDER RESPONSE", respString +" ")
+                        CLog.error("CREATE ORDER RESPONSE", respString +" ")
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<String>>() {}.type
                         val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
@@ -144,14 +145,14 @@ class OrderViewModel @Inject constructor(
                             isCreateSellOrderError = true,
                             createSellOrderErrorMessage = errorResp.message
                         ) }
-                        Log.d("CREATE ORDER ERROR", errorResp.server_message+" ")
+                        CLog.error("CREATE ORDER ERROR", errorResp.server_message+" ")
                     }
                 }catch (e:Exception){
                     _tradeUIState.update { it.copy(isCreateSellOrderButtonLoading = false) }
                     _tradeUIState.update { it.copy(isCreateSellOrderSuccess = false,
                         isCreateSellOrderError = true, createSellOrderErrorMessage = "Network Error") }
 
-                    Log.d("CREATE ORDER ERROR", e.toString()+" ")
+                    CLog.error("CREATE ORDER ERROR", e.toString()+" ")
                 }
 
                 _tradeUIState.update { it.copy(isCreateSellOrderButtonLoading = false) }
@@ -198,7 +199,7 @@ class OrderViewModel @Inject constructor(
                             addPyamentMethodsErrorMessage = errorResp.message
                         ) }
 
-                        Log.d("ADD PAYMENT METHODS",errorResp.server_message +"" )
+                        CLog.error("ADD PAYMENT METHODS",errorResp.server_message +"" )
 
                     }
                 }catch (e:Exception){
@@ -210,7 +211,7 @@ class OrderViewModel @Inject constructor(
                         addPyamentMethodsErrorMessage = "Network error"
                     ) }
 
-                    Log.d("ADD PAYMENT METHODS",e.toString() )
+                    CLog.error("ADD PAYMENT METHODS",e.toString() )
                 }
 
                 _tradeUIState.update { it.copy(
@@ -253,7 +254,7 @@ class OrderViewModel @Inject constructor(
                             getPyamentMethodsErrorMessage = errorResp.message
                         ) }
 
-                        Log.d("GET PAYMENT METHODS",errorResp.server_message +"" )
+                        CLog.error("GET PAYMENT METHODS",errorResp.server_message +"" )
 
                     }
                 }catch (e:Exception){
@@ -265,7 +266,7 @@ class OrderViewModel @Inject constructor(
                         getPyamentMethodsErrorMessage = "Network error"
                     ) }
 
-                    Log.d("GET PAYMENT METHODS",e.toString() )
+                    CLog.error("GET PAYMENT METHODS",e.toString() )
                 }
             }
         }
@@ -305,7 +306,7 @@ class OrderViewModel @Inject constructor(
                             deletePaymentMethodErrorMessage=errorResp.message
                         ) }
 
-                        Log.d("DELETE PAYMENT METHODS",errorResp.server_message +"" )
+                        CLog.error("DELETE PAYMENT METHODS",errorResp.server_message +"" )
 
                     }
                 }catch (e:Exception){
@@ -317,7 +318,7 @@ class OrderViewModel @Inject constructor(
                         deletePaymentMethodErrorMessage="Network error"
                     ) }
 
-                    Log.d("DELETE PAYMENT METHODS",e.toString() )
+                    CLog.error("DELETE PAYMENT METHODS",e.toString() )
                 }
 
 
@@ -364,7 +365,7 @@ class OrderViewModel @Inject constructor(
                             return@withContext
                         }
                         _mySellOrders.value = data
-                        Log.d("GET ORDERS XXXX", data.toString())
+                        CLog.error("GET ORDERS XXXX", data.toString())
                     }else if (resp.code()==401){
                         _tradeUIState.update { it.copy(isSuccess = false,
                             isError = true,
@@ -438,7 +439,7 @@ class OrderViewModel @Inject constructor(
                             return@withContext
                         }
                         _myBuyOrders.value = data
-                        Log.d("GET ORDERS XXXX", data.toString())
+                        CLog.error("GET ORDERS XXXX", data.toString())
                     }else if (resp.code()==401){
                         _tradeUIState.update { it.copy(isSuccess = false,
                             isError = true,
@@ -506,7 +507,7 @@ class OrderViewModel @Inject constructor(
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<String>>() {}.type
                         val errorResp: GenericResp<String> = gson.fromJson(resp.errorBody()?.string() , genericType)
-                        Log.d("CANCEL SELL ORDER ERROR", resp.errorBody()?.string()+"")
+                        CLog.error("CANCEL SELL ORDER ERROR", resp.errorBody()?.string()+"")
                         _tradeUIState.update { it.copy(
                             isCancelSellOrderButtonLoading = false,
                             isCancelSellOrderError = true,
@@ -523,7 +524,7 @@ class OrderViewModel @Inject constructor(
                         isCancelSellOrderSuccess = false,
                         cancelSellOrderErrorMessage = "Network Error"
                     ) }
-                    Log.d("CANCEL SELL ORDER ERROR", e.toString()+"")
+                    CLog.error("CANCEL SELL ORDER ERROR", e.toString()+"")
                 }
                 _tradeUIState.update { it.copy(isCancelBuyOrderButtonLoading = false) }
             }
@@ -536,7 +537,7 @@ class OrderViewModel @Inject constructor(
         _tradeUIState.update { it.copy(isCancelBuyOrderButtonLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val token = getUserToken()
+                val token = getUserToken.getUserToken()
                 if (token.isBlank()) {
                     _tradeUIState.update {
                         it.copy(
@@ -557,21 +558,10 @@ class OrderViewModel @Inject constructor(
                             isCancelBuyOrderError = false,
                             cancelBuyOrderError = ""
                         ) }
-//                        val data = resp.body()?.data
-//                        if (data.isNullOrEmpty()){
-//                            _tradeUIState.update {
-//                                it.copy(
-//                                    isSuccess = false,
-//                                    isError = true,
-//                                    errorMessage = "No Orders"
-//                                )
-//                            }
-//                            _tradeUIState.update { it.copy(isLoading = false) }
-//                            return@withContext
-//                        }
 
-                        //Log.d("GET ORDERS XXXX", data.toString())
+                        CLog.error("CANCEL BUY ORDER XXXX", resp.body().toString())
                     }else if (resp.code()==401){
+                        CLog.error("CANCEL BUY ORDER", " Unauthorized")
                         _tradeUIState.update { it.copy(
                             isCancelBuyOrderSuccess = false,
                             isCancelBuyOrderError = true,
@@ -579,10 +569,11 @@ class OrderViewModel @Inject constructor(
                         ) }
                     }
                     else{
-                        //Log.d("CANCEL SELL ORDER ERROR", resp.errorBody()?.string().toString())
+                        val respB = resp.errorBody()?.string()
+                        CLog.error("CANCEL BUY ORDER ERROR", respB+"")
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<BuyOrder>>() {}.type
-                        val errorResp: GenericResp<BuyOrder> = gson.fromJson(resp.errorBody()?.string() , genericType)
+                        val errorResp: GenericResp<BuyOrder> = gson.fromJson(respB, genericType)
 
                         _tradeUIState.update { it.copy(
                             isCancelBuyOrderSuccess = false,
@@ -594,6 +585,8 @@ class OrderViewModel @Inject constructor(
                     }
 
                 }catch (e:Exception){
+
+                    CLog.error("CANCEL BUY ORDER ERROR", e.toString())
                     _tradeUIState.update { it.copy(
                         isCancelBuyOrderSuccess = false,
                         isCancelBuyOrderError = true,
@@ -601,6 +594,7 @@ class OrderViewModel @Inject constructor(
                     ) }
                     _tradeUIState.update { it.copy(isCancelBuyOrderButtonLoading = false) }
                 }
+
                 _tradeUIState.update { it.copy(isCancelBuyOrderButtonLoading = false) }
             }
         }
@@ -644,7 +638,7 @@ class OrderViewModel @Inject constructor(
                             return@withContext
                         }
                         _singleSellOrder.value = data
-                        Log.d("GET ORDERS XXXX", data.toString())
+                        CLog.error("GET ORDERS XXXX", data.toString())
                     }else if (resp.code()==401){
                         _tradeUIState.update { it.copy(
                             isGetSingleSellOrderPageLoading = false,
@@ -663,7 +657,7 @@ class OrderViewModel @Inject constructor(
                             isGetSingleSellOrderPageSuccess = false,
                             getSingleSellOrderPageErrorMessage = errorResp.message
                         ) }
-                        Log.d("SINGLE ORDER ERROR XXXX", errorResp.server_message+"")
+                        CLog.error("SINGLE ORDER ERROR XXXX", errorResp.server_message+"")
                     }
 
                 }catch (e:Exception){
@@ -674,7 +668,7 @@ class OrderViewModel @Inject constructor(
                         getSingleSellOrderPageErrorMessage = "Network Error"
                     ) }
 
-                    Log.d("SINGLE ORDER ERROR XXXX", e.toString())
+                    CLog.error("SINGLE ORDER ERROR XXXX", e.toString())
                 }
                 _tradeUIState.update { it.copy(isGetSingleSellOrderPageLoading = false) }
             }
@@ -798,7 +792,10 @@ class OrderViewModel @Inject constructor(
                             getSingleBuyOrderPageErrorMessage = ""
                         ) }
                         _singleBuyOrder.value = data
-                        Log.d("GET ORDERS XXXX", data.toString())
+
+                        // get the sell order too
+                        getSingleSellOrders(_singleBuyOrder.value.sell_order_id)
+                        CLog.error("GET ORDERS XXXX", data.toString())
                     }else if (resp.code()==401){
                         _tradeUIState.update { it.copy(
                             isGetSingleBuyOrderPageSuccess = false,
@@ -808,7 +805,7 @@ class OrderViewModel @Inject constructor(
                     }
                     else{
                         val  respData =  resp.errorBody()?.string()
-                        Log.d("SIGNUP ERROR !", respData+"")
+                        CLog.error("SIGNUP ERROR !", respData+"")
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<String>>() {}.type
                         val errorResp: GenericResp<String> = gson.fromJson(respData, genericType)
@@ -887,7 +884,7 @@ class OrderViewModel @Inject constructor(
                             confirmBuyOrderErrorMessage = resp.body()?.message ?:""
 
                         ) }
-                        Log.d("XXX CONFIRM ORDER ERROR ", resp.body().toString())
+                        CLog.error("XXX CONFIRM ORDER ERROR ", resp.body().toString())
                     }
 
                 }catch (e:Exception){
@@ -897,7 +894,7 @@ class OrderViewModel @Inject constructor(
                         confirmBuyOrderErrorMessage =  "Network Error"
                     ) }
                     _tradeUIState.update { it.copy(isConfirmBuyOrderButtonLoading = false) }
-                    Log.d("XXX CONFIRM ORDER ERROR ", e.toString())
+                    CLog.error("XXX CONFIRM ORDER ERROR ", e.toString())
                 }
                 _tradeUIState.update { it.copy(isConfirmBuyOrderButtonLoading = false) }
             }
@@ -957,7 +954,7 @@ class OrderViewModel @Inject constructor(
                             confirmBuyOrderErrorMessage = resp.body()?.message ?: ""
 
                         ) }
-                        Log.d("XXX CONFIRM ORDER ERROR ", resp.body().toString())
+                        CLog.error("XXX CONFIRM ORDER ERROR ", resp.body().toString())
                     }
 
                 }catch (e:Exception){
@@ -967,7 +964,7 @@ class OrderViewModel @Inject constructor(
                         confirmBuyOrderErrorMessage =  "Network Error"
                     ) }
                     _tradeUIState.update { it.copy(isConfirmBuyOrderButtonLoading = false) }
-                    Log.d("XXX CONFIRM ORDER ERROR ", e.toString())
+                    CLog.error("XXX CONFIRM ORDER ERROR ", e.toString())
                 }
                 _tradeUIState.update { it.copy(isConfirmBuyOrderButtonLoading = false) }
             }
@@ -1034,7 +1031,7 @@ class OrderViewModel @Inject constructor(
 
 
                         ) }
-                        Log.d("XXX GET OPEN ORDER ", resp.body().toString())
+                        CLog.error("XXX GET OPEN ORDER ", resp.body().toString())
                     }
 
                 }catch (e:Exception){
@@ -1045,7 +1042,7 @@ class OrderViewModel @Inject constructor(
                     ) }
                     _tradeUIState.update { it.copy(
                         isGetOpenOrdersPageLoading = false) }
-                    Log.d("XXX GET OPEN ORDERS ", e.toString())
+                    CLog.error("XXX GET OPEN ORDERS ", e.toString())
                 }
                 _tradeUIState.update { it.copy(isGetOpenOrdersPageLoading = false) }
             }
@@ -1103,7 +1100,7 @@ class OrderViewModel @Inject constructor(
                     }
                     else{
                         val respData = resp.errorBody().toString()
-                        Log.d("CREATE BUY ORDER ERROR ", respData)
+                        CLog.error("CREATE BUY ORDER ERROR ", respData)
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<String>>() {}.type
                         val errorResp: GenericResp<String> = gson.fromJson(respData , genericType)
@@ -1114,7 +1111,7 @@ class OrderViewModel @Inject constructor(
 
 
                         ) }
-                        Log.d("XXX CREATE BUY ORDER ERROR", resp.body().toString())
+                        CLog.error("XXX CREATE BUY ORDER ERROR", resp.body().toString())
                     }
 
                 }catch (e:Exception){
@@ -1125,7 +1122,7 @@ class OrderViewModel @Inject constructor(
                     ) }
                     _tradeUIState.update { it.copy(
                         isCreateBuyOrderButtonLoading = false) }
-                    Log.d("XXX CREATE BUY ORDER ", e.toString())
+                    CLog.error("XXX CREATE BUY ORDER ", e.toString())
                 }
                 _tradeUIState.update { it.copy(isCreateBuyOrderButtonLoading = false) }
             }
@@ -1201,7 +1198,7 @@ class OrderViewModel @Inject constructor(
                             isGetAllOrderMessagesSuccess = false,
                             getAllOrderMessagesErrorMessage = resp.body()?.message ?: ""
                         ) }
-                        Log.d("XXX CREATE ORDER MESSAGE ", resp.body().toString())
+                        CLog.error("XXX CREATE ORDER MESSAGE ", resp.body().toString())
                     }
 
                 }catch (e:Exception){
@@ -1212,7 +1209,7 @@ class OrderViewModel @Inject constructor(
                     ) }
                     _tradeUIState.update { it.copy(
                         isGetAllOrderMessagesLoading = false) }
-                    Log.d("XXX CREATE MESSAGE ORDER", e.toString())
+                    CLog.error("XXX CREATE MESSAGE ORDER", e.toString())
                 }
                 _tradeUIState.update { it.copy(isGetAllOrderMessagesLoading = false) }
             }
@@ -1274,7 +1271,7 @@ class OrderViewModel @Inject constructor(
                             isCreateOrderMessageSuccess = false,
                             createOrderMessageErrorMessage = resp.body()?.message ?: ""
                         ) }
-                        Log.d("XXX CREATE ORDER MESSAGE", resp.body().toString())
+                        CLog.error("XXX CREATE ORDER MESSAGE", resp.body().toString())
                     }
 
                 }catch (e:Exception){
@@ -1285,7 +1282,7 @@ class OrderViewModel @Inject constructor(
                     ) }
                     _tradeUIState.update { it.copy(
                         isCreateOrderMessageButtonLoading = false) }
-                    Log.d("XXX CREATE MESSAGE ORDER", e.toString())
+                    CLog.error("XXX CREATE MESSAGE ORDER", e.toString())
                 }
                 _tradeUIState.update { it.copy(isCreateOrderMessageButtonLoading = false) }
             }

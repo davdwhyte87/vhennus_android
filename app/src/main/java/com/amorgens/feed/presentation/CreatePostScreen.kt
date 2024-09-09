@@ -37,19 +37,20 @@ fun createPostScreen(navController: NavController, feedViewModel: FeedViewModel)
     val feedUIState = feedViewModel.feedUIState.collectAsState()
     if(feedUIState.value.isCreatePostError){
         Toast.makeText(LocalContext.current, feedUIState.value.createPostErrorMessage, Toast.LENGTH_SHORT).show()
-
+        feedViewModel.clearModelData()
     }
 
     if(feedUIState.value.isCreatePostSuccess){
         Toast.makeText(LocalContext.current, "Post Created!", Toast.LENGTH_SHORT).show()
+        feedViewModel.clearModelData()
         //navController.popBackStack()
     }
 
     GeneralScaffold(
         topBar = { createPostNav(navController,
             {
-                //feedViewModel.createPost(CreatePostReq(text = postText.value))
-            feedViewModel.success()
+                feedViewModel.createPost(CreatePostReq(text = postText.value))
+
         }, feedViewModel) }, floatingActionButton = { /*TODO*/ }) {
 
         TextField(value = postText.value,
