@@ -4,9 +4,10 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.51.1" apply true
     id("kotlin-kapt")
 }
+
 val hilt_version = "2.51.1"
 android {
-    namespace = "com.amorgens"
+    namespace = "com.vhennus"
     compileSdk = 34
 
     flavorDimensions +="environment"
@@ -28,7 +29,7 @@ android {
         }
     }
     defaultConfig {
-        applicationId = "com.amorgens"
+        applicationId = "com.vhennus"
         minSdk = 28
         targetSdk = 34
         versionCode = 1
@@ -90,6 +91,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.ktx)
+ 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -146,6 +148,10 @@ dependencies {
 
     // sentry
     implementation (libs.sentry.android)
+
+    // pretty date
+    implementation (libs.prettytime)
+
 
 }
 

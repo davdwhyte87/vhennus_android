@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Amorgens"
+rootProject.name = "vhennus_android"
 include(":app")
  
