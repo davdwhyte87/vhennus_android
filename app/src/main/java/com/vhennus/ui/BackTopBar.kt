@@ -20,7 +20,7 @@ fun BackTopBar(pageName:String, navController: NavController){
         title = { Text(text = pageName, textAlign = TextAlign.Center) },
         navigationIcon = {
             IconButton(onClick = {
-                navController.popBackStack()
+                navController.navigateUp()
             }) {
                 Icon(imageVector = Icons.Sharp.ArrowBackIosNew ,
                     contentDescription = "Home",

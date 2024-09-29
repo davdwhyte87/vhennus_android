@@ -3,6 +3,7 @@ package com.vhennus.feed.presentation
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,11 +12,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.ModeComment
 import androidx.compose.material.icons.outlined.RemoveRedEye
+import androidx.compose.material.icons.sharp.Favorite
 import androidx.compose.material.icons.sharp.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -24,7 +27,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +54,7 @@ import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.feed.domain.Post
 import com.vhennus.general.utils.CLog
 import com.vhennus.ui.GeneralScaffold
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -62,6 +73,7 @@ fun FeedScreen(
     val observer = LifecycleEventObserver { _, event ->
       if (event == Lifecycle.Event.ON_RESUME) {
         feedViewModel.getAllPosts()
+        feedViewModel.getUserName()
       }
     }
 
@@ -77,21 +89,48 @@ fun FeedScreen(
 //    ""
 //  ))
 
+  val context = LocalContext.current
   val posts = feedViewModel.allPost.collectAsState()
   val feedUIState = feedViewModel.feedUIState.collectAsState()
 
-  if(feedUIState.value.isFeedLoadingError){
-    Toast.makeText(LocalContext.current, feedUIState.value.getFeedErrorMessage, Toast.LENGTH_SHORT).show()
+  LaunchedEffect(feedUIState.value.isFeedLoadingError) {
+    if(feedUIState.value.isFeedLoadingError){
+      Toast.makeText(context, feedUIState.value.getFeedErrorMessage, Toast.LENGTH_SHORT).show()
+    }
   }
+
   GeneralScaffold(topBar = { feedNav() }, floatingActionButton = {
     Button(onClick = { navHostController.navigate(NavScreen.CreatePostScreen.route)})
     { Icon(imageVector = Icons.Filled.Add, contentDescription ="Add" )}
   }) {
+    val feedUIState = feedViewModel.feedUIState.collectAsState()
+    val listState = rememberLazyListState()
+    val coroutine = rememberCoroutineScope()
+    val userName = feedViewModel.userName.collectAsState()
+    LaunchedEffect(feedUIState.value.isScrollToFeedTop) {
+      if (feedUIState.value.isScrollToFeedTop){
+        if (listState.firstVisibleItemIndex > 0) {
+
+            listState.scrollToItem(0)
+
+        }
+      }
+    }
+
+    LaunchedEffect(listState) {
+      snapshotFlow { listState.firstVisibleItemIndex }
+        .collect { firstVisibleItemIndex ->
+          feedViewModel.updateFeedScrollToTop(false)
+        }
+    }
     LazyColumn (
-      modifier = Modifier.fillMaxSize()
+      modifier = Modifier.fillMaxSize(),
+      state = listState
     ) {
       items(posts.value.reversed()){post->
-        com.vhennus.feed.presentation.post(post = post)
+        com.vhennus.feed.presentation.post(post = remember{mutableStateOf(post)}, navHostController, userName.value, {feedViewModel.likePost(post.id)}, {
+          navHostController.navigate(NavScreen.SinglePost.route+"/${post.id}")
+        })
       }
     }
   }
@@ -100,18 +139,25 @@ fun FeedScreen(
 
 
 @Composable
-fun post(post:Post){
+fun post(
+  post: MutableState<Post>,
+  navController: NavController,
+  userName:String,
+  onLike: ()->Unit,
+  onPostClick:()->Unit
+){
   Row (
     modifier = Modifier.fillMaxWidth(),
     horizontalArrangement = Arrangement.spacedBy(10.dp)
   ){
-    val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS 'UTC'", Locale.getDefault())
 
+    val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS 'UTC'", Locale.getDefault())
+    val likes = post.value.likes.toMutableList()
 
     var prettyPostDate = ""
     // Parse the string into a Date object
     try {
-      val parsedDate = inputFormat.parse(post.created_at)
+      val parsedDate = inputFormat.parse(post.value.created_at)
       val prettyTime = PrettyTime()
       prettyPostDate = prettyTime.format(parsedDate)
     } catch (e: ParseException) {
@@ -145,9 +191,12 @@ fun post(post:Post){
       horizontalAlignment = Alignment.Start,
       verticalArrangement = Arrangement.SpaceEvenly
     ){
-      Text(text = post.user_name, style=MaterialTheme.typography.titleLarge)
+      Text(text = post.value.user_name, style=MaterialTheme.typography.titleLarge)
       Text(text = prettyPostDate, style=MaterialTheme.typography.bodySmall)
-      Text(text = post.text, style=MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
+      Text(text = post.value.text, style=MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal),
+        modifier = Modifier.clickable(onClick = {
+          onPostClick()
+        }))
 
       Row(
         modifier = Modifier.fillMaxWidth(),
@@ -155,7 +204,9 @@ fun post(post:Post){
         verticalAlignment = Alignment.CenterVertically
       ) {
         Button(
-          onClick = {  },
+          onClick = {
+            navController.navigate(NavScreen.CreateCommentScreen.route+"/"+post.value.id)
+          },
           colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.secondary
@@ -165,19 +216,31 @@ fun post(post:Post){
             contentDescription = "Comment",
             modifier = Modifier.size(16.dp)
           )
-          Text(text = if(post.comments.count() ==0)"" else post.comments.count().toString(), style=MaterialTheme.typography.bodySmall)
+          Text(if (post.value.comments?.count() == 0) "" else post.value.comments?.count()?.toString() ?: "", style=MaterialTheme.typography.bodySmall)
         }
-        Button(onClick = {  },
+        Button(onClick = {
+          onLike()
+
+          if(post.value.likes.contains(userName)){
+            val npost =post.value.copy(likes = post.value.likes - userName)
+            post.value = npost
+            //post.value.likes.remove(userName)
+          }else{
+            val npost =post.value.copy(likes = post.value.likes + userName)
+            post.value = npost
+            //post.value.likes.add(userName)
+          }
+        },
           colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.secondary
           )
         ) {
-          Icon(imageVector = Icons.Sharp.FavoriteBorder,
+          Icon(imageVector =if(post.value.likes.contains(userName)) Icons.Sharp.Favorite else Icons.Sharp.FavoriteBorder,
             contentDescription = "Like",
             modifier = Modifier.size(16.dp)
           )
-          Text(text = if (post.likes.count() == 0)"" else post.likes.count().toString(), style=MaterialTheme.typography.bodySmall)
+          Text(text = if (post.value.likes.count() == 0)"" else post.value.likes.count().toString(), style=MaterialTheme.typography.bodySmall)
         }
         Button(onClick = {  },
           colors = ButtonDefaults.buttonColors(
@@ -189,7 +252,7 @@ fun post(post:Post){
             contentDescription = "Seen",
             modifier = Modifier.size(16.dp)
           )
-          Text(text = post.number_of_views.toString(), style=MaterialTheme.typography.bodySmall)
+          Text(text = post.value.number_of_views.toString(), style=MaterialTheme.typography.bodySmall)
         }
       }
     }

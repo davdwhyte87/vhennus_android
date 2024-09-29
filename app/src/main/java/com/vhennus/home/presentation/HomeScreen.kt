@@ -67,17 +67,24 @@ fun HomeScreen(navController: NavController, feedViewModel: FeedViewModel){
     val context = LocalContext.current
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
     val versionName = packageInfo.versionName
-
+    val feedUIState = feedViewModel.feedUIState.collectAsState()
     val showUpdateModal = remember {
         mutableStateOf(false)
     }
 
-    if (systemData.value.android_app_version != versionName ){
-        CLog.debug("NEW APP VERSION", "YEs")
-        showUpdateModal.value = true
-    }else{
-        showUpdateModal.value = false
+    LaunchedEffect(feedUIState.value.isGetSystemDataSuccess) {
+        if(feedUIState.value.isGetSystemDataSuccess){
+
+            if (systemData.value.android_app_version != versionName ){
+                CLog.debug("NEW APP VERSION", "YEs")
+                showUpdateModal.value = true
+            }else{
+                showUpdateModal.value = false
+            }
+        }
     }
+
+
     //CLog.debug("SYSTEM DATA", systemData.value.android_app_version )
     //CLog.error("APP VERSION",versionName )
     //clog("EAT ME", " YUM YUM")
@@ -152,10 +159,16 @@ fun HomeScreen(navController: NavController, feedViewModel: FeedViewModel){
                 MenuScreen(navController)
             }
         }
-        TabRow(selectedTabIndex = selectedTabIndex) {
+        TabRow(selectedTabIndex = pagerState.currentPage) {
             navItems.forEachIndexed { index, bottomNavItem ->
                 Tab(selected = index==selectedTabIndex,
-                    onClick = {selectedTabIndex = index},
+                    onClick = {
+                        selectedTabIndex = index
+                        if (index == 0){
+                            feedViewModel.getAllPosts()
+
+                        }
+                              },
                     icon = {
                         Icon(
                             imageVector = if (selectedTabIndex == index){bottomNavItem.selectedIcon}else{bottomNavItem.unselectedIcon},

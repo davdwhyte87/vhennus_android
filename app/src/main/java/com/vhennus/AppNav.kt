@@ -12,7 +12,10 @@ import com.vhennus.auth.presentation.logoutScreen
 import com.vhennus.auth.presentation.preLoginScreen
 import com.vhennus.auth.presentation.signUpScreen
 import com.vhennus.feed.data.FeedViewModel
+
+import com.vhennus.feed.presentation.createCommentScreen
 import com.vhennus.feed.presentation.createPostScreen
+import com.vhennus.feed.presentation.singlePostScreen
 import com.vhennus.home.presentation.HomeScreen
 import com.vhennus.trade.data.OrderViewModel
 import com.vhennus.trade.presentation.ShopCoinsScreen
@@ -121,6 +124,21 @@ fun AppNav(
 
         composable(NavScreen.CreatePaymentMethodScreen.route){
             addPaymentMethodScreen(navController, orderViewModel)
+        }
+
+        composable(NavScreen.CreateCommentScreen.route+"/{id}"){
+            val id = it.arguments?.getString("id")
+            if(id!=null) {
+                createCommentScreen(navController, feedViewModel, id)
+            }
+
+        }
+
+        composable(NavScreen.SinglePost.route+"/{id}"){
+            val id = it.arguments?.getString("id")
+            if(id!=null) {
+                singlePostScreen(id, feedViewModel, navController)
+            }
         }
 
         protectedComposable(

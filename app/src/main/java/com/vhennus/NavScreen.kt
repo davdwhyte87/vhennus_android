@@ -90,4 +90,14 @@ sealed class NavScreen(
         route = "create_post",
         title = "Create Post"
     )
+
+    object CreateCommentScreen:NavScreen(
+        route = "create_comment",
+        title = "Create Comment"
+    )
+
+    object SinglePost:NavScreen(
+        route = "single_post",
+        title = "Single Post"
+    )
 }

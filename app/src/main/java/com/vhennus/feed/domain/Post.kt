@@ -1,6 +1,7 @@
 package com.vhennus.feed.domain
 
 data class Post(
+    val id:String = "",
     val profile_image:String ="",
     val user_name: String ="",
     val created_at:String ="",
@@ -12,5 +13,8 @@ data class Post(
 )
 
 data class Comment(
-    val text: String
+    val text: String,
+    val id:String,
+    val user_name: String,
+    val created_at: String
 )

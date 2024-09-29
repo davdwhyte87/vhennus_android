@@ -3,6 +3,8 @@ package com.vhennus.general.data
 
 import com.vhennus.auth.domain.LoginReq
 import com.vhennus.auth.domain.SignupReq
+import com.vhennus.feed.domain.Comment
+import com.vhennus.feed.domain.CreateCommentReq
 import com.vhennus.feed.domain.CreatePostReq
 import com.vhennus.feed.domain.Post
 import com.vhennus.general.domain.SystemData
@@ -97,7 +99,16 @@ interface APIService {
     @GET("api/v1/auth/post/all")
     suspend fun getAllPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<Post>>>
 
+    @GET("api/v1/auth/post/single/{id}")
+    suspend fun getSinglePost(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<Post>>
 
+
+    @POST("api/v1/auth/post/{id}/comment/create")
+    suspend fun createComment(@Path("id") id:String,@Body data:CreateCommentReq, @HeaderMap header:Map<String,String> ):Response<GenericResp<Comment>>
+
+
+    @GET("api/v1/auth/post/like/{id}")
+    suspend fun likePost(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<Post>>
     // system data
     @GET("get_system_data")
     suspend fun getSystemData():Response<GenericResp<SystemData>>
