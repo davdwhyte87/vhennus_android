@@ -152,6 +152,8 @@ dependencies {
     // pretty date
     implementation (libs.prettytime)
 
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.3")
+
 
 }
 

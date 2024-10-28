@@ -1,6 +1,6 @@
 [versions]
 accompanistCoil = "9"
-agp = "8.3.2"
+agp = "8.7.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"

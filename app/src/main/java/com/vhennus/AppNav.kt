@@ -25,6 +25,9 @@ import com.vhennus.trade.presentation.myOrdersScreen
 import com.vhennus.trade.presentation.paymentOptionScreen
 import com.vhennus.trade.presentation.singleOrderScreen
 import com.vhennus.trade.presentation.singleSellOrderScreen
+import com.vhennus.trivia.data.TriviaViewModel
+import com.vhennus.trivia.presentation.postTriviaPlayPage
+import com.vhennus.trivia.presentation.triviaPage
 import com.vhennus.wallet.data.WalletViewModel
 import com.vhennus.wallet.presentation.AddWalletScreen
 import com.vhennus.wallet.presentation.NewWalletScreen
@@ -38,7 +41,8 @@ fun AppNav(
     walletViewModel: WalletViewModel,
     orderViewModel: OrderViewModel,
     authViewModel: AuthViewModel,
-    feedViewModel: FeedViewModel
+    feedViewModel: FeedViewModel,
+    triviaViewModel: TriviaViewModel
 ){
 
     NavHost(navController = navController, startDestination = NavScreen.HomeScreen.route) {
@@ -74,6 +78,13 @@ fun AppNav(
         
         composable(route=NavScreen.NewWalletScreen.route){
             NewWalletScreen(navController = navController, walletViewModel)
+        }
+
+        composable(route=NavScreen.TriviaScreen.route){
+            triviaPage(navController,triviaViewModel, walletViewModel)
+        }
+        composable(route=NavScreen.PostTriviaPage.route){
+            postTriviaPlayPage(navController, triviaViewModel)
         }
 
 //        composable(route=NavScreen.CreateSellOrderScreen.route){

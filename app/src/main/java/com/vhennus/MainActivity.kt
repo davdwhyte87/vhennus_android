@@ -12,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.trade.data.OrderViewModel
+import com.vhennus.trivia.data.TriviaViewModel
 import com.vhennus.ui.theme.AmorgensTheme
 import com.vhennus.wallet.data.WalletViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -40,6 +41,8 @@ class MainActivity : ComponentActivity() {
             val authViewModel:AuthViewModel = hiltViewModel()
             val feedViewModel:FeedViewModel = hiltViewModel()
             val navController = rememberNavController()
+            val triviaViewModel:TriviaViewModel = hiltViewModel()
+
             AmorgensTheme(darkTheme = false) {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -50,7 +53,8 @@ class MainActivity : ComponentActivity() {
                         walletViewModel ,
                         orderViewModel,
                         authViewModel,
-                        feedViewModel
+                        feedViewModel,
+                        triviaViewModel
                     )
 
                 }

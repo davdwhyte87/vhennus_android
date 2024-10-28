@@ -214,7 +214,7 @@ fun post(
         ) {
           Icon(imageVector = Icons.Outlined.ModeComment,
             contentDescription = "Comment",
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(18.dp)
           )
           Text(if (post.value.comments?.count() == 0) "" else post.value.comments?.count()?.toString() ?: "", style=MaterialTheme.typography.bodySmall)
         }
@@ -238,22 +238,22 @@ fun post(
         ) {
           Icon(imageVector =if(post.value.likes.contains(userName)) Icons.Sharp.Favorite else Icons.Sharp.FavoriteBorder,
             contentDescription = "Like",
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(18.dp)
           )
           Text(text = if (post.value.likes.count() == 0)"" else post.value.likes.count().toString(), style=MaterialTheme.typography.bodySmall)
         }
-        Button(onClick = {  },
-          colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.secondary,
-          )
-        ) {
-          Icon(imageVector = Icons.Outlined.RemoveRedEye,
-            contentDescription = "Seen",
-            modifier = Modifier.size(16.dp)
-          )
-          Text(text = post.value.number_of_views.toString(), style=MaterialTheme.typography.bodySmall)
-        }
+//        Button(onClick = {  },
+//          colors = ButtonDefaults.buttonColors(
+//            containerColor = MaterialTheme.colorScheme.surface,
+//            contentColor = MaterialTheme.colorScheme.secondary,
+//          )
+//        ) {
+//          Icon(imageVector = Icons.Outlined.RemoveRedEye,
+//            contentDescription = "Seen",
+//            modifier = Modifier.size(16.dp)
+//          )
+//          Text(text = post.value.number_of_views.toString(), style=MaterialTheme.typography.bodySmall)
+//        }
       }
     }
   }

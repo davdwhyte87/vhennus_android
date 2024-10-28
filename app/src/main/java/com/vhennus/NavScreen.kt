@@ -100,4 +100,14 @@ sealed class NavScreen(
         route = "single_post",
         title = "Single Post"
     )
+
+    object TriviaScreen:NavScreen(
+        route = "trivia",
+        title = "Trivia"
+    )
+
+    object PostTriviaPage:NavScreen(
+        route = "post_trivia",
+        title = "Post Trivia"
+    )
 }

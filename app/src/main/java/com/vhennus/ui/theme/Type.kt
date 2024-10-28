@@ -31,6 +31,13 @@ val Typography = Typography(
         lineHeight = 28.sp,
         letterSpacing = 0.5.sp
     ),
+    titleMedium = TextStyle(
+        fontFamily = OpenSansFont,
+        fontWeight = FontWeight.Bold,
+        fontSize = 14.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.5.sp
+    ),
     bodyMedium = TextStyle(
         fontFamily = OpenSansFont,
         fontWeight = FontWeight.Normal,

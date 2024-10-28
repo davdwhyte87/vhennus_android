@@ -19,10 +19,12 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(): Retrofit {
+
+
         val okHttpClient = OkHttpClient.Builder()
-            .connectTimeout(60, TimeUnit.SECONDS)   // Set connection timeout
-            .readTimeout(60, TimeUnit.SECONDS)      // Set read timeout
-            .writeTimeout(60, TimeUnit.SECONDS)     // Set write timeout
+            .connectTimeout(120, TimeUnit.SECONDS)   // Set connection timeout
+            .readTimeout(120, TimeUnit.SECONDS)      // Set read timeout
+            .writeTimeout(120, TimeUnit.SECONDS)     // Set write timeout
             .build()
 
         return Retrofit.Builder()

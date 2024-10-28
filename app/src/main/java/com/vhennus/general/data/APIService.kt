@@ -21,6 +21,8 @@ import com.vhennus.trade.domain.response.MyBuyOrdersResp
 import com.vhennus.trade.domain.response.MySellOrdersResponse
 import com.vhennus.trade.domain.response.SingleBuyOrdersResp
 import com.vhennus.trade.domain.response.SingleSellOrderResp
+import com.vhennus.trivia.domain.TriviaGame
+import com.vhennus.trivia.domain.TriviaGameReq
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -112,5 +114,13 @@ interface APIService {
     // system data
     @GET("get_system_data")
     suspend fun getSystemData():Response<GenericResp<SystemData>>
+
+
+    // trivia
+    @GET("api/v1/auth/trivia/todays_game")
+    suspend fun getTriviaGame( @HeaderMap header:Map<String,String> ):Response<GenericResp<TriviaGame>>
+
+    @POST("api/v1/auth/trivia/play")
+    suspend fun playTriviaGame(@Body data:TriviaGameReq, @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
 
 }
