@@ -1,5 +1,8 @@
 package com.vhennus.trivia.data
 
+import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,13 +22,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+
 
 
 @HiltViewModel
 class TriviaViewModel @Inject constructor(
     private val apiService: APIService,
-    private val getUserToken: GetUserToken
+    private val getUserToken: GetUserToken,
+    private val application: Application,
 ) :ViewModel() {
     val _triviaUiState = MutableStateFlow(TriviaUIState())
     val triviaUIState = _triviaUiState.asStateFlow()
@@ -108,6 +115,18 @@ class TriviaViewModel @Inject constructor(
             }
         }
     }
+
+    fun storePlayLocally(){
+        // store the play so that we know this user has played for today
+        val date = LocalDate.now() // current date
+        val formattedDate = formatDateWithDateTimeFormatter(date)
+
+        val sharedPref: SharedPreferences = application.getSharedPreferences("Trivia", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putString(formattedDate, "1")
+            apply()
+        }
+    }
     fun playTriviaGame(req:TriviaGameReq){
         _triviaUiState.update { it.copy(isPlayGameLoading = true) }
         viewModelScope.launch {
@@ -127,6 +146,8 @@ class TriviaViewModel @Inject constructor(
                         if (data !=null){
                             _gameResult.value = data
                         }
+                        // keep a record that the user has played
+                        storePlayLocally()
 
                     }else if (resp.code()==401){
                         _triviaUiState.update { it.copy(
@@ -163,4 +184,27 @@ class TriviaViewModel @Inject constructor(
             }
         }
     }
+
+    fun hasPlayedTriviaToday(){
+        // get current date and check if it exists in the shared pref store
+        val date = LocalDate.now() // current date
+        val formattedDate = formatDateWithDateTimeFormatter(date)
+        val sharedPref: SharedPreferences = application.getSharedPreferences("Trivia", Context.MODE_PRIVATE)
+        val res =  sharedPref.getString(formattedDate, "0") ?: "0"
+        if (res == "1"){
+            _triviaUiState.value = triviaUIState.value.copy(hasPlayedTriviaToday = true)
+        }
+
+        if(res == "0"){
+            _triviaUiState.value = triviaUIState.value.copy(hasPlayedTriviaToday = false)
+        }
+    }
+}
+
+
+
+
+fun formatDateWithDateTimeFormatter(date: LocalDate): String {
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    return date.format(formatter)
 }

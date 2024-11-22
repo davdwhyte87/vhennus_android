@@ -114,6 +114,7 @@ fun triviaPage(
                     triviaViewModel.resetUiState()
                     triviaViewModel.getTriviaGame()
                     walletViewModel.getAllWallets()
+                    triviaViewModel.hasPlayedTriviaToday()
                 }
             }
 
@@ -138,17 +139,26 @@ fun triviaPage(
 //            nonGame()
 //        }
 
-        if(!triviaUIState.value.isGetGameSuccess){
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.fillMaxWidth().height( 100.dp).shimmerEffect())
-                Spacer(modifier = Modifier.height(height = 50.dp).fillMaxWidth())
-                Box(modifier = Modifier.size(200.dp,300.dp).shimmerEffect()){}
+
+        // check if the time is 6pm
+
+        if(is6pm()){
+            if(!triviaUIState.value.isGetGameSuccess){
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.fillMaxWidth().height( 100.dp).shimmerEffect())
+                    Spacer(modifier = Modifier.height(height = 50.dp).fillMaxWidth())
+                    Box(modifier = Modifier.size(200.dp,300.dp).shimmerEffect()){}
 
 
+                }
+            }else{
+                game(triviaGame.value, wallets.value, triviaViewModel, navController)
             }
         }else{
-            game(triviaGame.value, wallets.value, triviaViewModel, navController)
+            nonGame()
         }
+
+
     }
 }
 
@@ -259,6 +269,12 @@ fun game(
           }
           if (!isAnswerSelected.value){
               Toast.makeText(context, "Please select an answer", Toast.LENGTH_SHORT).show()
+              return@Button
+          }
+          // check if player has pllayed
+
+          if (triviaUIState.value.hasPlayedTriviaToday){
+              Toast.makeText(context, "You have played for today already!", Toast.LENGTH_SHORT).show()
               return@Button
           }
           triviaViewModel.playTriviaGame(req)
@@ -381,6 +397,22 @@ fun triviaAlarmNotificationChannel(context: Context){
     )
     notificationManager.createNotificationChannel(notificationChannel)
 }
+
+
+fun is6pm():Boolean{
+    // Get an instance of Calendar set to today's date
+    val calendar = Calendar.getInstance()
+
+    // check if the time is past 6pm
+    val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+
+    if (currentHour<18 || currentHour>19){
+       return false
+    }
+
+    return true
+}
+
 
 fun getToday6PM(): Calendar {
     // Get an instance of Calendar set to today's date

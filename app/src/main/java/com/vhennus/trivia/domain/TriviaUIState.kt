@@ -14,5 +14,7 @@ data class TriviaUIState(
     val isPlayGameLoading:Boolean = false,
     val isPlayGameError:Boolean = false,
     val isPlayGameSuccess:Boolean = false,
-    val playGameErrorMessage:String = ""
+    val playGameErrorMessage:String = "",
+
+    val hasPlayedTriviaToday:Boolean = false
 )
