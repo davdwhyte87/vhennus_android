@@ -3,6 +3,7 @@ package com.vhennus.general.data
 
 import com.vhennus.auth.domain.LoginReq
 import com.vhennus.auth.domain.SignupReq
+import com.vhennus.chat.domain.Chat
 import com.vhennus.feed.domain.Comment
 import com.vhennus.feed.domain.CreateCommentReq
 import com.vhennus.feed.domain.CreatePostReq
@@ -122,5 +123,12 @@ interface APIService {
 
     @POST("api/v1/auth/trivia/play")
     suspend fun playTriviaGame(@Body data:TriviaGameReq, @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
+
+
+    // chats
+    @GET("api/v1/auth/chat/get_pair/{id}")
+    suspend fun getChatsByPair(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<List<Chat>>>
+
+
 
 }

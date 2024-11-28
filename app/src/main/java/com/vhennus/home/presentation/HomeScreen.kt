@@ -35,17 +35,21 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.vhennus.chat.data.ChatViewModel
+import com.vhennus.chat.presentation.AllChatsScreen
 import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.feed.presentation.FeedScreen
 import com.vhennus.general.utils.CLog
 import com.vhennus.home.presentation.components.BottomNavItem
 import com.vhennus.menu.presentation.MenuScreen
+import com.vhennus.profile.presentation.profilePage
 import com.vhennus.ui.theme.Purple
 import kotlinx.coroutines.launch
 
@@ -53,7 +57,10 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, feedViewModel: FeedViewModel){
+fun HomeScreen(navController: NavController,
+               feedViewModel: FeedViewModel,
+               chatViewModel: ChatViewModel
+){
     val systemData = feedViewModel.systemData.collectAsState()
     DisposableEffect(true) {
         // get the app version
@@ -89,7 +96,7 @@ fun HomeScreen(navController: NavController, feedViewModel: FeedViewModel){
     //CLog.error("APP VERSION",versionName )
     //clog("EAT ME", " YUM YUM")
     //Sentry.captureException(RuntimeException("This app uses Sentry! :)"))
-    var selectedTabIndex by remember {
+    var selectedTabIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
 
@@ -146,16 +153,16 @@ fun HomeScreen(navController: NavController, feedViewModel: FeedViewModel){
         HorizontalPager(state = pagerState, modifier= Modifier
             .fillMaxWidth()
             .weight(1f)) {
-            if(it == 0){
+            if(selectedTabIndex == 0){
                 FeedScreen(navController, feedViewModel)
             }
-            if(it == 1){
-                chatScreen()
+            if(selectedTabIndex == 1){
+                AllChatsScreen(navController, chatViewModel)
             }
-            if(it == 2){
-                profileScreen()
+            if(selectedTabIndex == 2){
+                profilePage()
             }
-            if(it == 3){
+            if(selectedTabIndex == 3){
                 MenuScreen(navController)
             }
         }

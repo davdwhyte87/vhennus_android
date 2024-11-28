@@ -110,4 +110,14 @@ sealed class NavScreen(
         route = "post_trivia",
         title = "Post Trivia"
     )
+
+    object AllChatsScreen:NavScreen(
+        route = "all_chats",
+        title = "All Chats"
+    )
+
+    object SingleChatScreen: NavScreen(
+        route = "single_chat",
+        title = "Single Chat"
+    )
 }

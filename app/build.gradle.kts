@@ -16,14 +16,17 @@ android {
         create("prod") {
             dimension = "environment"
             // Additional configurations for this flavor
-            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
+
+//            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
+            buildConfigField("String", "API_URL", "\"http://0.0.0.0:8000\"")
             buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.224.183:3000\"")
         }
         create("dev") {
             dimension = "environment"
             // Additional configurations for this flavor
             applicationIdSuffix = ".dev"
-            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
+            //buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
+            buildConfigField("String", "API_URL", "\"http://10.0.2.2:8000\"")
             buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.224.183:3000\"")
 
         }

@@ -16,7 +16,6 @@ import com.vhennus.wallet.domain.dao.WalletDAO
 @TypeConverters(Converters::class)
 abstract  class AppDatabase:RoomDatabase(){
     abstract fun walletDAO():WalletDAO
-
     companion object{
         @Volatile
         private var INSTANCE:AppDatabase? = null

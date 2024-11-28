@@ -11,6 +11,9 @@ import com.vhennus.auth.presentation.loginScreen
 import com.vhennus.auth.presentation.logoutScreen
 import com.vhennus.auth.presentation.preLoginScreen
 import com.vhennus.auth.presentation.signUpScreen
+import com.vhennus.chat.data.ChatViewModel
+import com.vhennus.chat.presentation.AllChatsScreen
+import com.vhennus.chat.presentation.SingleChatScreen
 import com.vhennus.feed.data.FeedViewModel
 
 import com.vhennus.feed.presentation.createCommentScreen
@@ -42,7 +45,8 @@ fun AppNav(
     orderViewModel: OrderViewModel,
     authViewModel: AuthViewModel,
     feedViewModel: FeedViewModel,
-    triviaViewModel: TriviaViewModel
+    triviaViewModel: TriviaViewModel,
+    chatViewModel: ChatViewModel
 ){
 
     NavHost(navController = navController, startDestination = NavScreen.HomeScreen.route) {
@@ -110,6 +114,13 @@ fun AppNav(
                 singleSellOrderScreen(navController,orderViewModel, id)
             }
         }
+
+        composable(NavScreen.AllChatsScreen.route){
+            AllChatsScreen(navController, chatViewModel)
+        }
+        composable(NavScreen.SingleChatScreen.route){
+            SingleChatScreen(navController, chatViewModel)
+        }
         composable(route=NavScreen.MyOrdersScreen.route){
             myOrdersScreen(navController,orderViewModel )
         }
@@ -170,7 +181,7 @@ fun AppNav(
             NavScreen.HomeScreen.route,
             authViewModel
         ) {
-            HomeScreen(navController, feedViewModel)
+            HomeScreen(navController, feedViewModel, chatViewModel)
         }
 
     }

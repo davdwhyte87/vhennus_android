@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.vhennus.auth.data.AuthViewModel
+import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.trade.data.OrderViewModel
 import com.vhennus.trivia.data.TriviaViewModel
@@ -42,7 +43,7 @@ class MainActivity : ComponentActivity() {
             val feedViewModel:FeedViewModel = hiltViewModel()
             val navController = rememberNavController()
             val triviaViewModel:TriviaViewModel = hiltViewModel()
-
+            val chatViewModel:ChatViewModel = hiltViewModel()
             AmorgensTheme(darkTheme = false) {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -54,7 +55,8 @@ class MainActivity : ComponentActivity() {
                         orderViewModel,
                         authViewModel,
                         feedViewModel,
-                        triviaViewModel
+                        triviaViewModel,
+                        chatViewModel
                     )
 
                 }
