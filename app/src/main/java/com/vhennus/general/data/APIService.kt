@@ -4,6 +4,7 @@ package com.vhennus.general.data
 import com.vhennus.auth.domain.LoginReq
 import com.vhennus.auth.domain.SignupReq
 import com.vhennus.chat.domain.Chat
+import com.vhennus.chat.domain.CreateChatReq
 import com.vhennus.feed.domain.Comment
 import com.vhennus.feed.domain.CreateCommentReq
 import com.vhennus.feed.domain.CreatePostReq
@@ -129,6 +130,11 @@ interface APIService {
     @GET("api/v1/auth/chat/get_pair/{id}")
     suspend fun getChatsByPair(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<List<Chat>>>
 
+    @GET("api/v1/auth/chat/get_all_chats")
+    suspend fun getAllChats( @HeaderMap header:Map<String,String> ):Response<GenericResp<List<Chat>>>
+
+    @POST("api/v1/auth/chat/create")
+    suspend fun createChat(@Body data:CreateChatReq, @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
 
 
 }

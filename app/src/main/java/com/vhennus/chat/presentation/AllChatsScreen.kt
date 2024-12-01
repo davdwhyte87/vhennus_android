@@ -9,6 +9,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,8 +18,11 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.chat.domain.Chat
+import com.vhennus.chat.domain.ChatPair
+import com.vhennus.chat.domain.MUser
 import com.vhennus.ui.GeneralScaffold
 import com.vhennus.ui.GeneralTopBar
 
@@ -27,19 +31,25 @@ import com.vhennus.ui.GeneralTopBar
 @Composable
 fun AllChatsScreen(
     navController: NavController,
-    chatViewModel: ChatViewModel
+    chatViewModel: ChatViewModel,
+    authViewModel: AuthViewModel
     ){
+
     val chats = listOf(
-        Chat(sender = "jubello", receiver = "cammello", message = "Why are you so dumb seenat"),
-        Chat(sender = "rexienelly", receiver = "temz", message = "We need to make this work o"),
-        Chat(sender = "greengoo", receiver = "remi", message = "Let us go on a fucking heist")
+        ChatPair(
+            "iow9838usose",
+            listOf(MUser("Daniel", "james"))
+        )
     )
+
     val lifecycleOwner = LocalLifecycleOwner.current
+    val userName = authViewModel.userName.collectAsState().value
 
     DisposableEffect(true) {
         val observer = LifecycleEventObserver{_,event->
             if(event == Lifecycle.Event.ON_RESUME){
-                chatViewModel.getAllChatsByPair("8937b13c-3034-4405-96be-c7a7d41fb3f3")
+                authViewModel.getUserName()
+                chatViewModel.getAllChats()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -58,7 +68,8 @@ fun AllChatsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(chats){chat->
-                ChatListItem(chat, navController)
+
+                ChatListItem(chat, navController, userName)
             }
         }
     }

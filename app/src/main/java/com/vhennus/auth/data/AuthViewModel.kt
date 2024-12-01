@@ -150,7 +150,7 @@ class AuthViewModel  @Inject constructor(
         return true
     }
 
-    fun getUserName(application: Context){
+    fun getUserName(){
         val mshared = application.getSharedPreferences("user_data", Context.MODE_PRIVATE)
         _userName.value = mshared.getString("user_name","").toString()
     }

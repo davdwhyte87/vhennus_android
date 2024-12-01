@@ -29,10 +29,11 @@ import androidx.navigation.NavController
 import com.vhennus.NavScreen
 import com.vhennus.R
 import com.vhennus.chat.domain.Chat
+import com.vhennus.chat.domain.ChatPair
 
 
 @Composable
-fun ChatListItem(chat:Chat, navController: NavController){
+fun ChatListItem(chat:ChatPair, navController: NavController, userName:String){
     Row  (
         modifier = Modifier.fillMaxWidth().clickable(onClick = {
             navController.navigate(NavScreen.SingleChatScreen.route)
@@ -47,8 +48,8 @@ fun ChatListItem(chat:Chat, navController: NavController){
             modifier = Modifier.size(60.dp).clip(CircleShape)
         )
         Column {
-            Text(chat.sender, style = MaterialTheme.typography.titleMedium)
-            Text(chat.message,
+            Text(if (chat.users[0].userName==userName) chat.users[1].userName else chat.users[0].userName , style = MaterialTheme.typography.titleMedium)
+            Text(chat.lastMessage,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium,

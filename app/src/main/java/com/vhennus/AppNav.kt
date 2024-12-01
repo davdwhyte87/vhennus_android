@@ -116,10 +116,10 @@ fun AppNav(
         }
 
         composable(NavScreen.AllChatsScreen.route){
-            AllChatsScreen(navController, chatViewModel)
+            AllChatsScreen(navController, chatViewModel, authViewModel)
         }
         composable(NavScreen.SingleChatScreen.route){
-            SingleChatScreen(navController, chatViewModel)
+            SingleChatScreen(navController, chatViewModel, authViewModel)
         }
         composable(route=NavScreen.MyOrdersScreen.route){
             myOrdersScreen(navController,orderViewModel )
@@ -181,7 +181,7 @@ fun AppNav(
             NavScreen.HomeScreen.route,
             authViewModel
         ) {
-            HomeScreen(navController, feedViewModel, chatViewModel)
+            HomeScreen(navController, feedViewModel, chatViewModel, authViewModel)
         }
 
     }

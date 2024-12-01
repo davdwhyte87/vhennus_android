@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.chat.presentation.AllChatsScreen
 import com.vhennus.feed.data.FeedViewModel
@@ -59,7 +60,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(navController: NavController,
                feedViewModel: FeedViewModel,
-               chatViewModel: ChatViewModel
+               chatViewModel: ChatViewModel,
+               authViewModel: AuthViewModel
 ){
     val systemData = feedViewModel.systemData.collectAsState()
     DisposableEffect(true) {
@@ -157,7 +159,7 @@ fun HomeScreen(navController: NavController,
                 FeedScreen(navController, feedViewModel)
             }
             if(selectedTabIndex == 1){
-                AllChatsScreen(navController, chatViewModel)
+                AllChatsScreen(navController, chatViewModel,authViewModel )
             }
             if(selectedTabIndex == 2){
                 profilePage()
