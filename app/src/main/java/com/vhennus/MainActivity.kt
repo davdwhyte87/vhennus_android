@@ -1,6 +1,7 @@
 package com.vhennus
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,9 +10,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.FirebaseApp
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.feed.data.FeedViewModel
+import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.trade.data.OrderViewModel
 import com.vhennus.trivia.data.TriviaViewModel
 import com.vhennus.ui.theme.AmorgensTheme
@@ -25,8 +30,10 @@ import io.sentry.android.core.SentryAndroid
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this) ?: throw IllegalStateException("FirebaseApp initialization failed")
+        Log.d("FirebaseInit", "ApplicationId: ${BuildConfig.APPLICATION_ID}")
 
-
+        val storage = Firebase.storage
         SentryAndroid.init(this) { options ->
             options.dsn = "https://e5aa33217ae0e9e465a28c7f3cbc0a45@o4507910790119424.ingest.us.sentry.io/4507910882131968"
             options.tracesSampleRate = 1.0 // Set the performance monitoring sample rate
@@ -44,6 +51,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val triviaViewModel:TriviaViewModel = hiltViewModel()
             val chatViewModel:ChatViewModel = hiltViewModel()
+            val profileViewModel:ProfileViewModel = hiltViewModel()
             AmorgensTheme(darkTheme = false) {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -56,7 +64,8 @@ class MainActivity : ComponentActivity() {
                         authViewModel,
                         feedViewModel,
                         triviaViewModel,
-                        chatViewModel
+                        chatViewModel,
+                        profileViewModel
                     )
 
                 }

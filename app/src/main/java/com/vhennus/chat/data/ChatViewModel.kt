@@ -37,24 +37,28 @@ class ChatViewModel @Inject constructor(
     private val _allChats = MutableStateFlow<List<Chat>>(emptyList())
     val allChats = _allChats.asStateFlow()
 
+    private val _allChatPairs = MutableStateFlow<List<ChatPair>>(emptyList())
+    val allChatPairs = _allChatPairs.asStateFlow()
+
+    private val _singleChatPair = MutableStateFlow(ChatPair())
+    val singleChatPair = _singleChatPair.asStateFlow()
+
     private val _chatsUIState = MutableStateFlow(ChatUIState())
     val chatsUIState = _chatsUIState.asStateFlow()
 
 
     fun getAllChats(){
         _chatsUIState.update { it.copy(isGetAllChatsLoading = true) }
-
-
         viewModelScope.launch {
             withContext(Dispatchers.IO){
                 val token = getUserToken.getUserToken()
                 try{
-                    val resp= apiService.getAllChats( mapOf("Authorization" to token) )
+                    val resp= apiService.getAllChatPairs( mapOf("Authorization" to token) )
 
                     if(resp.code() == 200){
                         val data = resp.body()?.data
                         if(data !=null){
-                            _allChats.value = data
+                            _allChatPairs.value = data
                         }
                         CLog.debug("CHATS_RESP", data.toString())
                         _chatsUIState.update { it.copy(

@@ -48,8 +48,8 @@ fun ChatListItem(chat:ChatPair, navController: NavController, userName:String){
             modifier = Modifier.size(60.dp).clip(CircleShape)
         )
         Column {
-            Text(if (chat.users[0].userName==userName) chat.users[1].userName else chat.users[0].userName , style = MaterialTheme.typography.titleMedium)
-            Text(chat.lastMessage,
+            Text(if (chat.users[0].user_name==userName) chat.users[1].user_name else chat.users[0].user_name , style = MaterialTheme.typography.titleMedium)
+            Text(chat.last_message,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium,

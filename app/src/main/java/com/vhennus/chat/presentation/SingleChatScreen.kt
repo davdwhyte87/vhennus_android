@@ -78,10 +78,8 @@ fun SingleChatScreen(
     val chats = chatViewModel.chats.collectAsState().value
     val chatsUIState = chatViewModel.chatsUIState.collectAsState().value
     val userName= authViewModel.userName.collectAsState().value
-    val chatPair = ChatPair(
-        id="iow9838usose",
-        users = listOf(MUser(userName, ""), MUser("Daniel", ""))
-    )
+    val collectAsState = chatViewModel.singleChatPair.collectAsState().value
+    val chatPair = collectAsState
     val listState = rememberLazyListState()
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -165,7 +163,7 @@ fun SingleChatScreen(
                       }
                       val createChatReq = CreateChatReq(
                           pair_id = chatPair.id,
-                          receiver = if(chatPair.users[0].userName == userName) chatPair.users[1].userName else chatPair.users[0].userName,
+                          receiver = if(chatPair.users[0].user_name == userName) chatPair.users[1].user_name else chatPair.users[0].user_name,
                           message = newMessage.value,
                           image = ""
                       )

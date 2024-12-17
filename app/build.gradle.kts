@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("com.google.dagger.hilt.android") version "2.51.1" apply true
     id("kotlin-kapt")
+    id("com.google.gms.google-services")
 }
 
 val hilt_version = "2.51.1"
@@ -156,6 +157,13 @@ dependencies {
     implementation (libs.prettytime)
 
     implementation ("com.squareup.okhttp3:logging-interceptor:4.9.3")
+
+    // image
+    implementation(libs.coil.compose)
+
+    // firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.1.0"))
+    implementation("com.google.firebase:firebase-storage-ktx")
 
 
 }

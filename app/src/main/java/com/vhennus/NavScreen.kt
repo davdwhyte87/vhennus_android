@@ -120,4 +120,20 @@ sealed class NavScreen(
         route = "single_chat",
         title = "Single Chat"
     )
+
+    object EditProfilePage:NavScreen(
+        route = "edit_profile",
+        title = "Edit Profile"
+    )
+
+    object MyFriendsPage:NavScreen(
+        route = "my_friends",
+        title = "My Friends"
+    )
+
+    object FriendRequestPage:NavScreen(
+        route = "friend_request",
+        title = "Friend Request"
+    )
+
 }

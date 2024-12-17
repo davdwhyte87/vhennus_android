@@ -20,6 +20,11 @@ import com.vhennus.feed.presentation.createCommentScreen
 import com.vhennus.feed.presentation.createPostScreen
 import com.vhennus.feed.presentation.singlePostScreen
 import com.vhennus.home.presentation.HomeScreen
+import com.vhennus.profile.data.ProfileViewModel
+import com.vhennus.profile.domain.Profile
+import com.vhennus.profile.presentation.FriendRequestsPage
+import com.vhennus.profile.presentation.editProfilePage
+import com.vhennus.profile.presentation.myFriendsPage
 import com.vhennus.trade.data.OrderViewModel
 import com.vhennus.trade.presentation.ShopCoinsScreen
 import com.vhennus.trade.presentation.addPaymentMethodScreen
@@ -46,7 +51,8 @@ fun AppNav(
     authViewModel: AuthViewModel,
     feedViewModel: FeedViewModel,
     triviaViewModel: TriviaViewModel,
-    chatViewModel: ChatViewModel
+    chatViewModel: ChatViewModel,
+    profileViewModel:ProfileViewModel
 ){
 
     NavHost(navController = navController, startDestination = NavScreen.HomeScreen.route) {
@@ -91,6 +97,14 @@ fun AppNav(
             postTriviaPlayPage(navController, triviaViewModel)
         }
 
+        composable(route=NavScreen.EditProfilePage.route){
+            editProfilePage(navController, profileViewModel)
+        }
+
+        composable(route=NavScreen.FriendRequestPage.route){
+            FriendRequestsPage(navController, profileViewModel)
+        }
+
 //        composable(route=NavScreen.CreateSellOrderScreen.route){
 //            createSellOrderScreen(navController, orderViewModel)
 //        }
@@ -98,6 +112,10 @@ fun AppNav(
 
         composable(route=NavScreen.AddWalletScreen.route){
             AddWalletScreen(navController = navController, walletViewModel)
+        }
+
+        composable(NavScreen.MyFriendsPage.route){
+            myFriendsPage(navController, profileViewModel)
         }
 
         // jut him kin mute turn the
@@ -181,7 +199,7 @@ fun AppNav(
             NavScreen.HomeScreen.route,
             authViewModel
         ) {
-            HomeScreen(navController, feedViewModel, chatViewModel, authViewModel)
+            HomeScreen(navController, feedViewModel, chatViewModel, authViewModel, profileViewModel)
         }
 
     }

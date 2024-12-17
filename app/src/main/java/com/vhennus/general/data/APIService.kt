@@ -4,12 +4,16 @@ package com.vhennus.general.data
 import com.vhennus.auth.domain.LoginReq
 import com.vhennus.auth.domain.SignupReq
 import com.vhennus.chat.domain.Chat
+import com.vhennus.chat.domain.ChatPair
 import com.vhennus.chat.domain.CreateChatReq
 import com.vhennus.feed.domain.Comment
 import com.vhennus.feed.domain.CreateCommentReq
 import com.vhennus.feed.domain.CreatePostReq
 import com.vhennus.feed.domain.Post
 import com.vhennus.general.domain.SystemData
+import com.vhennus.profile.domain.FriendRequest
+import com.vhennus.profile.domain.Profile
+import com.vhennus.profile.domain.UpdateProfileRequest
 import com.vhennus.trade.domain.BuyOrder
 import com.vhennus.trade.domain.OrderMessage
 import com.vhennus.trade.domain.PaymentMethodData
@@ -136,5 +140,19 @@ interface APIService {
     @POST("api/v1/auth/chat/create")
     suspend fun createChat(@Body data:CreateChatReq, @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
 
+    @GET("api/v1/auth/chat/get_my_chat_pairs")
+    suspend fun getAllChatPairs( @HeaderMap header:Map<String,String> ):Response<GenericResp<List<ChatPair>>>
+
+
+    // profile
+    @GET("api/v1/auth/profile/get")
+    suspend fun getMyProfile( @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
+
+    @POST("api/v1/auth/profile/update")
+    suspend fun updateProfile(@Body data:UpdateProfileRequest, @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
+
+
+    @GET("api/v1/auth/user/friend_requests")
+    suspend fun getMyFriendRequests( @HeaderMap header:Map<String,String> ):Response<GenericResp<List<FriendRequest>>>
 
 }

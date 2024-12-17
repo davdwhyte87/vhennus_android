@@ -1,10 +1,15 @@
 package com.vhennus.chat.domain
 
+import com.vhennus.profile.domain.Profile
+
 data class ChatPair(
     val id:String = "",
-    val users:List<MUser> = emptyList(),
-    val dateCreated:String = "",
-    val lastMessage:String = ""
+    val user_name:String = "",
+    val users_ids:List<String> = emptyList(),
+    val users:List<Profile> = emptyList(),
+    val created_at:String = "",
+    val updaed_at:String = "",
+    val last_message:String = ""
 )
 
 data class MUser(

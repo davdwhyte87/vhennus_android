@@ -50,6 +50,7 @@ import com.vhennus.feed.presentation.FeedScreen
 import com.vhennus.general.utils.CLog
 import com.vhennus.home.presentation.components.BottomNavItem
 import com.vhennus.menu.presentation.MenuScreen
+import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.profile.presentation.profilePage
 import com.vhennus.ui.theme.Purple
 import kotlinx.coroutines.launch
@@ -61,7 +62,8 @@ import kotlinx.coroutines.launch
 fun HomeScreen(navController: NavController,
                feedViewModel: FeedViewModel,
                chatViewModel: ChatViewModel,
-               authViewModel: AuthViewModel
+               authViewModel: AuthViewModel,
+               profileViewModel: ProfileViewModel
 ){
     val systemData = feedViewModel.systemData.collectAsState()
     DisposableEffect(true) {
@@ -162,7 +164,7 @@ fun HomeScreen(navController: NavController,
                 AllChatsScreen(navController, chatViewModel,authViewModel )
             }
             if(selectedTabIndex == 2){
-                profilePage()
+                profilePage(navController, profileViewModel)
             }
             if(selectedTabIndex == 3){
                 MenuScreen(navController)
