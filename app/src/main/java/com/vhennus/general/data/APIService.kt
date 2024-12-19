@@ -155,4 +155,11 @@ interface APIService {
     @GET("api/v1/auth/user/friend_requests")
     suspend fun getMyFriendRequests( @HeaderMap header:Map<String,String> ):Response<GenericResp<List<FriendRequest>>>
 
+    @GET("api/v1/auth/user/friend_request/accept/{id}")
+    suspend fun acceptFriendRequest(@Path("id") id:String, @HeaderMap header:Map<String,String>):Response<GenericResp<String>>
+
+    @GET("api/v1/auth/user/friend_request/reject/{id}")
+    suspend fun rejectFriendRequest(@Path("id") id:String, @HeaderMap header:Map<String,String>):Response<GenericResp<String>>
+
+
 }

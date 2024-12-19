@@ -214,4 +214,102 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun acceptFriendRequest(id:String){
+        _profileUIState.update { it.copy(
+            isAcceptRequestLoading = true
+        ) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                try {
+                    val token = getUserToken.getUserToken()
+                    val resp = apiService.acceptFriendRequest(id, mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        val data = resp.body()?.data
+                        CLog.debug("ACCEPT FR", resp.body().toString())
+                        val tempRequests = _myFriendRequests.value.filter { it.id != id }
+                        _myFriendRequests.value = tempRequests
+
+                        _profileUIState.update { it.copy(
+                            isAcceptRequestLoading = false,
+                            isAcceptRequestSuccess = true,
+                            isAcceptRequestError = false,
+                            acceptRequestErrorMessage = ""
+                        ) }
+
+                    }else{
+                        val respString = resp.errorBody()?.string()
+                        CLog.error("ACCEPT REQUEST RESPONSE", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                        _profileUIState.update { it.copy(
+                            isAcceptRequestLoading = false,
+                            isAcceptRequestSuccess = false,
+                            isAcceptRequestError = true,
+                            acceptRequestErrorMessage = errorResp.message
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _profileUIState.update { it.copy(
+                        isAcceptRequestLoading = false,
+                        isAcceptRequestSuccess = false,
+                        isAcceptRequestError = true,
+                        acceptRequestErrorMessage = "Network Error"
+                    ) }
+                    CLog.error("ACCEPT REQUEST RESPONSE", e.toString() +" ")
+                }
+            }
+        }
+    }
+
+    fun rejectFriendRequest(id:String){
+        _profileUIState.update { it.copy(
+            isRejectRequestLoading = true
+        ) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                try {
+                    val token = getUserToken.getUserToken()
+                    val resp = apiService.rejectFriendRequest(id, mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        val data = resp.body()?.data
+
+                        val tempRequests = _myFriendRequests.value.filter { it.id != id }
+                        _myFriendRequests.value = tempRequests
+
+                        _profileUIState.update { it.copy(
+                            isRejectRequestLoading = false,
+                            isRejectRequestSuccess = true,
+                            isRejectRequestError = false,
+                            rejectRequestErrorMessage = ""
+                        ) }
+
+                    }else{
+                        val respString = resp.errorBody()?.string()
+                        CLog.error("REJECT REQUEST RESPONSE", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                        _profileUIState.update { it.copy(
+                            isRejectRequestLoading = false,
+                            isRejectRequestSuccess = false,
+                            isRejectRequestError = true,
+                            rejectRequestErrorMessage = errorResp.message
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _profileUIState.update { it.copy(
+                        isRejectRequestLoading = false,
+                        isRejectRequestSuccess = false,
+                        isRejectRequestError = true,
+                        rejectRequestErrorMessage = "Network Error"
+                    ) }
+                    CLog.error("REJECT REQUEST RESPONSE", e.toString() +" ")
+                }
+            }
+        }
+    }
+
 }

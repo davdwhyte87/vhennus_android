@@ -14,5 +14,15 @@ data class ProfileUIState(
     val isGetFriendRequestsLoading:Boolean = false,
     val isGetFriendRequestsSuccess:Boolean = false,
     val isGetFriendRequestsError:Boolean = false,
-    val getFrienRequestsErrorMessage:String = ""
+    val getFrienRequestsErrorMessage:String = "",
+
+    val isAcceptRequestLoading:Boolean = false,
+    val isAcceptRequestSuccess:Boolean = false,
+    val isAcceptRequestError:Boolean = false,
+    val acceptRequestErrorMessage:String = "",
+
+    val isRejectRequestLoading:Boolean = false,
+    val isRejectRequestSuccess:Boolean = false,
+    val isRejectRequestError:Boolean = false,
+    val rejectRequestErrorMessage:String = ""
 )
