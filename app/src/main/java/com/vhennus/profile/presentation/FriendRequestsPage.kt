@@ -132,7 +132,6 @@ fun FriendRequestItem(
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(60.dp).clip(CircleShape)
         )
-
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -144,7 +143,6 @@ fun FriendRequestItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ){
                 Button(onClick = {
-
                     profileViewModel.acceptFriendRequest(request.id)
                 },
                     colors = ButtonDefaults.buttonColors(

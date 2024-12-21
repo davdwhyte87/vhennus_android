@@ -32,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.vhennus.NavScreen
 import com.vhennus.R
 import com.vhennus.general.presentation.LoadImageWithPlaceholder
 import com.vhennus.profile.data.ProfileViewModel
@@ -88,7 +89,7 @@ fun myFriendsPage(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ){
                     items(friends){ item->
-                        FriendListItem(item)
+                        FriendListItem(item, navController)
                     }
                 }
             }
@@ -121,11 +122,12 @@ fun FriendsPageLoadingState(){
 }
 
 @Composable
-fun FriendListItem(profile:Profile){
+fun FriendListItem(profile:Profile, navController: NavController){
     Row (
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.clickable(onClick = {
-
+            // open chat
+            navController.navigate(NavScreen.SingleChatScreen.route)
         }).fillMaxWidth()
     ) {
         if(profile.image.isEmpty() || profile.image.isBlank()){
