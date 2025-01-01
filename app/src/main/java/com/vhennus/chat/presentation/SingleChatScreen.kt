@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,9 @@ import com.vhennus.chat.domain.Chat
 import com.vhennus.chat.domain.ChatPair
 import com.vhennus.chat.domain.CreateChatReq
 import com.vhennus.chat.domain.MUser
+import com.vhennus.general.utils.CLog
+import com.vhennus.profile.data.ProfileViewModel
+import com.vhennus.profile.domain.Profile
 import com.vhennus.ui.AnimatedPreloader
 import com.vhennus.ui.GeneralScaffold
 import kotlinx.coroutines.CoroutineScope
@@ -61,7 +65,9 @@ import kotlinx.coroutines.launch
 fun SingleChatScreen(
     navController: NavController,
     chatViewModel: ChatViewModel,
-    authViewModel: AuthViewModel
+    profileViewModel: ProfileViewModel,
+    authViewModel: AuthViewModel,
+    receiverUsername:String?,
 ){
 
     val newMessage = remember {
@@ -75,29 +81,59 @@ fun SingleChatScreen(
 //    )
 
 
+
     val chats = chatViewModel.chats.collectAsState().value
     val chatsUIState = chatViewModel.chatsUIState.collectAsState().value
     val userName= authViewModel.userName.collectAsState().value
     val collectAsState = chatViewModel.singleChatPair.collectAsState().value
-    val chatPair = collectAsState
+    var chatPair = chatViewModel.singleChatPair.collectAsState().value
     val listState = rememberLazyListState()
+    val profile = profileViewModel.profile.collectAsState().value
+    val singleChatPair = chatViewModel.singleChatPair.collectAsState().value
 
     val lifecycleOwner = LocalLifecycleOwner.current
     val scrollState = rememberScrollState()
     DisposableEffect(true) {
         val observer = LifecycleEventObserver{_,event->
             if(event == Lifecycle.Event.ON_RESUME){
-                chatViewModel.getAllChatsByPair("iow9838usose")
+//                if(chatPairID != null){
+//                    chatViewModel.getAllChatsByPair(chatPairID)
+//                }
+
                 authViewModel.getUserName()
+                if(receiverUsername != null){
+                    // get the persons profile
+                    CLog.debug("RECEIVER_USERNAME_FROM_ROUTE", receiverUsername)
+                    chatViewModel.findChatPair(receiverUsername)
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
+            //profileViewModel.resetModelData()
+            chatViewModel.resetChatUIState()
+            chatViewModel.singleChatScreenDispose()
+        }
+    }
+    val receiverProfile = chatViewModel.singleChatReceiverProfile.collectAsState().value
 
+    LaunchedEffect(chatsUIState.isFindChatPairSuccess) {
+        if(chatsUIState.isFindChatPairSuccess && !chatsUIState.isChatPairNull){
+            // get chats if a chat pair exists
+            CLog.debug("CHAT_PAIR_ID", singleChatPair.id)
+            chatViewModel.getAllChatsByPair(singleChatPair.id)
+        }
+
+        if(chatsUIState.isFindChatPairSuccess && chatsUIState.isChatPairNull){
+            chatPair = ChatPair(
+                user_name = userName,
+                users_ids = listOf(userName, receiverUsername!!)
+
+            )
         }
     }
     GeneralScaffold(
-        { ChatTopBar(navController) },
+        { ChatTopBar(navController, receiverProfile) },
         floatingActionButton = {  },
     ) {
       Column(
@@ -161,9 +197,10 @@ fun SingleChatScreen(
                       if(!validateCreateChat(context, newMessage.value)){
                           return@Button
                       }
+
                       val createChatReq = CreateChatReq(
                           pair_id = chatPair.id,
-                          receiver = if(chatPair.users[0].user_name == userName) chatPair.users[1].user_name else chatPair.users[0].user_name,
+                          receiver = receiverUsername!!,
                           message = newMessage.value,
                           image = ""
                       )
@@ -193,7 +230,6 @@ fun SingleChatScreen(
                   }
               }
           }
-
       }
     }
 }

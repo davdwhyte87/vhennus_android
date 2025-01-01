@@ -1,16 +1,20 @@
 package com.vhennus.chat.data
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vhennus.Application
 import com.vhennus.chat.domain.Chat
 import com.vhennus.chat.domain.ChatPair
 import com.vhennus.chat.domain.ChatUIState
 import com.vhennus.chat.domain.CreateChatReq
 import com.vhennus.general.data.APIService
 import com.vhennus.general.data.GetUserToken
+import com.vhennus.general.data.WebSocketManager
 import com.vhennus.general.utils.CLog
+import com.vhennus.profile.domain.Profile
 import com.vhennus.trade.domain.response.GenericResp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +29,9 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatViewModel @Inject constructor(
    private val apiService: APIService,
-    private val getUserToken: GetUserToken
+    private val getUserToken: GetUserToken,
+    private val webSocketManager: WebSocketManager,
+    private val application: android.app.Application
 ):ViewModel() {
 
     private val _chatPairs = MutableStateFlow<List<ChatPair>>(emptyList())
@@ -46,6 +52,34 @@ class ChatViewModel @Inject constructor(
     private val _chatsUIState = MutableStateFlow(ChatUIState())
     val chatsUIState = _chatsUIState.asStateFlow()
 
+    private val _singleChatReceiverProfile = MutableStateFlow(Profile())
+    val singleChatReceiverProfile = _singleChatReceiverProfile.asStateFlow()
+
+
+
+    fun setSingleChatReceiverProfile(profile:Profile){
+        _singleChatReceiverProfile.value = profile
+    }
+
+    fun singleChatScreenDispose(){
+        _singleChatReceiverProfile.value = Profile()
+        _chats.value = emptyList()
+        _singleChatPair.value = ChatPair()
+    }
+
+    fun resetChatUIState(){
+        _chatsUIState.value = ChatUIState()
+    }
+
+
+    init {
+        CLog.debug("INIT","ChatViewModel")
+        connectToChatWS()
+
+        // get all chat pairs
+        getAllMyChatPairs()
+    }
+
 
     fun getAllChats(){
         _chatsUIState.update { it.copy(isGetAllChatsLoading = true) }
@@ -60,7 +94,7 @@ class ChatViewModel @Inject constructor(
                         if(data !=null){
                             _allChatPairs.value = data
                         }
-                        CLog.debug("CHATS_RESP", data.toString())
+                        CLog.debug("GET_ALL_CHATS_RESP", data.toString())
                         _chatsUIState.update { it.copy(
                             isGetAllChatsLoading = false,
                             isGetAllChatsSuccess = true,
@@ -70,7 +104,7 @@ class ChatViewModel @Inject constructor(
 
                     }else{
                         val respString = resp.errorBody()?.string()
-                        CLog.error("CREATE ORDER RESPONSE", respString +" ")
+                        CLog.error("GET_ALL_CHATS_RESP", respString +" ")
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<String>>() {}.type
                         val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
@@ -89,11 +123,61 @@ class ChatViewModel @Inject constructor(
                         isGetAllChatsError = true,
                         isGetAllChatsErrorMessage = "Network Error"
                     ) }
-                    CLog.debug("CHATS_RESP", e.toString())
+                    CLog.debug("GET_ALL_CHATS_RESP", e.toString())
                 }
             }
         }
     }
+
+
+    fun getAllMyChatPairs(){
+        _chatsUIState.update { it.copy(isGetAllChatsLoading = true) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                val token = getUserToken.getUserToken()
+                try{
+                    val resp= apiService.getMyChatPairs( mapOf("Authorization" to token) )
+
+                    if(resp.code() == 200){
+                        val data = resp.body()?.data
+                        if(data !=null){
+                            _allChatPairs.value = data
+                        }
+                        CLog.debug("GET_ALL_CHAT_PAIRS_RESP", data.toString())
+                        _chatsUIState.update { it.copy(
+                            isGetAllChatsLoading = false,
+                            isGetAllChatsSuccess = true,
+                            isGetAllChatsError = false,
+                            isGetAllChatsErrorMessage = ""
+                        ) }
+
+                    }else{
+                        val respString = resp.errorBody()?.string()
+                        CLog.error("GET_ALL_CHAT_PAIRS_RESP", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                        _chatsUIState.update { it.copy(
+                            isGetAllChatsLoading = false,
+                            isGetAllChatsSuccess = false,
+                            isGetAllChatsError = true,
+                            isGetAllChatsErrorMessage = errorResp.message
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _chatsUIState.update { it.copy(
+                        isGetAllChatsLoading = false,
+                        isGetAllChatsSuccess = false,
+                        isGetAllChatsError = true,
+                        isGetAllChatsErrorMessage = "Network Error"
+                    ) }
+                    CLog.debug("GET_ALL_CHAT_PAIRS_RESP", e.toString())
+                }
+            }
+        }
+    }
+
 
 
 
@@ -113,7 +197,12 @@ class ChatViewModel @Inject constructor(
                         if(data !=null){
                             _chats.value = data
                         }
-                        CLog.debug("CHATS_RESP", data.toString())
+                        // store last message locally
+                        val lastMessage = _chats.value.last()
+                        saveLastMessage(lastMessage.pair_id, lastMessage.message)
+
+
+                        CLog.debug("GET_CHATS_BY_PAIR_RESP", data.toString())
                         _chatsUIState.update { it.copy(
                            isGetChatsLoading = false,
                             isGetChatsSuccess = true,
@@ -123,7 +212,7 @@ class ChatViewModel @Inject constructor(
 
                     }else{
                         val respString = resp.errorBody()?.string()
-                        CLog.error("CREATE ORDER RESPONSE", respString +" ")
+                        CLog.error("GET_CHATS_BY_PAIR_RESP", respString +" ")
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<String>>() {}.type
                         val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
@@ -142,7 +231,7 @@ class ChatViewModel @Inject constructor(
                         isGetChatsError = true,
                         getChatsErrorMessage = "Network Error"
                     ) }
-                    CLog.debug("CHATS_RESP", e.toString())
+                    CLog.debug("GET_CHATS_BY_PAIR_RESP", e.toString())
                 }
             }
         }
@@ -160,7 +249,7 @@ class ChatViewModel @Inject constructor(
                     if(resp.code() == 200){
                         val data = resp.body()?.data
 
-                        CLog.debug("CHATS_RESP", data.toString())
+                        CLog.debug("CREATE_CHAT_RESP", data.toString())
                         _chatsUIState.update { it.copy(
                             isCreateChatLoading = false,
                             isCreateChatSuccess = true,
@@ -168,12 +257,17 @@ class ChatViewModel @Inject constructor(
                             createChatErrorMessage = ""
                         ) }
 
+                        // refresh to get chat pair after the first chat
+                        if(_chatsUIState.value.isChatPairNull){
+                            findChatPair(chat.receiver)
+                        }
+
                         // get all chats
                         getAllChatsByPair(chat.pair_id, true)
 
                     }else{
                         val respString = resp.errorBody()?.string()
-                        CLog.error("CREATE ORDER RESPONSE", respString +" ")
+                        CLog.error("CREATE_CHAT_RESP", respString +" ")
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<String>>() {}.type
                         val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
@@ -192,9 +286,153 @@ class ChatViewModel @Inject constructor(
                         isCreateChatError = false,
                         createChatErrorMessage = "Network Error"
                     ) }
-                    CLog.debug("CHATS_RESP", e.toString())
+                    CLog.debug("CREATE_CHAT_RESP", e.toString())
                 }
             }
         }
     }
+
+
+
+    // find chat pair between app user and the supplied userName
+    fun findChatPair(userName:String){
+        _chatsUIState.update { it.copy(
+            isFindChatPairLoading = true
+        ) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                try {
+                    val token = getUserToken.getUserToken()
+                    val resp = apiService.findChatPair(userName, mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        val data = resp.body()?.data
+                        CLog.debug("FIND CHAT PAIR", data.toString())
+                        if(data !=null){
+                            _chatsUIState.update { it.copy(
+                                isFindChatPairLoading = false,
+                                isFindChatPairSuccess = true,
+                                isFindChatPairError = false,
+                                findChatPairErrorMessage = "",
+                                isChatPairNull = false
+                            ) }
+                            _singleChatPair.value = data
+
+                        }else{
+                            _chatsUIState.update { it.copy(
+                                isFindChatPairLoading = false,
+                                isFindChatPairSuccess = true,
+                                isFindChatPairError = false,
+                                findChatPairErrorMessage = "",
+                                isChatPairNull = true
+                            ) }
+
+                        }
+
+                    }else{
+                        val respString = resp.errorBody()?.string()
+                        CLog.error("FIND CHAT PAIR ERROR", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                        _chatsUIState.update { it.copy(
+                            isFindChatPairLoading = false,
+                            isFindChatPairSuccess = false,
+                            isFindChatPairError = true,
+                            findChatPairErrorMessage = errorResp.message,
+                            isChatPairNull = true
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _chatsUIState.update { it.copy(
+                        isFindChatPairLoading = false,
+                        isFindChatPairSuccess = false,
+                        isFindChatPairError = true,
+                        findChatPairErrorMessage = "Error",
+                        isChatPairNull = true
+                    ) }
+                    CLog.error("FIND CHAT PAIR ERROR", e.toString() +" ")
+                }
+            }
+        }
+    }
+
+    fun connectToChatWS(){
+        CLog.debug("WS MESSAGE", "Connecting .......  ....")
+        webSocketManager.connect(
+            onMessageReceived = { text->
+                // convert text to chat model
+                val message = Gson().fromJson(text, Chat::class.java)
+                // save last message locally
+                //saveLastMessage(message.pair_id, message.message)
+                addMessageWS(message)
+                CLog.debug("WS MESSAGE", message.toString()) },
+            onFailure = {error ->
+                CLog.debug("WS MESSAGE ERROR", error.toString())
+            },
+        )
+
+    }
+
+    fun addMessageWS(message:Chat){
+        // add message to current
+        // check if th chats have the same pair ID
+        if (_chats.value.isEmpty()){
+            _chats.value.toMutableList().add(message)
+            CLog.debug("NO SINGLECHATS OPEN","")
+        }else{
+            if (_chats.value.get(0).pair_id == message.pair_id){
+                // add to the list
+                val tempChats = _chats.value.toMutableList()
+                tempChats.add(message)
+                _chats.value = tempChats.toList()
+
+                CLog.debug("ADDED NEW CHATS TO CHAT", "")
+
+            }else{
+
+            }
+        }
+
+        var pairFound = false
+        // find the chat pair it belongs to and add last message
+        val cpairs = _allChatPairs.value.toMutableList()
+        cpairs.forEachIndexed { index, chatPair ->
+            CLog.debug("FINDING PAIR", "chatpair ${chatPair.id} - messagepair ${message.pair_id}")
+            if (message.pair_id == chatPair.id){
+                val updatedChatPair = chatPair.copy(last_message = message.message)
+                cpairs[index] = updatedChatPair
+                pairFound = true
+//                    var newChatPair = _chatPairs.value.last()
+//                    newChatPair.last_message = message.message
+                CLog.debug("NEW CHAT PAIR", chatPair.toString())
+
+            }
+        }
+        _allChatPairs.value = cpairs
+
+        if(!pairFound){
+            // if no pair was found, get all chat pairs from the sever
+            CLog.debug("NO PAIR FOUND", "")
+
+            getAllMyChatPairs()
+        }
+    }
+
+    // save last message to shared preference
+
+    fun saveLastMessage(chatPairId:String, lastMessage:String ){
+        val mshared = application.getSharedPreferences("last_messages", Context.MODE_PRIVATE)
+        val edit = mshared.edit()
+        edit.putString(chatPairId, lastMessage)
+        edit.apply()
+    }
+
+
+    fun getLastMessage(chatPairId:String):String?{
+        val mshared = application.getSharedPreferences("last_messages", Context.MODE_PRIVATE)
+        val lastMessageId = mshared.getString(chatPairId, null)
+        return lastMessageId
+    }
+
 }

@@ -115,7 +115,7 @@ fun AppNav(
         }
 
         composable(NavScreen.MyFriendsPage.route){
-            myFriendsPage(navController, profileViewModel)
+            myFriendsPage(navController, profileViewModel, chatViewModel)
         }
 
         // jut him kin mute turn the
@@ -136,8 +136,14 @@ fun AppNav(
         composable(NavScreen.AllChatsScreen.route){
             AllChatsScreen(navController, chatViewModel, authViewModel)
         }
-        composable(NavScreen.SingleChatScreen.route){
-            SingleChatScreen(navController, chatViewModel, authViewModel)
+        composable(NavScreen.SingleChatScreen.route+"/{userName}"){backStackEntry->
+            val userNameParam = backStackEntry.arguments?.getString("userName")
+//            val chatsPairIDParam = backStackEntry.arguments?.getString("chatPairID")
+
+            val userName = if(userNameParam=="null") null else userNameParam
+//            val chatsPairID = if(chatsPairIDParam == "null") null else chatsPairIDParam
+
+            SingleChatScreen(navController, chatViewModel,profileViewModel, authViewModel, userName)
         }
         composable(route=NavScreen.MyOrdersScreen.route){
             myOrdersScreen(navController,orderViewModel )

@@ -9,7 +9,7 @@ data class ChatPair(
     val users:List<Profile> = emptyList(),
     val created_at:String = "",
     val updaed_at:String = "",
-    val last_message:String = ""
+    var last_message:String = ""
 )
 
 data class MUser(

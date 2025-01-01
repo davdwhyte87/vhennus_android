@@ -14,5 +14,11 @@ data class ChatUIState(
     val isGetAllChatsSuccess:Boolean = false,
     val isGetAllChatsError:Boolean = false,
     val isGetAllChatsErrorMessage:String = "",
-    val isGetAllChatsLoading:Boolean = false
+    val isGetAllChatsLoading:Boolean = false,
+
+    val isFindChatPairLoading:Boolean = false,
+    val isFindChatPairSuccess:Boolean = false,
+    val isFindChatPairError:Boolean = false,
+    val findChatPairErrorMessage:String = "",
+    val isChatPairNull:Boolean = false,
 )

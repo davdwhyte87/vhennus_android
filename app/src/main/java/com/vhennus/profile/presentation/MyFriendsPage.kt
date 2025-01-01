@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,9 +33,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.vhennus.NavScreen
 import com.vhennus.R
+import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.general.presentation.LoadImageWithPlaceholder
 import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.profile.domain.Profile
@@ -45,8 +51,22 @@ import com.vhennus.ui.GeneralScaffold
 @Composable
 fun myFriendsPage(
     navController: NavController,
-    profileViewModel:ProfileViewModel
+    profileViewModel:ProfileViewModel,
+    chatViewModel: ChatViewModel
 ){
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val scrollState = rememberScrollState()
+    DisposableEffect(true) {
+        val observer = LifecycleEventObserver{_,event->
+            if(event == Lifecycle.Event.ON_RESUME){
+                profileViewModel.getMyProfile()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+
+        }
+    }
     val searchText = remember {
         mutableStateOf("")
     }
@@ -89,7 +109,7 @@ fun myFriendsPage(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ){
                     items(friends){ item->
-                        FriendListItem(item, navController)
+                        FriendListItem(item, navController, chatViewModel)
                     }
                 }
             }
@@ -122,12 +142,18 @@ fun FriendsPageLoadingState(){
 }
 
 @Composable
-fun FriendListItem(profile:Profile, navController: NavController){
+fun FriendListItem(
+    profile:Profile,
+    navController: NavController,
+    chatViewModel: ChatViewModel
+){
     Row (
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.clickable(onClick = {
+            // set receiver profile inmemory
+            chatViewModel.setSingleChatReceiverProfile(profile)
             // open chat
-            navController.navigate(NavScreen.SingleChatScreen.route)
+            navController.navigate(NavScreen.SingleChatScreen.route+"/${profile.user_name}")
         }).fillMaxWidth()
     ) {
         if(profile.image.isEmpty() || profile.image.isBlank()){

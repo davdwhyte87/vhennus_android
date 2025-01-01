@@ -32,6 +32,8 @@ class ProfileViewModel @Inject constructor(
     private val _profile = MutableStateFlow(Profile())
     val profile = _profile.asStateFlow()
 
+
+
     private val _profileUIState = MutableStateFlow(ProfileUIState())
     val profileUIState = _profileUIState.asStateFlow()
 
@@ -40,6 +42,70 @@ class ProfileViewModel @Inject constructor(
 
     fun resetUIState(){
         _profileUIState.value = ProfileUIState()
+    }
+    fun resetModelData(){
+        _profile.value = Profile()
+        _myFriendRequests.value = emptyList()
+    }
+
+
+
+    fun getUserProfile(userName:String){
+        _profileUIState.update { it.copy(
+            isGetUserProfileLoading = true
+        ) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                try {
+                    val token = getUserToken.getUserToken()
+                    val resp = apiService.getUserProfile(userName, mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        val data = resp.body()?.data
+                        if(data !=null){
+                            _profileUIState.update { it.copy(
+                                isGetUserProfileLoading = false,
+                                isGetUserProfileSuccess = true,
+                                isGetUserProfileError = false,
+                                getUserProfileErrorMessage = ""
+                            ) }
+                            _profile.value = data
+
+                            CLog.debug("GET PROFILE RESPONSE", data.toString())
+                        }else{
+                            _profileUIState.update { it.copy(
+                                isGetUserProfileLoading = false,
+                                isGetUserProfileSuccess = false,
+                                isGetUserProfileError = true,
+                                getUserProfileErrorMessage = "Profile not available"
+                            ) }
+
+                        }
+
+                    }else{
+                        val respString = resp.errorBody()?.string()
+                        CLog.error("GET PROFILE RESPONSE", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                        _profileUIState.update { it.copy(
+                            isGetUserProfileLoading = false,
+                            isGetUserProfileSuccess = false,
+                            isGetUserProfileError = true,
+                            getUserProfileErrorMessage = errorResp.message
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _profileUIState.update { it.copy(
+                        isGetUserProfileLoading = false,
+                        isGetUserProfileSuccess = false,
+                        isGetUserProfileError = true,
+                        getUserProfileErrorMessage = "Network Error"
+                    ) }
+                    CLog.error("GET PROFILE RESPONSE", e.toString() +" ")
+                }
+            }
+        }
     }
 
     fun getMyProfile(){
@@ -311,5 +377,7 @@ class ProfileViewModel @Inject constructor(
             }
         }
     }
+
+
 
 }

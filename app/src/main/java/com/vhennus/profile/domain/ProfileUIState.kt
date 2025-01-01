@@ -6,6 +6,12 @@ data class ProfileUIState(
     val isGetProfileError:Boolean = false,
     val isGetProfileErrorMessage:String = "",
 
+    val isGetUserProfileLoading:Boolean = false,
+    val isGetUserProfileSuccess:Boolean = false,
+    val isGetUserProfileError:Boolean = false,
+    val getUserProfileErrorMessage:String = "",
+
+
     val isUpdateProfileLoading:Boolean = false,
     val isUpdateProfileSuccess:Boolean = false,
     val isUpdateProfileError:Boolean = false,

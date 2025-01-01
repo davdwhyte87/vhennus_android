@@ -1,6 +1,7 @@
 package com.vhennus.chat.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +29,7 @@ import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.chat.domain.Chat
 import com.vhennus.chat.domain.ChatPair
 import com.vhennus.chat.domain.MUser
+import com.vhennus.trivia.presentation.shimmerEffect
 import com.vhennus.ui.GeneralScaffold
 import com.vhennus.ui.GeneralTopBar
 
@@ -51,7 +53,7 @@ fun AllChatsScreen(
         val observer = LifecycleEventObserver{_,event->
             if(event == Lifecycle.Event.ON_RESUME){
                 authViewModel.getUserName()
-                chatViewModel.getAllChats()
+                chatViewModel.getAllMyChatPairs()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -64,17 +66,18 @@ fun AllChatsScreen(
         { GeneralTopBar() },
         floatingActionButton = {},
     ) {
-        if (!chatUIState.isGetAllChatsLoading){
+
+
+        if (chatUIState.isGetAllChatsLoading){
             loadingStateALlChats()
         }else{
-
             LazyColumn (
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 items(chats){chat->
 
-                    ChatListItem(chat, navController, userName)
+                    ChatListItem(chat, navController, userName,chatViewModel)
                 }
 
             }
@@ -86,16 +89,27 @@ fun AllChatsScreen(
 
 @Composable
 fun loadingStateALlChats(){
-    Column (modifier = Modifier.fillMaxSize()){
-        Row (modifier = Modifier.fillMaxWidth()) {
-            Box(modifier = Modifier.size(width = 50.dp, height = 50.dp))
-            Box(modifier = Modifier.size(width = 20.dp, height = 20.dp))
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        items(listOf(1,2,3)){
+            Row (
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(modifier = Modifier.size(width = 50.dp, height = 50.dp).shimmerEffect())
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(modifier = Modifier.size(width = 300.dp, height = 50.dp).shimmerEffect())
+                    Box(modifier = Modifier.size(width = 300.dp, height = 50.dp).shimmerEffect())
+                }
+
+            }
         }
-        Row (modifier = Modifier.fillMaxWidth()) {
-            Box(modifier = Modifier.size(width = 50.dp, height = 50.dp))
-            Box(modifier = Modifier.size(width = 20.dp, height = 20.dp))
-        }
+
     }
+
+
 
 
 }

@@ -148,6 +148,15 @@ interface APIService {
     @GET("api/v1/auth/profile/get")
     suspend fun getMyProfile( @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
 
+    @GET("api/v1/auth/profile/get/{username}")
+    suspend fun getUserProfile(@Path("username") username:String,@HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
+
+    @GET("api/v1/auth/chat/find_chat_pair/{username}")
+    suspend fun findChatPair(@Path("username") username:String,@HeaderMap header:Map<String,String> ):Response<GenericResp<ChatPair>>
+
+    @GET("api/v1/auth/chat/get_my_chat_pairs")
+    suspend fun getMyChatPairs(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<ChatPair>>>
+
     @POST("api/v1/auth/profile/update")
     suspend fun updateProfile(@Body data:UpdateProfileRequest, @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
 
