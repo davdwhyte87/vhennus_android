@@ -1,6 +1,7 @@
 package com.vhennus
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -25,6 +26,7 @@ import com.vhennus.profile.domain.Profile
 import com.vhennus.profile.presentation.FriendRequestsPage
 import com.vhennus.profile.presentation.editProfilePage
 import com.vhennus.profile.presentation.myFriendsPage
+import com.vhennus.search.presentation.SearchPage
 import com.vhennus.trade.data.OrderViewModel
 import com.vhennus.trade.presentation.ShopCoinsScreen
 import com.vhennus.trade.presentation.addPaymentMethodScreen
@@ -103,6 +105,9 @@ fun AppNav(
 
         composable(route=NavScreen.FriendRequestPage.route){
             FriendRequestsPage(navController, profileViewModel)
+        }
+        composable(route = NavScreen.SearchPage.route) {
+            SearchPage(navController)
         }
 
 //        composable(route=NavScreen.CreateSellOrderScreen.route){

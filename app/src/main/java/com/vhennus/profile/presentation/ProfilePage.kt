@@ -109,7 +109,7 @@ fun profilePage(
             }
 
             // username
-            if(profileUiState.isGetProfileLoading){
+            if(profileUiState.isGetProfileLoading && profile.user_name.isBlank()){
                 Box(modifier = Modifier.size(height = 20.dp, width = 100.dp).shimmerEffect())
             }else{
                 Text("@"+profile.user_name, style = MaterialTheme.typography.bodyMedium)
@@ -117,7 +117,7 @@ fun profilePage(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            if(profileUiState.isGetProfileLoading){
+            if(profileUiState.isGetProfileLoading && profile.bio.isBlank()){
                 Box(modifier = Modifier.size(height = 40.dp, width = 600.dp).shimmerEffect())
             }else{
                 if(!profile.bio.isEmpty() || !profile.bio.isBlank()){
@@ -184,7 +184,7 @@ fun profilePage(
             Spacer(modifier = Modifier.height(20.dp))
             Text("My Posts", style = MaterialTheme.typography.titleLarge)
 
-            if(profileUiState.isGetProfileLoading){
+            if(profileUiState.isGetProfileLoading && post.value.id.isBlank()){
                 Column (
                     verticalArrangement = Arrangement.SpaceEvenly
                 ) {

@@ -53,6 +53,7 @@ import com.vhennus.menu.presentation.MenuScreen
 import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.profile.presentation.profilePage
 import com.vhennus.ui.theme.Purple
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 // home screen will have buttom navigation and will contains four screens
@@ -153,28 +154,39 @@ fun HomeScreen(navController: NavController,
             selectedTabIndex = pagerState.currentPage
         }
     }
+    val coroutineScope = rememberCoroutineScope()
     Column {
         HorizontalPager(state = pagerState, modifier= Modifier
             .fillMaxWidth()
-            .weight(1f)) {
-            if(selectedTabIndex == 0){
-                FeedScreen(navController, feedViewModel)
+            .weight(1f)) {page->
+
+            when(page){
+                0-> FeedScreen(navController, feedViewModel)
+                1-> AllChatsScreen(navController, chatViewModel,authViewModel )
+                2-> profilePage(navController, profileViewModel)
+                3-> MenuScreen(navController)
             }
-            if(selectedTabIndex == 1){
-                AllChatsScreen(navController, chatViewModel,authViewModel )
-            }
-            if(selectedTabIndex == 2){
-                profilePage(navController, profileViewModel)
-            }
-            if(selectedTabIndex == 3){
-                MenuScreen(navController)
-            }
+//            if(selectedTabIndex == 0){
+//                FeedScreen(navController, feedViewModel)
+//            }
+//            if(selectedTabIndex == 1){
+//                AllChatsScreen(navController, chatViewModel,authViewModel )
+//            }
+//            if(selectedTabIndex == 2){
+//                profilePage(navController, profileViewModel)
+//            }
+//            if(selectedTabIndex == 3){
+//                MenuScreen(navController)
+//            }
         }
         TabRow(selectedTabIndex = pagerState.currentPage) {
             navItems.forEachIndexed { index, bottomNavItem ->
-                Tab(selected = index==selectedTabIndex,
+                Tab(selected = pagerState.currentPage ==index,
                     onClick = {
-                        selectedTabIndex = index
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
+//                        selectedTabIndex = index
                         if (index == 0){
                             feedViewModel.getAllPosts()
 
@@ -182,7 +194,7 @@ fun HomeScreen(navController: NavController,
                               },
                     icon = {
                         Icon(
-                            imageVector = if (selectedTabIndex == index){bottomNavItem.selectedIcon}else{bottomNavItem.unselectedIcon},
+                            imageVector = if (pagerState.currentPage == index){bottomNavItem.selectedIcon}else{bottomNavItem.unselectedIcon},
                             contentDescription = bottomNavItem.title,
                             tint = Purple
                         )

@@ -1,5 +1,7 @@
 package com.vhennus
 
+import androidx.navigation.Navigator
+
 sealed class NavScreen(
     val route: String,
     val title: String
@@ -134,6 +136,11 @@ sealed class NavScreen(
     object FriendRequestPage:NavScreen(
         route = "friend_request",
         title = "Friend Request"
+    )
+
+    object SearchPage:NavScreen(
+        route = "search",
+        title = "Search Page"
     )
 
 }

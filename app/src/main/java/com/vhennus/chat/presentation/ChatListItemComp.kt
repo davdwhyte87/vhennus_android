@@ -31,6 +31,7 @@ import com.vhennus.R
 import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.chat.domain.Chat
 import com.vhennus.chat.domain.ChatPair
+import com.vhennus.general.presentation.LoadImageWithPlaceholder
 import com.vhennus.general.utils.CLog
 import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.profile.domain.Profile
@@ -100,12 +101,19 @@ fun ChatListItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Image(
-            painter = painterResource(R.drawable.dp1),
-            contentDescription = "",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.size(60.dp).clip(CircleShape)
-        )
+        if(receiverProfile.image.isEmpty() || receiverProfile.image.isBlank()){
+            Image(
+                painter = painterResource(R.drawable.p1),
+                contentDescription = "",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(60.dp).clip(CircleShape)
+            )
+        }else{
+            LoadImageWithPlaceholder(receiverProfile.image,
+                modifier = Modifier.size(60.dp)
+                    .clip(CircleShape)
+            )
+        }
         Column {
             Text(if (chat.users[0].user_name==userName) chat.users[1].user_name else chat.users[0].user_name , style = MaterialTheme.typography.titleMedium)
             Text(chat.last_message,

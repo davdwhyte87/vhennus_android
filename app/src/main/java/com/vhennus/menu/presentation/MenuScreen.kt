@@ -14,13 +14,14 @@ import androidx.compose.runtime.Composable
 import com.vhennus.ui.GeneralScaffold
 import com.vhennus.ui.GeneralTopBar
 import androidx.navigation.NavController
+import com.vhennus.general.presentation.MenuTopBar
 import com.vhennus.menu.domain.MenuItemData
 
 @Composable
 fun MenuScreen(navController: NavController){
 
 
-    GeneralScaffold(topBar = { GeneralTopBar() }, floatingActionButton = { }) {
+    GeneralScaffold(topBar = { MenuTopBar(navController) }, floatingActionButton = { }) {
         Column {
             Text(text = "Menu",
                 style =  MaterialTheme.typography.titleLarge,
