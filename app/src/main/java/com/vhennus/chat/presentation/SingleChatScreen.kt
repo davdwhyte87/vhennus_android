@@ -19,12 +19,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -138,7 +141,8 @@ fun SingleChatScreen(
     ) {
       Column(
           modifier = Modifier.fillMaxSize(),
-          horizontalAlignment = Alignment.CenterHorizontally
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.spacedBy(10.dp)
       ){
 
           if(chatsUIState.isGetChatsLoading){
@@ -186,49 +190,67 @@ fun SingleChatScreen(
                   onValueChange = {
                       newMessage.value = it
                   },
-                  shape = RoundedCornerShape(20.dp),
+                  shape = RoundedCornerShape(30.dp),
                   placeholder = { Text(text = "Message") },
                   modifier = Modifier
                       .weight(1f)
-                      .padding(end = 16.dp)
+                      .padding(end = 1.dp),
+                  trailingIcon =  {
+                      IconButton(
+                          onClick = {
+                              if(!validateCreateChat(context, newMessage.value)){
+                                  return@IconButton
+                              }
+
+                              val createChatReq = CreateChatReq(
+                                  pair_id = chatPair.id,
+                                  receiver = receiverUsername!!,
+                                  message = newMessage.value,
+                                  image = ""
+                              )
+                              chatViewModel.createChat(createChatReq)
+                              newMessage.value = ""
+
+                              // Scroll to the bottom (newest message)
+                              CoroutineScope(Dispatchers.Main).launch {
+                                  listState.scrollToItem(0)
+                              }
+                          },
+                          colors = IconButtonDefaults.iconButtonColors(
+                              contentColor = MaterialTheme.colorScheme.surface,
+                              containerColor = MaterialTheme.colorScheme.primary
+                          )
+
+                      ) {
+                          if(chatsUIState.isCreateChatLoading){
+                              AnimatedPreloader(modifier = Modifier.size(size = 60.dp), MaterialTheme.colorScheme.surface)
+                          }else{
+                              Icon(Icons.AutoMirrored.Outlined.Send, "Send")
+                          }
+
+                      } }
               )
-              Button(
-                  onClick = {
-                      if(!validateCreateChat(context, newMessage.value)){
-                          return@Button
-                      }
-
-                      val createChatReq = CreateChatReq(
-                          pair_id = chatPair.id,
-                          receiver = receiverUsername!!,
-                          message = newMessage.value,
-                          image = ""
-                      )
-                      chatViewModel.createChat(createChatReq)
-                      newMessage.value = ""
-
-                      // Scroll to the bottom (newest message)
-                      CoroutineScope(Dispatchers.Main).launch {
-                          listState.scrollToItem(0)
-                      }
-                  },
-                  shape = CircleShape, // Makes the button round
-                  modifier = Modifier.size(width = 65.dp, height = 65.dp).padding(0.dp),
-                  colors = ButtonDefaults.buttonColors(
-                      containerColor = MaterialTheme.colorScheme.primary
-                  )
-              ) {
-                  if(chatsUIState.isCreateChatLoading){
-                      AnimatedPreloader(modifier = Modifier.size(size = 60.dp), MaterialTheme.colorScheme.surface)
-                  }else{
-                      Icon(
-                          imageVector = Icons.AutoMirrored.Filled.Send,
-                          contentDescription = "Favorite",
-                          tint = MaterialTheme.colorScheme.surface,
-                          modifier = Modifier.size(30.dp).padding(0.dp)
-                      )
-                  }
-              }
+//              Button(
+//                  onClick = {
+//
+//                  },
+//                  shape = CircleShape, // Makes the button round
+//                  modifier = Modifier.size(width = 65.dp, height = 65.dp).padding(0.dp),
+//                  colors = ButtonDefaults.buttonColors(
+//                      containerColor = MaterialTheme.colorScheme.primary
+//                  )
+//              ) {
+//                  if(chatsUIState.isCreateChatLoading){
+//                      AnimatedPreloader(modifier = Modifier.size(size = 60.dp), MaterialTheme.colorScheme.surface)
+//                  }else{
+//                      Icon(
+//                          imageVector = Icons.AutoMirrored.Filled.Send,
+//                          contentDescription = "Favorite",
+//                          tint = MaterialTheme.colorScheme.surface,
+//                          modifier = Modifier.size(30.dp).padding(0.dp)
+//                      )
+//                  }
+//              }
           }
       }
     }

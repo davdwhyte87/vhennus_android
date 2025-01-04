@@ -13,6 +13,7 @@ import com.vhennus.feed.domain.Post
 import com.vhennus.general.domain.SystemData
 import com.vhennus.profile.domain.FriendRequest
 import com.vhennus.profile.domain.Profile
+import com.vhennus.profile.domain.SendFriendRequest
 import com.vhennus.profile.domain.UpdateProfileRequest
 import com.vhennus.trade.domain.BuyOrder
 import com.vhennus.trade.domain.OrderMessage
@@ -161,6 +162,7 @@ interface APIService {
     suspend fun updateProfile(@Body data:UpdateProfileRequest, @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
 
 
+    //Friend request
     @GET("api/v1/auth/user/friend_requests")
     suspend fun getMyFriendRequests( @HeaderMap header:Map<String,String> ):Response<GenericResp<List<FriendRequest>>>
 
@@ -169,6 +171,13 @@ interface APIService {
 
     @GET("api/v1/auth/user/friend_request/reject/{id}")
     suspend fun rejectFriendRequest(@Path("id") id:String, @HeaderMap header:Map<String,String>):Response<GenericResp<String>>
+
+    @POST("api/v1/auth/user/friend_request/send")
+    suspend fun sendFriendRequest(@Body data:SendFriendRequest, @HeaderMap header:Map<String,String> ):Response<GenericResp<FriendRequest>>
+
+    // search
+    @GET("api/v1/auth/profile/search/{data}")
+    suspend fun searchProfile(@Path("data") data:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<List<Profile>>>
 
 
 }

@@ -40,7 +40,7 @@ fun ChatTopBar(navController: NavController, profile: Profile){
                 horizontalArrangement = Arrangement.SpaceEvenly
             ){
                 IconButton(onClick = {
-                    navController.navigateUp()
+                    navController.popBackStack()
                 }) {
                     Icon(imageVector = Icons.Sharp.ArrowBackIosNew ,
                         contentDescription = "Home",

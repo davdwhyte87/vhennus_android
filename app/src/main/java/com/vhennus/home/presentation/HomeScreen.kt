@@ -101,9 +101,7 @@ fun HomeScreen(navController: NavController,
     //CLog.error("APP VERSION",versionName )
     //clog("EAT ME", " YUM YUM")
     //Sentry.captureException(RuntimeException("This app uses Sentry! :)"))
-    var selectedTabIndex by rememberSaveable {
-        mutableIntStateOf(0)
-    }
+
 
     val sheetState = rememberModalBottomSheetState()
     val coroutine = rememberCoroutineScope()
@@ -141,19 +139,16 @@ fun HomeScreen(navController: NavController,
             route = ""
         ),
         )
-    val pagerState: PagerState = rememberPagerState {
-        navItems.size
-    }
+    val pagerState: PagerState = rememberPagerState(0){navItems.size}
 
-    LaunchedEffect(selectedTabIndex) {
-        pagerState.animateScrollToPage(selectedTabIndex)
-    }
 
-    LaunchedEffect(pagerState.currentPage) {
-        if (!pagerState.isScrollInProgress) {
-            selectedTabIndex = pagerState.currentPage
-        }
-    }
+
+//    LaunchedEffect(pagerState.currentPage) {
+//        if (!pagerState.isScrollInProgress) {
+//            selectedTabIndex = pagerState.currentPage
+//        }
+//    }
+
     val coroutineScope = rememberCoroutineScope()
     Column {
         HorizontalPager(state = pagerState, modifier= Modifier

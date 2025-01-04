@@ -107,7 +107,7 @@ fun AppNav(
             FriendRequestsPage(navController, profileViewModel)
         }
         composable(route = NavScreen.SearchPage.route) {
-            SearchPage(navController)
+            SearchPage(navController, profileViewModel)
         }
 
 //        composable(route=NavScreen.CreateSellOrderScreen.route){

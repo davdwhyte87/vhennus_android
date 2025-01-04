@@ -6,3 +6,7 @@ data class UpdateProfileRequest(
     val bio:String,
     val name:String
 )
+
+data class SendFriendRequest(
+    val user_name:String
+)

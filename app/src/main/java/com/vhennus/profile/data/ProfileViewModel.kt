@@ -10,8 +10,10 @@ import com.vhennus.general.utils.CLog
 import com.vhennus.profile.domain.FriendRequest
 import com.vhennus.profile.domain.Profile
 import com.vhennus.profile.domain.ProfileUIState
+import com.vhennus.profile.domain.SendFriendRequest
 import com.vhennus.profile.domain.UpdateProfileRequest
 import com.vhennus.profile.presentation.FriendRequestItem
+import com.vhennus.search.domain.SearchUIState
 import com.vhennus.trade.domain.response.GenericResp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -40,12 +42,20 @@ class ProfileViewModel @Inject constructor(
     private val _myFriendRequests = MutableStateFlow<List<FriendRequest>>(emptyList())
     val myFriendRequests = _myFriendRequests.asStateFlow()
 
+    private val _searchUIState = MutableStateFlow(SearchUIState())
+    val searchUIState = _searchUIState.asStateFlow()
+
+    private val _profileSearchResults = MutableStateFlow<List<Profile>>(emptyList())
+    val profileSearchResults = _profileSearchResults.asStateFlow()
+
     fun resetUIState(){
         _profileUIState.value = ProfileUIState()
+        _searchUIState.value = SearchUIState()
     }
     fun resetModelData(){
         _profile.value = Profile()
         _myFriendRequests.value = emptyList()
+        _profileSearchResults.value = emptyList()
     }
 
 
@@ -378,6 +388,100 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun searchProfiles(data:String){
+       _searchUIState.update { it.copy(
+           isSearchLoading = true
+       ) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                try {
+                    val token = getUserToken.getUserToken()
+                    val resp = apiService.searchProfile(data, mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        val data = resp.body()?.data
+                        if(data !=null){
+                            _searchUIState.update { it.copy(
+                                isSearchLoading = false,
+                                isSearchSuccess = true,
+                                isSearchError = false,
+                                searchErrorMessage = ""
+                            ) }
+                            _profileSearchResults.value = data
+                            CLog.debug("SEARCH RESP ", data.toString())
+                        }
 
+                    }else{
+                        val respString = resp.errorBody()?.string()
+                        CLog.error("SEARCH ERROR", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                        _searchUIState.update { it.copy(
+                            isSearchLoading = false,
+                            isSearchSuccess = false,
+                            isSearchError = true,
+                            searchErrorMessage = errorResp.message
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _searchUIState.update { it.copy(
+                        isSearchLoading = false,
+                        isSearchSuccess = false,
+                        isSearchError = true,
+                        searchErrorMessage = "Network"
+                    ) }
+                    CLog.error("SEARCH ERROR", e.toString() +" ")
+                }
+            }
+        }
+    }
+
+    fun sendFriendRequest(data:SendFriendRequest){
+        _profileUIState.update { it.copy(
+            isSendFriendRequestLoading = true
+        ) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                try {
+                    val token = getUserToken.getUserToken()
+                    val resp = apiService.sendFriendRequest(data, mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        val data = resp.body()?.data
+                        CLog.debug("SEND FR", resp.body().toString())
+
+                        _profileUIState.update { it.copy(
+                            isSendFriendRequestLoading = false,
+                            isSendFriendRequestSuccess = true,
+                            isSendFriendRequestError = false,
+                            sendFriendRequestError = ""
+                        ) }
+
+                    }else{
+                        val respString = resp.errorBody()?.string()
+                        CLog.error("SEND FRIEND REQUEST", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                        _profileUIState.update { it.copy(
+                            isSendFriendRequestLoading = false,
+                            isSendFriendRequestSuccess = false,
+                            isSendFriendRequestError = true,
+                            sendFriendRequestError = errorResp.message
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _profileUIState.update { it.copy(
+                        isSendFriendRequestLoading = false,
+                        isSendFriendRequestSuccess = false,
+                        isSendFriendRequestError = true,
+                        sendFriendRequestError = "Network Error"
+                    ) }
+                    CLog.error("SEND FRIEND REQUEST ", e.toString() +" ")
+                }
+            }
+        }
+    }
 
 }

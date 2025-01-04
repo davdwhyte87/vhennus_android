@@ -30,5 +30,10 @@ data class ProfileUIState(
     val isRejectRequestLoading:Boolean = false,
     val isRejectRequestSuccess:Boolean = false,
     val isRejectRequestError:Boolean = false,
-    val rejectRequestErrorMessage:String = ""
+    val rejectRequestErrorMessage:String = "",
+
+    val isSendFriendRequestLoading:Boolean = false,
+    val isSendFriendRequestSuccess:Boolean = false,
+    val isSendFriendRequestError:Boolean = false,
+    val sendFriendRequestError:String = ""
 )
