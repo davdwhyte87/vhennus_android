@@ -67,14 +67,7 @@ fun HomeScreen(navController: NavController,
                profileViewModel: ProfileViewModel
 ){
     val systemData = feedViewModel.systemData.collectAsState()
-    DisposableEffect(true) {
-        // get the app version
-        feedViewModel.getSystemData()
 
-        onDispose {
-
-        }
-    }
 
     val context = LocalContext.current
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -82,6 +75,17 @@ fun HomeScreen(navController: NavController,
     val feedUIState = feedViewModel.feedUIState.collectAsState()
     val showUpdateModal = remember {
         mutableStateOf(false)
+    }
+
+
+    // effects
+    DisposableEffect(true) {
+        // get the app version
+        feedViewModel.getSystemData()
+
+        onDispose {
+
+        }
     }
 
     LaunchedEffect(feedUIState.value.isGetSystemDataSuccess) {
@@ -94,6 +98,11 @@ fun HomeScreen(navController: NavController,
                 showUpdateModal.value = false
             }
         }
+    }
+
+    LaunchedEffect(true) {
+        // connect to websocket
+        chatViewModel.connectToChatWS()
     }
 
 
@@ -158,7 +167,11 @@ fun HomeScreen(navController: NavController,
             when(page){
                 0-> FeedScreen(navController, feedViewModel)
                 1-> AllChatsScreen(navController, chatViewModel,authViewModel )
-                2-> profilePage(navController, profileViewModel)
+                2-> {
+                    // get profile data and users posts
+
+                    profilePage(navController, profileViewModel, feedViewModel)
+                }
                 3-> MenuScreen(navController)
             }
 //            if(selectedTabIndex == 0){
@@ -185,6 +198,10 @@ fun HomeScreen(navController: NavController,
                         if (index == 0){
                             feedViewModel.getAllPosts()
 
+                        }
+                        if(index == 2){
+                            profileViewModel.getMyProfile()
+                            feedViewModel.getAllMyPosts()
                         }
                               },
                     icon = {

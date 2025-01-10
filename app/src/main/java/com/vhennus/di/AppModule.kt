@@ -55,6 +55,7 @@ object AppModule {
     fun provideWebSocketUrl(): String = BuildConfig.API_URL+"/api/v1/auth/chat/ws"
 
     @Provides
+    @Singleton
     fun provideWebSocketManager(
         @Named("webSocketUrl") url: String,
         token: GetUserToken,

@@ -74,7 +74,7 @@ class ChatViewModel @Inject constructor(
 
     init {
         CLog.debug("INIT","ChatViewModel")
-        connectToChatWS()
+        //connectToChatWS()
 
         // get all chat pairs
         getAllMyChatPairs()
@@ -153,7 +153,7 @@ class ChatViewModel @Inject constructor(
 
                     }else{
                         val respString = resp.errorBody()?.string()
-                        CLog.error("GET_ALL_CHAT_PAIRS_RESP", respString +" ")
+                        CLog.error("GET_ALL_CHAT_PAIRS ERROR", respString +" ")
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<String>>() {}.type
                         val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
@@ -172,7 +172,7 @@ class ChatViewModel @Inject constructor(
                         isGetAllChatsError = true,
                         isGetAllChatsErrorMessage = "Network Error"
                     ) }
-                    CLog.debug("GET_ALL_CHAT_PAIRS_RESP", e.toString())
+                    CLog.debug("GET_ALL_CHAT_PAIRS ERROR", e.toString())
                 }
             }
         }
@@ -202,7 +202,7 @@ class ChatViewModel @Inject constructor(
                         saveLastMessage(lastMessage.pair_id, lastMessage.message)
 
 
-                        CLog.debug("GET_CHATS_BY_PAIR_RESP", data.toString())
+                        CLog.debug("GET_CHATS_BY_PAIR_RESP", lastMessage.toString())
                         _chatsUIState.update { it.copy(
                            isGetChatsLoading = false,
                             isGetChatsSuccess = true,
@@ -372,6 +372,37 @@ class ChatViewModel @Inject constructor(
             },
         )
 
+    }
+    fun sendMessageToWS(createChatReq: CreateChatReq, userName:String){
+        val gson = Gson()
+        val text = gson.toJson(createChatReq)
+        if(!webSocketManager.sendMessage(text)){
+            _chatsUIState.update { it.copy(
+                isCreateChatLoading = false,
+                isCreateChatError = true,
+                createChatErrorMessage = "Error sending message"
+            ) }
+        }
+        // refresh to get chat pair after the first chat
+        if(_chatsUIState.value.isChatPairNull){
+            findChatPair(createChatReq.receiver)
+        }
+
+        // get new chat
+
+        val temp = _chats.value.toMutableList()
+        temp.add(
+            Chat(
+            pair_id = createChatReq.pair_id,
+            receiver = createChatReq.receiver,
+            message = createChatReq.message,
+            image = createChatReq.image,
+            sender = userName
+        )
+        )
+        _chats.value = temp.toList()
+        // get all chats
+        //getAllChatsByPair(createChatReq.pair_id, true)
     }
 
     fun addMessageWS(message:Chat){

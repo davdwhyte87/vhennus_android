@@ -50,6 +50,15 @@ class WebSocketManager @Inject constructor(
 
     }
 
+    fun sendMessage(message: String): Boolean {
+        return try {
+            webSocket?.send(message) ?: false
+        } catch (e: Exception) {
+            CLog.debug("WS", "Failed to send message: ${e.message}")
+            false
+        }
+    }
+
 
 
     fun disconnect() {

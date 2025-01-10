@@ -48,6 +48,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.airbnb.lottie.model.content.CircleShape
+import com.google.gson.Gson
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.chat.domain.Chat
@@ -118,6 +119,7 @@ fun SingleChatScreen(
             chatViewModel.singleChatScreenDispose()
         }
     }
+
     val receiverProfile = chatViewModel.singleChatReceiverProfile.collectAsState().value
 
     LaunchedEffect(chatsUIState.isFindChatPairSuccess) {
@@ -135,6 +137,25 @@ fun SingleChatScreen(
             )
         }
     }
+
+    LaunchedEffect(chatsUIState.isCreateChatError) {
+        // show error message
+        if(chatsUIState.isCreateChatError){
+            Toast.makeText(context, chatsUIState.createChatErrorMessage, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    //
+    LaunchedEffect(chats) {
+        // make the last chat the last read
+        if(chats.isNotEmpty()){
+            val lastChat = chats.last()
+            chatViewModel.saveLastMessage(lastChat.pair_id, lastChat.message)
+        }
+    }
+
+
+
     GeneralScaffold(
         { ChatTopBar(navController, receiverProfile) },
         floatingActionButton = {  },
@@ -208,9 +229,15 @@ fun SingleChatScreen(
                                   message = newMessage.value,
                                   image = ""
                               )
-                              chatViewModel.createChat(createChatReq)
+                             // chatViewModel.createChat(createChatReq)
+                              val gson = Gson()
+                              val text = gson.toJson(createChatReq)
                               newMessage.value = ""
 
+                              // sned message to WS
+                              chatViewModel.sendMessageToWS(createChatReq, userName)
+
+                              //chatViewModel.getAllChatsByPair(createChatReq.pair_id, true)
                               // Scroll to the bottom (newest message)
                               CoroutineScope(Dispatchers.Main).launch {
                                   listState.scrollToItem(0)

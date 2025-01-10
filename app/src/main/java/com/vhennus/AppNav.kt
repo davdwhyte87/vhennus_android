@@ -232,7 +232,7 @@ fun NavGraphBuilder.protectedComposable(
         if (authViewModel.isLoggedIn()) {
             content(backStackEntry)
         } else {
-            navController.navigate("pre_login") {
+            navController.navigate(NavScreen.LoginScreen.route) {
                 popUpTo(NavScreen.HomeScreen.route) { inclusive = false }
             }
         }

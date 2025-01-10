@@ -30,10 +30,10 @@ import io.sentry.android.core.SentryAndroid
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        FirebaseApp.initializeApp(this) ?: throw IllegalStateException("FirebaseApp initialization failed")
-        Log.d("FirebaseInit", "ApplicationId: ${BuildConfig.APPLICATION_ID}")
+//        FirebaseApp.initializeApp(this) ?: throw IllegalStateException("FirebaseApp initialization failed")
+//        Log.d("FirebaseInit", "ApplicationId: ${BuildConfig.APPLICATION_ID}")
 
-        val storage = Firebase.storage
+//        val storage = Firebase.storage
         SentryAndroid.init(this) { options ->
             options.dsn = "https://e5aa33217ae0e9e465a28c7f3cbc0a45@o4507910790119424.ingest.us.sentry.io/4507910882131968"
             options.tracesSampleRate = 1.0 // Set the performance monitoring sample rate
@@ -52,6 +52,8 @@ class MainActivity : ComponentActivity() {
             val triviaViewModel:TriviaViewModel = hiltViewModel()
             val chatViewModel:ChatViewModel = hiltViewModel()
             val profileViewModel:ProfileViewModel = hiltViewModel()
+
+
             AmorgensTheme(darkTheme = false) {
                 // A surface container using the 'background' color from the theme
                 Surface(

@@ -39,6 +39,9 @@ class  FeedViewModel @Inject constructor(
     private val _allPosts = MutableStateFlow<List<Post>>(emptyList())
     val allPost = _allPosts.asStateFlow()
 
+    private val _allMyPosts = MutableStateFlow<List<Post>>(emptyList())
+    val allMyPost = _allMyPosts.asStateFlow()
+
     private val _feedUIState = MutableStateFlow(FeedUIState())
     val feedUIState= _feedUIState.asStateFlow()
 
@@ -373,6 +376,62 @@ class  FeedViewModel @Inject constructor(
                         likePostErrorMessage = e.toString()
                     ) }
                     CLog.error("XX ERROR CREATING POST ", e.toString())
+                }
+
+            }
+        }
+    }
+
+    fun getAllMyPosts(){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                _feedUIState.update { it.copy(isGetAllMyPostsLoading = true) }
+                val token = getUserToken.getUserToken()
+                if (token.isBlank()){
+                    _feedUIState.update { it.copy(
+                        isGetAllMyPostsLoading  = false,
+                        isGetAllMyPostsError  = true,
+                        isGetAllMyPostsSuccess  = false,
+                        getFeedErrorMessage = "Unauthorized"
+                    ) }
+                }
+                try {
+                    val resp = apiService.getAllMyPosts(mapOf("Authorization" to token))
+                    if (resp.isSuccessful){
+                        val allPosts = resp.body()?.data
+                        if (allPosts != null){
+                            _allMyPosts.value = allPosts
+                        }
+                        CLog.debug("ALL MY POSTS ", allPosts.toString())
+                        _feedUIState.update { it.copy(
+                            isGetAllMyPostsLoading  = false,
+                            isGetAllMyPostsError  = false,
+                            isGetAllMyPostsSuccess  = true,
+                            getFeedErrorMessage = ""
+                        ) }
+                    }else{
+                        //CLog.error("XX ERROR CREATING POST ", resp.errorBody()?.string() +"")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(resp.errorBody()?.string() , genericType)
+                        _feedUIState.update { it.copy(
+                            isGetAllMyPostsLoading  = false,
+                            isGetAllMyPostsError  = true,
+                            isGetAllMyPostsSuccess  = false,
+                            getFeedErrorMessage = errorResp.message
+                        ) }
+                        CLog.error("ALL MY POSTS ERROR ", errorResp.server_message+"")
+                    }
+
+
+                }catch (e:Exception){
+                    _feedUIState.update { it.copy(
+                        isGetAllMyPostsLoading  = false,
+                        isGetAllMyPostsError  = true,
+                        isGetAllMyPostsSuccess  = false,
+                        getFeedErrorMessage = e.toString()
+                    ) }
+                    CLog.error("ALL MY POSTS ERROR", e.toString())
                 }
 
             }

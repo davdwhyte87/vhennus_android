@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -40,6 +42,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.vhennus.NavScreen
 import com.vhennus.R
+import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.feed.domain.Post
 import com.vhennus.feed.presentation.post
 import com.vhennus.general.presentation.LoadImageWithPlaceholder
@@ -53,14 +56,19 @@ import com.vhennus.ui.GeneralTopBar
 @Composable
 fun profilePage(
     navController: NavController,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel,
+    feedViewModel: FeedViewModel
 ){
 
     val lifecycleOwner = LocalLifecycleOwner.current
+    val posts = feedViewModel.allMyPost.collectAsState().value
+
+    //effects
     DisposableEffect(true) {
         val observer = LifecycleEventObserver{_,event->
             if(event == Lifecycle.Event.ON_RESUME){
-                profileViewModel.getMyProfile()
+//                profileViewModel.getMyProfile()
+//                feedViewModel.getAllMyPosts()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -193,12 +201,20 @@ fun profilePage(
                 }
 
             }else{
-                post(
-                    post,
-                    navController,
-                    "jerome",
-                    onLike = {}
-                ) { }
+
+                LazyColumn {
+                    items(posts){post->
+                        post(
+                            remember { mutableStateOf(post) },
+                            navController,
+                            profile.user_name,
+                            onLike = {}
+                        ) {
+                            navController.navigate(NavScreen.SinglePost.route+"/${post.id}")
+                        }
+                    }
+                }
+
             }
 
         }

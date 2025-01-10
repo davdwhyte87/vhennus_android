@@ -114,13 +114,15 @@ fun ChatListItem(
                     .clip(CircleShape)
             )
         }
-        Column {
+        Column (
+            modifier = Modifier.weight(1f)
+        ) {
             Text(if (chat.users[0].user_name==userName) chat.users[1].user_name else chat.users[0].user_name , style = MaterialTheme.typography.titleMedium)
             Text(chat.last_message,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = if(newMessage) MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.widthIn(max=500.dp)
+                modifier = Modifier.widthIn(max=700.dp)
             )
         }
         Spacer(modifier = Modifier.weight(1f))

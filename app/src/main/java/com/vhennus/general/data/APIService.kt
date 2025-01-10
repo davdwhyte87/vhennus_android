@@ -108,6 +108,10 @@ interface APIService {
     @GET("api/v1/auth/post/all")
     suspend fun getAllPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<Post>>>
 
+    @GET("api/v1/auth/post/allmy")
+    suspend fun getAllMyPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<Post>>>
+
+
     @GET("api/v1/auth/post/single/{id}")
     suspend fun getSinglePost(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<Post>>
 

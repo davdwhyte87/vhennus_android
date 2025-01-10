@@ -28,6 +28,11 @@ data class FeedUIState(
 
     val isLikePostError:Boolean = false,
     val isLikePostSuccess:Boolean = false,
-    val likePostErrorMessage:String = ""
+    val likePostErrorMessage:String = "",
+
+    val isGetAllMyPostsLoading:Boolean = false,
+    val isGetAllMyPostsSuccess:Boolean = false,
+    val isGetAllMyPostsError:Boolean = false,
+    val getAllMyPostsErrorMessage:String  =""
 
 )
