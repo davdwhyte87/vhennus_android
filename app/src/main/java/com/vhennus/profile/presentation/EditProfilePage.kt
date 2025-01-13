@@ -1,12 +1,14 @@
 package com.vhennus.profile.presentation
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,11 +29,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -39,7 +46,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import androidx.work.WorkInfo
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
 import com.vhennus.R
+import com.vhennus.general.presentation.LoadImageWithPlaceholder
+import com.vhennus.general.utils.CLog
 import com.vhennus.general.utils.uploadFileToFirebase
 import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.profile.domain.UpdateProfileRequest
@@ -76,13 +89,40 @@ fun editProfilePage(
     val name = remember {
         mutableStateOf(profile.name)
     }
+
     val context = LocalContext.current
+    val workStatus  = profileViewModel.workStatus.collectAsState().value
+    var uploadProgress by remember { mutableStateOf(0) }
+    val selectedImage = remember { mutableStateOf<Uri?>(null) }
+    var newUploadedUrl = ""
+    val uploadSuccess = remember { mutableStateOf(false) }
+    val currentUploadSuccess = rememberUpdatedState(uploadSuccess.value)
+
     LaunchedEffect(profileUiState.isUpdateProfileSuccess) {
         if(profileUiState.isUpdateProfileSuccess){
             Toast.makeText(context, "Updated!", Toast.LENGTH_SHORT).show()
+            profileViewModel.resetUIState()
         }
+
     }
 
+    LaunchedEffect(profileUiState.isUpdateProfileError) {
+        if(profileUiState.isUpdateProfileError){
+            Toast.makeText(context, profileUiState.updateProfileErrorMessage, Toast.LENGTH_SHORT).show()
+            profileViewModel.resetUIState()
+        }
+
+    }
+    LaunchedEffect(currentUploadSuccess.value) {
+        if(currentUploadSuccess.value){
+            // if uploadd successful then send api request to save image
+//            profileViewModel.updateProfile(UpdateProfileRequest(
+//                image = newUploadedUrl,
+//                null,
+//                null
+//            ))
+        }
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -90,7 +130,13 @@ fun editProfilePage(
         if (uri != null) {
             try {
                 // Process the URI (e.g., upload to Firebase)
-                uploadFileToFirebase(context, uri)
+                CLog.debug("FILE NAME", uri.toString())
+//                uploadImageToCloudinary(context, uri) { progress ->
+//                    uploadProgress = progress
+//                }
+
+                profileViewModel.uploadImage(uri)
+
             } catch (e: Exception) {
                 Log.e("FilePicker", "Error processing file: ${e.message}")
             }
@@ -103,12 +149,22 @@ fun editProfilePage(
         floatingActionButton = {}
     ) {
         Column (
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ){
-            Image(painter = painterResource(R.drawable.p1),
-                "",
-                modifier = Modifier.size(120.dp).clip(CircleShape)
+            if(profile.image.isEmpty() || profile.image.isBlank()){
+                Image(
+                    painter = painterResource(R.drawable.p1),
+                    contentDescription = "",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(60.dp).clip(CircleShape)
                 )
+            }else{
+                LoadImageWithPlaceholder(profile.image,
+                    modifier = Modifier.size(60.dp)
+                        .clip(CircleShape)
+                )
+            }
             Button(onClick = {
                 launcher.launch("image/*")
             },
@@ -121,7 +177,44 @@ fun editProfilePage(
             ) {
                 Icon(Icons.Filled.Edit, "")
             }
-            Spacer(modifier = Modifier.height(20.dp))
+
+            workStatus?.let { info ->
+                when (info.state) {
+                    WorkInfo.State.ENQUEUED ->{
+                        Text("On Queue...")
+                    }
+                    WorkInfo.State.RUNNING -> {
+                        Text("Uploading...")
+                    }
+                    WorkInfo.State.SUCCEEDED -> {
+                        val uploadedUrl = info.outputData.getString("uploadedUrl")
+//                        if (uploadedUrl != null){
+//                            newUploadedUrl = uploadedUrl
+//                            uploadSuccess.value = true
+//                        }
+                        if (!uploadedUrl.isNullOrEmpty()) {
+                            profileViewModel.updateProfile(
+                                UpdateProfileRequest(
+                                    image = uploadedUrl,
+                                    null,
+                                    null
+                                )
+                            )
+                        }
+                        profileViewModel.resetUploadWorkStatus()
+
+//                        Text("Upload successful!")
+                    }
+                    WorkInfo.State.FAILED -> {
+                        Text("Upload failed.", color = Color.Red)
+                    }
+                    else -> {}
+                }
+            }
+            if (profileUiState.isUploadImageLoading){
+                Text("Updating profile ...")
+            }
+//            Spacer(modifier = Modifier.height(20.dp))
             OutlinedTextField(
                 value =name.value ,
                 onValueChange = { name.value = it  },
@@ -142,12 +235,12 @@ fun editProfilePage(
                 singleLine = false, // Ensures multi-line capability
                 shape = RoundedCornerShape(8.dp) // Optional styling
             )
-            Spacer(modifier = Modifier.height(20.dp))
+//            Spacer(modifier = Modifier.height(20.dp))
             Button(onClick = {
                 if(!updateBioValidation(context, bio.value, name.value)){
                    return@Button
                 }
-                profileViewModel.updateProfile(UpdateProfileRequest(image = "", bio.value, name = name.value ))
+                profileViewModel.updateProfile(UpdateProfileRequest(image = null, bio.value, name = name.value ))
             },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -178,5 +271,44 @@ fun updateBioValidation(context: Context, bio:String, name:String):Boolean{
     }
 
     return true
+}
+
+
+fun uploadImageToCloudinary(context: android.content.Context, imageUri: Uri, onProgress: (Int) -> Unit) {
+    try {
+
+        MediaManager.get().upload(imageUri)
+            .unsigned("preset1") // Use an unsigned upload preset if you don't need server-side authentication
+            .callback(object : UploadCallback {
+                override fun onStart(requestId: String) {
+                    // Upload started
+                }
+
+                override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {
+                    val progress = (bytes * 100 / totalBytes).toInt()
+                    onProgress(progress)
+                }
+
+                override fun onSuccess(requestId: String, resultData: Map<*, *>) {
+                    val url = resultData["secure_url"] as String
+                    // Handle success, e.g., save the URL to your database
+                    println("Image uploaded successfully. URL: $url")
+
+                }
+
+                override fun onError(requestId: String, error: ErrorInfo) {
+                    // Handle error
+                    println("Upload error: ${error.description}")
+                }
+
+                override fun onReschedule(requestId: String, error: ErrorInfo) {
+                    // Handle reschedule
+                }
+            })
+            .dispatch()
+    }catch (e:Exception){
+        CLog.error("UPLOAD ERROR", e.toString())
+    }
+
 }
 

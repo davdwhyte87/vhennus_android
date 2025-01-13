@@ -10,6 +10,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
+import com.cloudinary.android.MediaManager
 import com.google.firebase.FirebaseApp
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -34,6 +35,10 @@ class MainActivity : ComponentActivity() {
 //        Log.d("FirebaseInit", "ApplicationId: ${BuildConfig.APPLICATION_ID}")
 
 //        val storage = Firebase.storage
+
+
+
+
         SentryAndroid.init(this) { options ->
             options.dsn = "https://e5aa33217ae0e9e465a28c7f3cbc0a45@o4507910790119424.ingest.us.sentry.io/4507910882131968"
             options.tracesSampleRate = 1.0 // Set the performance monitoring sample rate

@@ -1,12 +1,19 @@
 package com.vhennus.profile.data
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vhennus.Application
 import com.vhennus.general.data.APIService
 import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.utils.CLog
+import com.vhennus.general.utils.ImageUploadWorker
 import com.vhennus.profile.domain.FriendRequest
 import com.vhennus.profile.domain.Profile
 import com.vhennus.profile.domain.ProfileUIState
@@ -18,6 +25,7 @@ import com.vhennus.trade.domain.response.GenericResp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,7 +36,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val getUserToken: GetUserToken,
-    private val apiService: APIService
+    private val apiService: APIService,
+    private val application: android.app.Application
 ):ViewModel() {
 
     private val _profile = MutableStateFlow(Profile())
@@ -47,6 +56,53 @@ class ProfileViewModel @Inject constructor(
 
     private val _profileSearchResults = MutableStateFlow<List<Profile>>(emptyList())
     val profileSearchResults = _profileSearchResults.asStateFlow()
+
+
+
+    private val _workStatus = MutableStateFlow<WorkInfo?>(null)
+    val workStatus: StateFlow<WorkInfo?> = _workStatus.asStateFlow()
+    private val workManager: WorkManager = WorkManager.getInstance(application)
+    private var hasHandledUploadSuccess = false
+
+
+    fun uploadImage(imageUri: Uri) {
+
+        val inputData = workDataOf("imageUri" to imageUri.toString(),
+            "userName" to _profile.value.user_name
+        )
+
+        // Create the work request
+        val uploadWorkRequest = OneTimeWorkRequestBuilder<ImageUploadWorker>()
+            .setInputData(inputData)
+            .build()
+
+        // Enqueue the upload work
+        workManager.enqueue(uploadWorkRequest)
+
+        // Observe the work status
+        workManager.getWorkInfoByIdLiveData(uploadWorkRequest.id).observeForever { workInfo ->
+            // Emit updates to the state flow
+            if(workInfo != null && !hasHandledUploadSuccess){
+                _workStatus.value = workInfo
+
+                if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                    hasHandledUploadSuccess = true
+                    workManager.getWorkInfoByIdLiveData(uploadWorkRequest.id).removeObserver { this }
+                }
+
+                // remove the oberserver when done
+                if (workInfo?.state?.isFinished == true) {
+                    workManager.getWorkInfoByIdLiveData(uploadWorkRequest.id).removeObserver { this }
+                }
+            }
+
+        }
+    }
+
+    fun resetUploadWorkStatus() {
+        _workStatus.value = null
+        hasHandledUploadSuccess = false
+    }
 
     fun resetUIState(){
         _profileUIState.value = ProfileUIState()
@@ -177,9 +233,18 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun updateProfile(data:UpdateProfileRequest){
-        _profileUIState.update { it.copy(
-            isUpdateProfileLoading = true
-        ) }
+        if(data.image!=null){
+            _profileUIState.update { it.copy(
+                isUploadImageLoading = true
+            ) }
+            CLog.debug("UPLOAD IMAGE LOADING", _profileUIState.value.isUploadImageLoading.toString())
+        }
+
+        if(data.bio != null || data.name!= null){
+            _profileUIState.update { it.copy(
+                isUpdateProfileLoading = true
+            ) }
+        }
         viewModelScope.launch {
             withContext(Dispatchers.IO){
                 try {
@@ -192,7 +257,8 @@ class ProfileViewModel @Inject constructor(
                                 isUpdateProfileLoading = false,
                                 isUpdateProfileSuccess = true,
                                 isUpdateProfileError = false,
-                                updateProfileErrorMessage = ""
+                                updateProfileErrorMessage = "",
+                                isUploadImageLoading = false
                             ) }
                             _profile.value = data
                         }else{
@@ -215,7 +281,8 @@ class ProfileViewModel @Inject constructor(
                             isUpdateProfileLoading = false,
                             isUpdateProfileSuccess = false,
                             isUpdateProfileError = true,
-                            updateProfileErrorMessage = errorResp.message
+                            updateProfileErrorMessage = errorResp.message,
+                            isUploadImageLoading = false
                         ) }
                     }
 
@@ -224,7 +291,8 @@ class ProfileViewModel @Inject constructor(
                         isUpdateProfileLoading = false,
                         isUpdateProfileSuccess = false,
                         isUpdateProfileError = true,
-                        updateProfileErrorMessage = "Network Error"
+                        updateProfileErrorMessage = "Network Error",
+                        isUploadImageLoading = false
                     ) }
                     CLog.error("UPDATE PROFILE RESPONSE", e.toString() +" ")
                 }

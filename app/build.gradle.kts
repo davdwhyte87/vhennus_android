@@ -98,6 +98,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.ktx)
+    implementation(libs.play.services.cast.tv)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -167,6 +168,12 @@ dependencies {
     // firebase
     implementation(platform("com.google.firebase:firebase-bom:32.1.0"))
     implementation("com.google.firebase:firebase-storage-ktx")
+
+    // cloudinary
+    implementation(libs.cloudinary.android)
+    implementation("androidx.activity:activity-compose:1.7.2")
+
+    implementation("androidx.work:work-runtime-ktx:2.8.0")
 
 
 }

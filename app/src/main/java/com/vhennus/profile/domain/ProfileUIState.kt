@@ -16,6 +16,7 @@ data class ProfileUIState(
     val isUpdateProfileSuccess:Boolean = false,
     val isUpdateProfileError:Boolean = false,
     val updateProfileErrorMessage:String = "",
+    val isUploadImageLoading:Boolean = false,
 
     val isGetFriendRequestsLoading:Boolean = false,
     val isGetFriendRequestsSuccess:Boolean = false,

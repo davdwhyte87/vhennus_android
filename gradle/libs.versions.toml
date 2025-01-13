@@ -1,6 +1,7 @@
 [versions]
 accompanistCoil = "9"
 agp = "8.7.0"
+cloudinaryAndroid = "2.1.0"
 coilCompose = "2.4.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
@@ -15,12 +16,14 @@ navigationRuntimeKtx = "2.7.7"
 prettytime = "5.0.1.Final"
 sentryAndroid = "6.29.0"
 volley = "1.2.1"
+playServicesCastTv = "21.1.1"
 
 [libraries]
 accompanist-coil = { module = "com.google.accompanist:accompanist-coil", version.ref = "accompanistCoil" }
 android-volley = { module = "com.android.volley:volley" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
+cloudinary-android = { module = "com.cloudinary:cloudinary-android", version.ref = "cloudinaryAndroid" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -39,6 +42,7 @@ androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navig
 prettytime = { module = "org.ocpsoft.prettytime:prettytime", version.ref = "prettytime" }
 sentry-android = { module = "io.sentry:sentry-android", version.ref = "sentryAndroid" }
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
+play-services-cast-tv = { group = "com.google.android.gms", name = "play-services-cast-tv", version.ref = "playServicesCastTv" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
