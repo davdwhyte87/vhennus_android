@@ -122,8 +122,10 @@ class  FeedViewModel @Inject constructor(
                         val newPost = resp.body()?.data
                         if (newPost != null){
                             val  posts = _allPosts.value.toMutableList()
-                            posts.add(newPost)
-                            _allPosts.value = posts
+                            //posts.add(newPost)
+//                            _allPosts.value = posts
+                            getAllPosts()
+
                         }
                         _feedUIState.update { it.copy(
                             isCreatePostLoading = false,
@@ -161,9 +163,9 @@ class  FeedViewModel @Inject constructor(
 
 
     fun getAllPosts(){
+        _feedUIState.update { it.copy(isFeedLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO){
-                _feedUIState.update { it.copy(isFeedLoading = true) }
                 val token = getUserToken.getUserToken()
                 if (token.isBlank()){
                     _feedUIState.update { it.copy(

@@ -33,6 +33,7 @@ import com.vhennus.NavScreen
 import com.vhennus.R
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.auth.domain.SignupReq
+import com.vhennus.auth.domain.USER_TYPE
 import com.vhennus.ui.AnimatedPreloader
 
 
@@ -49,6 +50,10 @@ fun signUpScreen(
     val password = remember {
         mutableStateOf("")
     }
+
+    val password2 = remember {
+        mutableStateOf("")
+    }
     val authUIState = authViewModel.authUIState.collectAsState()
     val context = LocalContext.current
 
@@ -60,6 +65,7 @@ fun signUpScreen(
         Toast.makeText(LocalContext.current, "Success. You can login now!", Toast.LENGTH_SHORT).show()
         userName.value = ""
         password.value = ""
+        password2.value =""
         authViewModel.resetSignupUIState()
     }
 
@@ -79,7 +85,9 @@ fun signUpScreen(
 
         Text(
             text="Create A Vhenncoin ID",
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier
+                .padding( bottom =  20.dp, )
         )
         OutlinedTextField(value = userName.value,
             onValueChange = {
@@ -89,7 +97,7 @@ fun signUpScreen(
             placeholder = { Text(text = "Username") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
         )
         OutlinedTextField(value = password.value,
             onValueChange = {
@@ -99,16 +107,29 @@ fun signUpScreen(
             placeholder = { Text(text = "Password") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
         )
 
+        OutlinedTextField(value = password2.value,
+            onValueChange = {
+                password2.value = it
+            },
+            shape = RoundedCornerShape(20.dp),
+            placeholder = { Text(text = "Confirm Password") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
+        )
+
+
         Button(onClick = {
-            if (!validateInput(userName.value, password.value, context)){
+            if (!validateInput(userName.value, password.value, password2.value, context)){
                 return@Button
             }
             val signupReq = SignupReq(
                 user_name =userName.value,
-                password=password.value
+                password=password.value,
+                user_type = USER_TYPE.User
             )
             authViewModel.signup(signupReq)
 
@@ -135,12 +156,12 @@ fun signUpScreen(
             textDecoration = TextDecoration.Underline,
             modifier = Modifier.clickable(onClick = {
                 navHostController.navigate(NavScreen.LoginScreen.route)
-            })
+            }).padding(5.dp)
         )
     }
 }
 
-fun validateInput(userName:String, password:String, context: Context):Boolean{
+fun validateInput(userName:String, password:String, password2:String, context: Context):Boolean{
     val isAllLowerCase = userName.all { it.isLowerCase() }
 //    if (!isAllLowerCase){
 //        Toast.makeText(context, "username should be all lowercase", Toast.LENGTH_SHORT).show()
@@ -157,6 +178,11 @@ fun validateInput(userName:String, password:String, context: Context):Boolean{
     }
     if (password.isBlank()){
         Toast.makeText(context, "password cannot be blank", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
+    if(password != password2){
+        Toast.makeText(context, "passwords do not match", Toast.LENGTH_SHORT).show()
         return false
     }
     return true

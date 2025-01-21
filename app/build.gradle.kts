@@ -29,9 +29,10 @@ android {
             // Additional configurations for this flavor
             applicationIdSuffix = ".dev"
             //buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
-            buildConfigField("String", "API_URL", "\"http://10.0.2.2:8000\"")
+//            buildConfigField("String", "API_URL", "\"http://10.0.2.2:8000\"")
+            buildConfigField("String", "API_URL", "\"http://155.138.221.87:8000\"")
 //            buildConfigField("String", "API_URL", "\"http://172.20.10.2:8000\"")
-            buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.224.183:3000\"")
+            buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.221.87:3000\"")
 
         }
     }

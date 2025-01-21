@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,7 +58,9 @@ import com.vhennus.NavScreen
 import com.vhennus.R.*
 import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.feed.domain.Post
+import com.vhennus.general.presentation.LoadImageWithPlaceholder
 import com.vhennus.general.utils.CLog
+import com.vhennus.ui.AnimatedPreloader
 import com.vhennus.ui.GeneralScaffold
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -98,46 +101,55 @@ fun FeedScreen(
   val posts = feedViewModel.allPost.collectAsState()
   val feedUIState = feedViewModel.feedUIState.collectAsState()
 
+  val listState = rememberLazyListState()
+  val coroutine = rememberCoroutineScope()
+  val userName = feedViewModel.userName.collectAsState()
+
+  LaunchedEffect(feedUIState.value.isScrollToFeedTop) {
+    if (feedUIState.value.isScrollToFeedTop){
+      if (listState.firstVisibleItemIndex > 0) {
+
+        listState.scrollToItem(0)
+
+      }
+    }
+  }
   LaunchedEffect(feedUIState.value.isFeedLoadingError) {
     if(feedUIState.value.isFeedLoadingError){
       Toast.makeText(context, feedUIState.value.getFeedErrorMessage, Toast.LENGTH_SHORT).show()
     }
+  }
+  LaunchedEffect(listState) {
+    snapshotFlow { listState.firstVisibleItemIndex }
+      .collect { firstVisibleItemIndex ->
+        feedViewModel.updateFeedScrollToTop(false)
+      }
   }
 
   GeneralScaffold(topBar = { feedNav() }, floatingActionButton = {
     Button(onClick = { navHostController.navigate(NavScreen.CreatePostScreen.route)})
     { Icon(imageVector = Icons.Filled.Add, contentDescription ="Add" )}
   }) {
-    val feedUIState = feedViewModel.feedUIState.collectAsState()
-    val listState = rememberLazyListState()
-    val coroutine = rememberCoroutineScope()
-    val userName = feedViewModel.userName.collectAsState()
-    LaunchedEffect(feedUIState.value.isScrollToFeedTop) {
-      if (feedUIState.value.isScrollToFeedTop){
-        if (listState.firstVisibleItemIndex > 0) {
 
-            listState.scrollToItem(0)
-
-        }
-      }
-    }
-
-    LaunchedEffect(listState) {
-      snapshotFlow { listState.firstVisibleItemIndex }
-        .collect { firstVisibleItemIndex ->
-          feedViewModel.updateFeedScrollToTop(false)
-        }
-    }
-    LazyColumn (
-      modifier = Modifier.fillMaxSize(),
-      state = listState
+    Column(
+      verticalArrangement = Arrangement.Center,
+      horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      items(posts.value.reversed()){post->
-        com.vhennus.feed.presentation.post(post = remember{mutableStateOf(post)}, navHostController, userName.value, {feedViewModel.likePost(post.id)}, {
-          navHostController.navigate(NavScreen.SinglePost.route+"/${post.id}")
-        })
+      if(feedUIState.value.isFeedLoading){
+        AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.primary)
+      }
+      LazyColumn (
+        modifier = Modifier.fillMaxSize(),
+        state = listState
+      ) {
+        items(posts.value.reversed()){post->
+          com.vhennus.feed.presentation.post(post = remember{mutableStateOf(post)}, navHostController, userName.value, {feedViewModel.likePost(post.id)}, {
+            navHostController.navigate(NavScreen.SinglePost.route+"/${post.id}")
+          })
+        }
       }
     }
+
   }
 }
 
@@ -183,13 +195,19 @@ fun post(
     )
     val randomImage = images[Random.nextInt(images.size)]
     val painter = painterResource(id = randomImage)
-    Image(
-      painter,
-      contentDescription = null,
-      modifier = Modifier
-        .size(40.dp)
-        .clip(CircleShape)
-    )
+    if(post.value.profile.image.isEmpty() || post.value.profile.image.isBlank()){
+      Image(
+        painter = painter,
+        contentDescription = "",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.size(40.dp).clip(CircleShape)
+      )
+    }else{
+      LoadImageWithPlaceholder(post.value.profile.image,
+        modifier = Modifier.size(40.dp)
+          .clip(CircleShape)
+      )
+    }
 
     // actual post
     Column (

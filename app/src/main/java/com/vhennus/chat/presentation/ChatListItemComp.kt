@@ -106,11 +106,11 @@ fun ChatListItem(
                 painter = painterResource(R.drawable.p1),
                 contentDescription = "",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(60.dp).clip(CircleShape)
+                modifier = Modifier.size(40.dp).clip(CircleShape)
             )
         }else{
             LoadImageWithPlaceholder(receiverProfile.image,
-                modifier = Modifier.size(60.dp)
+                modifier = Modifier.size(40.dp)
                     .clip(CircleShape)
             )
         }

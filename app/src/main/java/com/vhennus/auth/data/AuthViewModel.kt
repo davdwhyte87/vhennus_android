@@ -41,16 +41,14 @@ class AuthViewModel  @Inject constructor(
 
 
     fun signup(data: SignupReq){
+        // start loading button
+        _authUIState.update { it.copy(isSignupButtonLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO){
-                // start loading button
-                _authUIState.update { it.copy(isSignupButtonLoading = true) }
-
                 // send data to api
-
                 try {
-                    val resp = apiService.signup(data)
-                    if (resp.isSuccessful){
+                    val resp = apiService.create_account(data)
+                    if (resp.code() == 200){
                         _authUIState.update { it.copy(
                             isSignupButtonLoading = false,
                             isSignupSuccess = true,
@@ -91,16 +89,17 @@ class AuthViewModel  @Inject constructor(
 
 
     fun login(data: LoginReq){
+        // start loading button
+        _authUIState.update { it.copy(isLoginButtonLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO){
-                // start loading button
-                _authUIState.update { it.copy(isLoginButtonLoading = true) }
+
 
                 // send data to api
 
                 try {
-                    val resp = apiService.login(data)
-                    if (resp.isSuccessful){
+                    val resp = apiService.login2(data)
+                    if (resp.code() == 200){
                         _authUIState.update { it.copy(
                             isLoginButtonLoading = false,
                             isLoginSuccess = true,

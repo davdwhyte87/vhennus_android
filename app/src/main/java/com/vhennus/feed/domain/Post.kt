@@ -1,5 +1,7 @@
 package com.vhennus.feed.domain
 
+import com.vhennus.profile.domain.Profile
+
 data class Post(
     val id:String = "",
     val profile_image:String ="",
@@ -9,7 +11,8 @@ data class Post(
     val image:String ="",
     val likes:List<String> = emptyList(),
     val comments:List<Comment> = emptyList(),
-    val number_of_views:Int = 0
+    val number_of_views:Int = 0,
+    val profile:Profile = Profile()
 )
 
 data class Comment(

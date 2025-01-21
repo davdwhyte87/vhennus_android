@@ -66,6 +66,10 @@ class WalletViewModel @Inject constructor(
 
     }
 
+    fun resetUI(){
+        _walletUIState.value = WalletUIState()
+    }
+
 
     fun updateSingleWallet(wallet:Wallet){
         _singleWallet.value = wallet

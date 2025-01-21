@@ -88,6 +88,12 @@ interface APIService {
     @POST("user/kura_login")
     suspend fun login(@Body data: LoginReq):Response<GenericResp<String>>
 
+    @POST("/create_account")
+    suspend fun create_account(@Body data: SignupReq):Response<GenericResp<String>>
+
+    @POST("/login")
+    suspend fun login2(@Body data: LoginReq):Response<GenericResp<String>>
+
 
     // payment method
     @GET("api/v1/auth/payment_method/my_payment_methods")

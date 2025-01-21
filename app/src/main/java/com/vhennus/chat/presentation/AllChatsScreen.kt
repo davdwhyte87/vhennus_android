@@ -76,10 +76,10 @@ fun AllChatsScreen(
             }
             LazyColumn (
                 modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 items(chats){chat->
-
                     ChatListItem(chat, navController, userName,chatViewModel)
                 }
 

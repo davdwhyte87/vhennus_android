@@ -1,5 +1,6 @@
 package com.vhennus.auth.presentation
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -85,7 +86,7 @@ fun loginScreen(
             placeholder = { Text(text = "Username") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
         )
         OutlinedTextField(value = password.value,
             onValueChange = {
@@ -95,11 +96,11 @@ fun loginScreen(
             placeholder = { Text(text = "Password") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
         )
 
         Button(onClick = {
-            if (!validateInput(userName.value, password.value, context)){
+            if (!loginFormValidation(userName.value, password.value, context)){
                 return@Button
             }
             val loginReq = LoginReq(
@@ -128,9 +129,31 @@ fun loginScreen(
             textDecoration = TextDecoration.Underline,
             modifier = Modifier.clickable(onClick = {
                navHostController.navigate(NavScreen.SignupScreen.route)
-            })
+            }).padding(5.dp)
         )
     }
 }
 
+fun loginFormValidation(userName:String, password:String, context: Context):Boolean{
+    val isAllLowerCase = userName.all { it.isLowerCase() }
+//    if (!isAllLowerCase){
+//        Toast.makeText(context, "username should be all lowercase", Toast.LENGTH_SHORT).show()
+//        return false
+//    }
+    val hasSpace = userName.any { it.isWhitespace() }
+    if (hasSpace){
+        Toast.makeText(context, "username should have no spaces", Toast.LENGTH_SHORT).show()
+        return false
+    }
+    if (userName.isBlank()){
+        Toast.makeText(context, "username cannot be blank", Toast.LENGTH_SHORT).show()
+        return false
+    }
+    if (password.isBlank()){
+        Toast.makeText(context, "password cannot be blank", Toast.LENGTH_SHORT).show()
+        return false
+    }
 
+
+    return true
+}

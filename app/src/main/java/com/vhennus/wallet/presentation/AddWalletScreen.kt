@@ -56,12 +56,14 @@ fun AddWalletScreen(navController: NavController, walletViewModel: WalletViewMod
     LaunchedEffect(walletUIState.value.isAddWalletSuccess) {
         if (walletUIState.value.isAddWalletSuccess){
             Toast.makeText(context, "Wallet Added Successfully", Toast.LENGTH_SHORT).show()
+            walletViewModel.resetUI()
             navController.popBackStack()
         }
     }
 
     if (walletUIState.value.isAddWalletError){
         Toast.makeText(LocalContext.current,walletUIState.value.addWalletErrorMessage, Toast.LENGTH_SHORT).show()
+        walletViewModel.resetUI()
     }
     val walletAddress = remember {
         mutableStateOf("")

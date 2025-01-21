@@ -20,6 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ import androidx.navigation.NavController
 import com.vhennus.R
 import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.feed.domain.Comment
+import com.vhennus.general.presentation.LoadImageWithPlaceholder
 import com.vhennus.general.utils.CLog
 import com.vhennus.ui.BackTopBar
 import com.vhennus.ui.GeneralScaffold
@@ -98,13 +100,20 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
                 }
 
                 val painter = painterResource(id = randomImage)
-                Image(
-                    painter,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                )
+                if(post.value.profile.image.isEmpty() || post.value.profile.image.isBlank()){
+
+                    Image(
+                        painter = painter,
+                        contentDescription = "",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(40.dp).clip(CircleShape)
+                    )
+                }else{
+                    LoadImageWithPlaceholder(post.value.profile.image,
+                        modifier = Modifier.size(40.dp)
+                            .clip(CircleShape)
+                    )
+                }
                 // actual post
                 Column (
                     horizontalAlignment = Alignment.Start,
