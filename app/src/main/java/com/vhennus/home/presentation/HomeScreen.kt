@@ -196,8 +196,13 @@ fun HomeScreen(navController: NavController,
                         }
 //                        selectedTabIndex = index
                         if (index == 0){
-                            feedViewModel.getAllPosts()
-
+                            // prevent reload when coming from other tabs
+                            if (0 == pagerState.currentPage){
+                                //CLog.debug("INDEX CURRPAGE", pagerState.currentPage.toString())
+                                feedViewModel.getAllPosts(true)
+                            }else{
+                                feedViewModel.getAllPosts(false)
+                            }
                         }
                         if(index == 2){
                             profileViewModel.getMyProfile()

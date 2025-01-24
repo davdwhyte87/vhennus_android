@@ -71,7 +71,7 @@ fun loginScreen(
         modifier = Modifier.fillMaxWidth()
     ){
         Image(
-            painterResource(R.mipmap.ic_launcher_foreground),
+            painterResource(R.mipmap.vhennuslogo2),
             contentDescription = null,
             modifier = Modifier
                 .size(200.dp)

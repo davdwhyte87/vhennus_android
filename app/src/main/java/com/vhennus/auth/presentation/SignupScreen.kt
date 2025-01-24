@@ -76,7 +76,7 @@ fun signUpScreen(
     ){
 
         Image(
-            painterResource(R.mipmap.ic_launcher_foreground),
+            painterResource(R.mipmap.vhennuslogo2),
             contentDescription = null,
             modifier = Modifier
                 .size(200.dp)
@@ -84,7 +84,7 @@ fun signUpScreen(
         )
 
         Text(
-            text="Create A Vhenncoin ID",
+            text="Create account",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier
                 .padding( bottom =  20.dp, )

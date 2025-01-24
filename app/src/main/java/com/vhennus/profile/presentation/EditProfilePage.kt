@@ -79,6 +79,7 @@ fun editProfilePage(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             profileViewModel.resetUIState()
+            profileViewModel.resetUploadWorkStatus()
         }
     }
     val profile = profileViewModel.profile.collectAsState().value

@@ -68,10 +68,10 @@ class ImageUploadWorker(
     override suspend fun doWork(): Result {
         val imageUriString = inputData.getString("imageUri") ?: return Result.failure()
         val imageUri = Uri.parse(imageUriString)
-        val userName = inputData.getString("userName")?: return Result.failure()
+        val publicID = inputData.getString("publicID")?: return Result.failure()
 
         return try {
-            val resultUrl = uploadImageToCloudinary(imageUri, userName)
+            val resultUrl = uploadImageToCloudinary(imageUri, publicID)
             if (resultUrl != null) {
                 Result.success(workDataOf("uploadedUrl" to resultUrl))
             } else {
@@ -82,11 +82,11 @@ class ImageUploadWorker(
         }
     }
 
-    private suspend fun uploadImageToCloudinary(imageUri: Uri, userName:String): String? {
+    private suspend fun uploadImageToCloudinary(imageUri: Uri, publicID:String): String? {
         return suspendCancellableCoroutine { continuation ->
             MediaManager.get().upload(imageUri)
                 .option("folder", "profile")
-                .option("public_id", userName)
+                .option("public_id", publicID)
                 .option("overwrite", true)
                 .option("upload_preset", "preset1")
                 .callback(object : UploadCallback {

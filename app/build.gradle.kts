@@ -52,7 +52,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -98,8 +98,10 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.material3)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.play.services.cast.tv)
+    implementation(libs.androidx.foundation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -113,7 +115,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
     // material 3
-    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation(libs.androidx.material3.v121)
     implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.0-beta03")
     implementation("androidx.compose.material:material-icons-extended:1.6.8")

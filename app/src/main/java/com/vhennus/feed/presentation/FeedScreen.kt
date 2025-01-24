@@ -8,14 +8,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.ModeComment
@@ -48,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -80,7 +86,7 @@ fun FeedScreen(
 
     val observer = LifecycleEventObserver { _, event ->
       if (event == Lifecycle.Event.ON_RESUME) {
-        feedViewModel.getAllPosts()
+        feedViewModel.getAllPosts(false)
         feedViewModel.getUserName()
       }
     }
@@ -212,7 +218,8 @@ fun post(
     // actual post
     Column (
       horizontalAlignment = Alignment.Start,
-      verticalArrangement = Arrangement.SpaceEvenly
+      verticalArrangement = Arrangement.SpaceEvenly,
+      modifier = Modifier
     ){
       Text(text = post.value.user_name, style=MaterialTheme.typography.titleLarge)
       Text(text = prettyPostDate, style=MaterialTheme.typography.bodySmall)
@@ -220,6 +227,13 @@ fun post(
         modifier = Modifier.clickable(onClick = {
           onPostClick()
         }))
+
+      if(post.value.image.isNotEmpty()){
+        LoadImageWithPlaceholder(post.value.image,
+          modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp, max = 300.dp)
+            .clip(RoundedCornerShape(20.dp))
+        )
+      }
 
       Row(
         modifier = Modifier.fillMaxWidth(),

@@ -2,8 +2,15 @@ package com.vhennus.feed.data
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.vhennus.feed.domain.CreatePostReq
 import com.vhennus.feed.domain.FeedUIState
 import com.vhennus.feed.domain.Post
@@ -16,13 +23,17 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vhennus.feed.domain.Comment
 import com.vhennus.feed.domain.CreateCommentReq
+import com.vhennus.general.utils.ImageUploadWorker
+import com.vhennus.profile.domain.UpdateProfileRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import javax.inject.Inject
 
 
@@ -56,7 +67,18 @@ class  FeedViewModel @Inject constructor(
     private val _userName = MutableStateFlow("")
     val userName = _userName.asStateFlow()
 
+    private val _imageURI = MutableStateFlow<Uri?>(null)
+    val imageUri = _imageURI.asStateFlow()
+
+
+    fun setImageURI(uri: Uri){
+        _imageURI.value = uri
+    }
     fun clearModelData(){
+        _imageURI.value = null
+    }
+
+    fun clearUIData(){
         _feedUIState.value = FeedUIState()
     }
 
@@ -100,10 +122,32 @@ class  FeedViewModel @Inject constructor(
     fun success(){
         _feedUIState.update { it.copy(isCreatePostSuccess = true) }
     }
+
+    fun createPostB(post: CreatePostReq){
+        _feedUIState.update { it.copy(isCreatePostLoading = true) }
+        // check if there is an image in post, if so upload it
+        val tempUri = _imageURI.value
+        if(tempUri !=null){
+
+            uploadImage(tempUri)
+            // now wait for upload to finish
+
+        }else{
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    createPost(post)
+                }
+            }
+
+        }
+
+    }
+
     fun createPost(post: CreatePostReq){
+        _feedUIState.update { it.copy(isCreatePostLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO){
-                _feedUIState.update { it.copy(isCreatePostLoading = true) }
+
                 val token = getUserToken.getUserToken()
                 if (token.isBlank()){
                     _feedUIState.update { it.copy(
@@ -124,7 +168,7 @@ class  FeedViewModel @Inject constructor(
                             val  posts = _allPosts.value.toMutableList()
                             //posts.add(newPost)
 //                            _allPosts.value = posts
-                            getAllPosts()
+                            getAllPosts(true)
 
                         }
                         _feedUIState.update { it.copy(
@@ -162,7 +206,9 @@ class  FeedViewModel @Inject constructor(
     }
 
 
-    fun getAllPosts(){
+
+
+    fun getAllPosts(isScrollToTop:Boolean){
         _feedUIState.update { it.copy(isFeedLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO){
@@ -182,13 +228,19 @@ class  FeedViewModel @Inject constructor(
                         if (allPosts != null){
                             _allPosts.value = allPosts
                         }
+                        //CLog.debug("HOW TO", allPosts.toString())
                         _feedUIState.update { it.copy(
                             isFeedLoading  = false,
                             isFeedLoadingError  = false,
                             isFeedLoadingSuccess  = true,
                             getFeedErrorMessage = "",
-                            isScrollToFeedTop = true
+
                         ) }
+
+                        // scroll screen to top if asked to do so
+                        if(isScrollToTop){
+                            _feedUIState.update { it.copy(isScrollToFeedTop = true) }
+                        }
                     }else{
                         //CLog.error("XX ERROR CREATING POST ", resp.errorBody()?.string() +"")
                         val gson = Gson()
@@ -228,7 +280,8 @@ class  FeedViewModel @Inject constructor(
                         isGetSinglePostLoading  = false,
                         isGetSinglePostError  = true,
                         isGetSinglePostSuccess  = false,
-                        getSinglePostErrorMessage = "Unauthorized"
+                        getSinglePostErrorMessage = "Unauthorized",
+                        isGetSinglePostRefresh = false
                     ) }
                 }
                 try {
@@ -236,13 +289,14 @@ class  FeedViewModel @Inject constructor(
                     if (resp.isSuccessful){
                         val post = resp.body()?.data
                         if (post != null){
-                            _singlePost.value = post
+                            _singlePost.update { post }
                         }
                         _feedUIState.update { it.copy(
                             isGetSinglePostLoading  = false,
                             isGetSinglePostError  = false,
                             isGetSinglePostSuccess  = true,
-                            getSinglePostErrorMessage = ""
+                            getSinglePostErrorMessage = "",
+                            isGetSinglePostRefresh = false
                         ) }
                     }else{
                         //CLog.error("XX ERROR CREATING POST ", resp.errorBody()?.string() +"")
@@ -253,7 +307,8 @@ class  FeedViewModel @Inject constructor(
                             isGetSinglePostLoading  = false,
                             isGetSinglePostError  = true,
                             isGetSinglePostSuccess  = false,
-                            getSinglePostErrorMessage = errorResp.message
+                            getSinglePostErrorMessage = errorResp.message,
+                            isGetSinglePostRefresh = false
                         ) }
                         CLog.error("XX ERROR CREATING POST ", errorResp.server_message+"")
                     }
@@ -263,7 +318,8 @@ class  FeedViewModel @Inject constructor(
                         isGetSinglePostLoading  = false,
                         isGetSinglePostError  = true,
                         isGetSinglePostSuccess  = false,
-                        getSinglePostErrorMessage = e.toString()
+                        getSinglePostErrorMessage = e.toString(),
+                        isGetSinglePostRefresh = false
                     ) }
                     CLog.error("XX ERROR CREATING POST ", e.toString())
                 }
@@ -297,6 +353,9 @@ class  FeedViewModel @Inject constructor(
                             comments.add(comment)
                             _comments.value = comments
                         }
+
+                        // get the single post data
+                        getSinglePosts(id)
                         _feedUIState.update { it.copy(
                             isCreateCommentError = false,
                             isCreateCommentSuccess = true,
@@ -329,6 +388,10 @@ class  FeedViewModel @Inject constructor(
 
             }
         }
+    }
+
+    fun updateSinglePOstRefresh(data:Boolean){
+        _feedUIState.update { it.copy(isGetSinglePostRefresh = data) }
     }
 
     fun updateFeedScrollToTop(data:Boolean){
@@ -439,4 +502,51 @@ class  FeedViewModel @Inject constructor(
             }
         }
     }
+
+
+    private val _workStatus = MutableStateFlow<WorkInfo?>(null)
+    val workStatus: StateFlow<WorkInfo?> = _workStatus.asStateFlow()
+    private val workManager: WorkManager = WorkManager.getInstance(application)
+    private var hasHandledUploadSuccess = false
+
+
+    fun uploadImage(imageUri: Uri) {
+
+        val inputData = workDataOf("imageUri" to imageUri.toString(),
+            "publicID" to UUID.randomUUID().toString()
+        )
+
+        // Create the work request
+        val uploadWorkRequest = OneTimeWorkRequestBuilder<ImageUploadWorker>()
+            .setInputData(inputData)
+            .build()
+
+        // Enqueue the upload work
+        workManager.enqueue(uploadWorkRequest)
+
+        // Observe the work status
+        workManager.getWorkInfoByIdLiveData(uploadWorkRequest.id).observeForever { workInfo ->
+            // Emit updates to the state flow
+            if(workInfo != null && !hasHandledUploadSuccess){
+                _workStatus.value = workInfo
+
+                if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                    hasHandledUploadSuccess = true
+                    workManager.getWorkInfoByIdLiveData(uploadWorkRequest.id).removeObserver { this }
+                }
+
+                // remove the oberserver when done
+                if (workInfo?.state?.isFinished == true) {
+                    workManager.getWorkInfoByIdLiveData(uploadWorkRequest.id).removeObserver { this }
+                }
+            }
+
+        }
+    }
+
+    fun resetUploadWorkStatus() {
+        _workStatus.value = null
+        hasHandledUploadSuccess = false
+    }
+
 }

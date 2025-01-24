@@ -1,5 +1,6 @@
 package com.vhennus.feed.domain
 
+import android.text.BoringLayout
 import androidx.collection.floatSetOf
 
 data class FeedUIState(
@@ -13,11 +14,13 @@ data class FeedUIState(
     val isCreatePostError:Boolean=false,
     val isCreatePostSuccess:Boolean = false,
     val createPostErrorMessage:String ="",
+    val isCreatePostImage:Boolean = false,
 
     val isGetSinglePostLoading:Boolean = false,
     val isGetSinglePostSuccess:Boolean = false,
     val isGetSinglePostError:Boolean= false,
     val getSinglePostErrorMessage:String = "",
+    val isGetSinglePostRefresh:Boolean = false,
 
     val isCreateCommentButtonLoading:Boolean = false,
     val isCreateCommentSuccess:Boolean = false,

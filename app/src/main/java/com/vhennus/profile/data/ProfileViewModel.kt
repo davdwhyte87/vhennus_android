@@ -68,7 +68,7 @@ class ProfileViewModel @Inject constructor(
     fun uploadImage(imageUri: Uri) {
 
         val inputData = workDataOf("imageUri" to imageUri.toString(),
-            "userName" to _profile.value.user_name
+            "publicID" to _profile.value.user_name
         )
 
         // Create the work request
