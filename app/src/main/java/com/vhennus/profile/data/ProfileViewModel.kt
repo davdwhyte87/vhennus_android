@@ -21,7 +21,8 @@ import com.vhennus.profile.domain.SendFriendRequest
 import com.vhennus.profile.domain.UpdateProfileRequest
 import com.vhennus.profile.presentation.FriendRequestItem
 import com.vhennus.search.domain.SearchUIState
-import com.vhennus.trade.domain.response.GenericResp
+import com.vhennus.settings.domain.SettingsUIState
+import com.vhennus.general.domain.GenericResp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +58,8 @@ class ProfileViewModel @Inject constructor(
     private val _profileSearchResults = MutableStateFlow<List<Profile>>(emptyList())
     val profileSearchResults = _profileSearchResults.asStateFlow()
 
+    private val _settingsUIState = MutableStateFlow(SettingsUIState())
+    val settingsUIState = _settingsUIState.asStateFlow()
 
 
     private val _workStatus = MutableStateFlow<WorkInfo?>(null)
@@ -107,6 +110,7 @@ class ProfileViewModel @Inject constructor(
     fun resetUIState(){
         _profileUIState.value = ProfileUIState()
         _searchUIState.value = SearchUIState()
+        _settingsUIState.value = SettingsUIState()
     }
     fun resetModelData(){
         _profile.value = Profile()
@@ -547,6 +551,49 @@ class ProfileViewModel @Inject constructor(
                         sendFriendRequestError = "Network Error"
                     ) }
                     CLog.error("SEND FRIEND REQUEST ", e.toString() +" ")
+                }
+            }
+        }
+    }
+
+    fun deleteAccount(){
+       _settingsUIState.update { it.copy(isDeleteAccountLoading = true) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                try {
+                    val token = getUserToken.getUserToken()
+                    val resp = apiService.deleteAccount( mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        val data = resp.body()?.data
+                        _settingsUIState.update { it.copy(
+                            isDeleteAccountLoading = false,
+                            isDeleteAccountError = false,
+                            isDeleteAccountSuccess = true,
+                            deleteAccountErrorMessage = ""
+                        ) }
+
+                    }else{
+                        val respString = resp.errorBody()?.string()
+                        CLog.error("DELETE ACCOUNT ERROR", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                        _settingsUIState.update { it.copy(
+                            isDeleteAccountLoading = false,
+                            isDeleteAccountError = true,
+                            isDeleteAccountSuccess = false,
+                            deleteAccountErrorMessage = errorResp.message
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _settingsUIState.update { it.copy(
+                        isDeleteAccountLoading = false,
+                        isDeleteAccountError = true,
+                        isDeleteAccountSuccess = false,
+                        deleteAccountErrorMessage = "Network error"
+                    ) }
+                    CLog.error("DELETE ACCOUNT ERROR", e.toString() +" ")
                 }
             }
         }

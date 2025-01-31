@@ -15,7 +15,7 @@ import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.data.WebSocketManager
 import com.vhennus.general.utils.CLog
 import com.vhennus.profile.domain.Profile
-import com.vhennus.trade.domain.response.GenericResp
+import com.vhennus.general.domain.GenericResp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -11,9 +11,10 @@ import com.vhennus.auth.domain.AuthUIState
 import com.vhennus.auth.domain.LoginReq
 import com.vhennus.auth.domain.SignupReq
 import com.vhennus.general.data.APIService
-import com.vhennus.trade.domain.response.GenericResp
+import com.vhennus.general.domain.GenericResp
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vhennus.general.utils.CLog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,6 +49,7 @@ class AuthViewModel  @Inject constructor(
                 // send data to api
                 try {
                     val resp = apiService.create_account(data)
+                    Log.d("SIGNUP RESP", resp.body().toString())
                     if (resp.code() == 200){
                         _authUIState.update { it.copy(
                             isSignupButtonLoading = false,
@@ -55,8 +57,6 @@ class AuthViewModel  @Inject constructor(
                             isSignupError = false,
                             signupErrorMessage = ""
                         ) }
-
-                        Log.d("SIGNUP RESP", resp.body().toString())
 
                     }else{
                         Log.d("SIGNUP ERROR !", resp.errorBody().toString())
@@ -88,17 +88,56 @@ class AuthViewModel  @Inject constructor(
     }
 
 
-    fun login(data: LoginReq){
-        // start loading button
-        _authUIState.update { it.copy(isLoginButtonLoading = true) }
+    fun getSys(){
+
+    }
+
+    fun getSystemData(){
         viewModelScope.launch {
             withContext(Dispatchers.IO){
+                try{
+
+                    val resp = apiService.getSystemData()
+                    CLog.debug("SYSTEM DA", resp.body().toString())
+                    if (resp.isSuccessful){
+                        val systemData = resp.body()?.data
+                        if (systemData == null){
+                            CLog.error("ERROR GETTING SYSTEM DATA", " Did not get any data")
+                            return@withContext
+                        }
 
 
+                    }else{
+                        val errData = resp.errorBody()?.string()
+                        CLog.error("ERROR GETTING SYSTEM DATA", resp.code().toString()+"err data")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(errData, genericType)
+                        CLog.error("ERROR GETTING SYSTEM DATA", errorResp.message)
+
+                    }
+                }catch (e:Exception){
+                    CLog.error("ERROR GETTING SYSTEM DATA", e.toString())
+                }
+
+            }
+        }
+    }
+
+
+    fun login(data: LoginReq){
+        Log.d("LOGIN ****", "Starting " )
+        // start loading button
+        _authUIState.update { it.copy(isLoginButtonLoading = true) }
+        Log.d("LOGIN ****", "loading " )
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
                 // send data to api
-
                 try {
+                    Log.d("LOGIN ****", "calling api " )
                     val resp = apiService.login2(data)
+                    Log.d("LOGIN ****", "done calling api " )
+                    Log.d("LOGIN ****", resp.body().toString())
                     if (resp.code() == 200){
                         _authUIState.update { it.copy(
                             isLoginButtonLoading = false,

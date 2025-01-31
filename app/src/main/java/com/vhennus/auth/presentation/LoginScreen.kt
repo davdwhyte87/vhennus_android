@@ -11,12 +11,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,6 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -32,6 +43,7 @@ import com.vhennus.NavScreen
 import com.vhennus.R
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.auth.domain.LoginReq
+import com.vhennus.general.presentation.PasswordTextField
 import com.vhennus.ui.AnimatedPreloader
 
 @Composable
@@ -44,18 +56,24 @@ fun loginScreen(
     val context = LocalContext.current
 
 
-    if(authUIState.value.isLoginError){
-        Toast.makeText(LocalContext.current, authUIState.value.loginErrorMessage, Toast.LENGTH_SHORT).show()
-        authViewModel.resetLoginUIState()
-    }
-    if(authUIState.value.isLoginSuccess){
-        Toast.makeText(LocalContext.current, "Success!", Toast.LENGTH_SHORT).show()
-        authViewModel.resetLoginUIState()
-
-        navHostController.navigate(NavScreen.HomeScreen.route){
-            popUpTo(NavScreen.HomeScreen.route)
+    LaunchedEffect(authUIState.value.isLoginError) {
+        if(authUIState.value.isLoginError){
+            Toast.makeText(context, authUIState.value.loginErrorMessage, Toast.LENGTH_SHORT).show()
+            authViewModel.resetLoginUIState()
         }
     }
+
+
+    LaunchedEffect(authUIState.value.isLoginSuccess) {
+        if(authUIState.value.isLoginSuccess){
+            Toast.makeText(context, "Success!", Toast.LENGTH_SHORT).show()
+            navHostController.navigate(NavScreen.HomeScreen.route){
+                popUpTo(NavScreen.HomeScreen.route){inclusive = true}
+            }
+            authViewModel.resetLoginUIState()
+        }
+    }
+
 
     val userName = remember {
         mutableStateOf("")
@@ -64,6 +82,7 @@ fun loginScreen(
     val password = remember {
         mutableStateOf("")
     }
+
 
     Column (
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -84,19 +103,15 @@ fun loginScreen(
             },
             shape = RoundedCornerShape(20.dp),
             placeholder = { Text(text = "Username") },
+            singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
         )
-        OutlinedTextField(value = password.value,
-            onValueChange = {
-                password.value = it
-            },
-            shape = RoundedCornerShape(20.dp),
-            placeholder = { Text(text = "Password") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
+
+        PasswordTextField(
+            password = password.value,
+            onPasswordChange = { password.value = it }
         )
 
         Button(onClick = {
@@ -108,6 +123,7 @@ fun loginScreen(
                 password=password.value
             )
             authViewModel.login(loginReq)
+
         },
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,

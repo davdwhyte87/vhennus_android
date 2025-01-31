@@ -1,13 +1,18 @@
 package com.vhennus.trade.domain.requests
 
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
+@Serializable
 data class CreateBuyOrderReq(
-    val amount:BigDecimal,
+    @Contextual val amount:BigDecimal,
     val sell_order_id:String,
     val wallet_address:String
 )
 
+
+@Serializable
 data class CreateOrderMessageReq(
     val receiver_user_name: String,
     val buy_order_id:String,
@@ -15,6 +20,8 @@ data class CreateOrderMessageReq(
     val image:String
 )
 
+
+@Serializable
 data class CreatePaymentMethod(
     val payment_method: PaymentMethod = PaymentMethod.Bank,
     val account_name:String ,

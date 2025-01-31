@@ -18,7 +18,7 @@ import com.vhennus.general.data.APIService
 import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.domain.SystemData
 import com.vhennus.general.utils.CLog
-import com.vhennus.trade.domain.response.GenericResp
+import com.vhennus.general.domain.GenericResp
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vhennus.feed.domain.Comment
@@ -228,7 +228,8 @@ class  FeedViewModel @Inject constructor(
                         if (allPosts != null){
                             _allPosts.value = allPosts
                         }
-                        //CLog.debug("HOW TO", allPosts.toString())
+                       // CLog.debug("GET ALL POSTS REQ", resp.body().toString())
+                        //CLog.debug("GET ALL POSTS", allPosts.toString())
                         _feedUIState.update { it.copy(
                             isFeedLoading  = false,
                             isFeedLoadingError  = false,

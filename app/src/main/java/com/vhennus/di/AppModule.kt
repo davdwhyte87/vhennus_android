@@ -7,9 +7,10 @@ import dagger.hilt.InstallIn
 
 import android.content.Context
 import com.vhennus.BuildConfig
+import com.vhennus.general.data.AppDatabase
 import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.data.WebSocketManager
-import com.vhennus.wallet.data.AppDatabase
+
 import com.vhennus.wallet.data.WalletService
 import com.vhennus.wallet.domain.dao.WalletDAO
 import dagger.Provides

@@ -100,7 +100,7 @@ fun myFriendsPage(
             )
 
             // list of friends
-            val friends = profile.friends_models
+            val friends = profile.friends_models ?:emptyList()
 
             if (profileUIState.isGetProfileLoading){
                 FriendsPageLoadingState()
@@ -108,6 +108,7 @@ fun myFriendsPage(
                 LazyColumn (
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ){
+
                     items(friends){ item->
                         FriendListItem(item, navController, chatViewModel)
                     }

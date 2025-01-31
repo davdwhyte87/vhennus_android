@@ -27,6 +27,7 @@ import com.vhennus.profile.presentation.FriendRequestsPage
 import com.vhennus.profile.presentation.editProfilePage
 import com.vhennus.profile.presentation.myFriendsPage
 import com.vhennus.search.presentation.SearchPage
+import com.vhennus.settings.presentation.SettingsPage
 import com.vhennus.trade.data.OrderViewModel
 import com.vhennus.trade.presentation.ShopCoinsScreen
 import com.vhennus.trade.presentation.addPaymentMethodScreen
@@ -190,6 +191,10 @@ fun AppNav(
             if(id!=null) {
                 singlePostScreen(id, feedViewModel, navController)
             }
+        }
+
+        composable(NavScreen.SettingsPage.route){
+            SettingsPage(navController,profileViewModel, authViewModel)
         }
 
         protectedComposable(

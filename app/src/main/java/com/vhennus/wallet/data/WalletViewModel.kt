@@ -16,7 +16,7 @@ import com.vhennus.wallet.presentation.formatter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vhennus.general.data.APIService
-import com.vhennus.trade.domain.response.GenericResp
+import com.vhennus.general.domain.GenericResp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

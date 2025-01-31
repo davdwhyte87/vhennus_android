@@ -1,5 +1,9 @@
 package com.vhennus.trivia.domain
 
+import kotlinx.serialization.Serializable
+
+
+@Serializable
 data class TriviaGame(
     val id:String = "",
     val trivia_question_id:String ="",

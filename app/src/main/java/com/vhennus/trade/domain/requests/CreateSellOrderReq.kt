@@ -1,10 +1,14 @@
 package com.vhennus.trade.domain.requests
 
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
+
+@Serializable
 data class CreateSellOrderReq(
-    val amount:BigDecimal,
-    val min_amount:BigDecimal,
+    @Contextual val amount:BigDecimal,
+    @Contextual val min_amount:BigDecimal,
     //val max_amount:BigDecimal,
     val currency:Currency,
     val payment_method:PaymentMethod,
@@ -14,11 +18,15 @@ data class CreateSellOrderReq(
     val password:String
 )
 
+
+@Serializable
 enum class Currency{
     NGN,
     USD
 }
 
+
+@Serializable
 enum class PaymentMethod {
     Bank,
     Paypal

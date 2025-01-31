@@ -1,15 +1,19 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    id("com.google.dagger.hilt.android") version "2.51.1" apply true
+    id("com.google.dagger.hilt.android") version "2.55" apply true
     id("kotlin-kapt")
     id("com.google.gms.google-services")
+    alias(libs.plugins.compose.compiler)
+    //id("kotlinx-serialization")
+    kotlin("plugin.serialization") version "2.0.0"
+
 }
 
-val hilt_version = "2.51.1"
+val hilt_version = "2.55"
 android {
     namespace = "com.vhennus"
-    compileSdk = 34
+    compileSdk = 35
 
     flavorDimensions +="environment"
     productFlavors {
@@ -21,8 +25,8 @@ android {
 //            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
 
 //            buildConfigField("String", "API_URL", "\"http://0.0.0.0:8000\"")
-            buildConfigField("String", "API_URL", "\"http://172.20.10.2:8000\"")
-            buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.224.183:3000\"")
+            buildConfigField("String", "API_URL", "\"http://155.138.221.87:8000\"")
+            buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.221.87:3000\"")
         }
         create("dev") {
             dimension = "environment"
@@ -40,7 +44,7 @@ android {
         applicationId = "com.vhennus"
         minSdk = 28
         targetSdk = 34
-        versionCode = 1
+        versionCode = 4
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -57,10 +61,17 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+//           isShrinkResources = true
+//            isDebuggable =true
+//            signingConfig = signingConfigs.getByName("debug")
         }
 
         debug {
-
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
@@ -76,7 +87,7 @@ android {
         buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.15"
     }
     packaging {
         resources {
@@ -87,6 +98,7 @@ android {
 
 
 }
+
 
 dependencies {
 
@@ -111,6 +123,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation(libs.kotlinx.metadata.jvm)
+
     val nav_version = "2.7.7"
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
@@ -131,7 +145,7 @@ dependencies {
 
 
     // gson
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.11.0")
 
     //lotie animation
 
@@ -140,8 +154,8 @@ dependencies {
     // room db
     val room_version = "2.6.1"
 
-    implementation("androidx.room:room-runtime:$room_version")
-    annotationProcessor("androidx.room:room-compiler:$room_version")
+    implementation(libs.androidx.room.runtime)
+    annotationProcessor(libs.androidx.room.compiler)
 
     // To use Kotlin annotation processing tool (kapt)
     kapt("androidx.room:room-compiler:$room_version")
@@ -151,8 +165,8 @@ dependencies {
 
 
     // retrofit
-    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation (libs.retrofit)
+    implementation(libs.converter.gson)
 
     // crypto shared
     implementation ("androidx.security:security-crypto:1.1.0-alpha06")
@@ -163,7 +177,7 @@ dependencies {
     // pretty date
     implementation (libs.prettytime)
 
-    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.3")
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.10.0")
 
     // image
     implementation(libs.coil.compose)
@@ -177,6 +191,16 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.7.2")
 
     implementation("androidx.work:work-runtime-ktx:2.8.0")
+
+    implementation("com.facebook.soloader:soloader:0.12.1")
+
+
+    implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
+
+    // kotlin serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
+
 
 
 }

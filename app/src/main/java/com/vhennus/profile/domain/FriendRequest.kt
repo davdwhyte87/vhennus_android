@@ -1,5 +1,10 @@
 package com.vhennus.profile.domain
 
+import kotlinx.serialization.Serializable
+import java.io.Serial
+
+
+@Serializable
 data class FriendRequest(
     val id:String = "",
     val user_name:String = "",
@@ -10,6 +15,8 @@ data class FriendRequest(
     val requester_profile:Profile = Profile()
 )
 
+
+@Serializable
 enum class FriendRequestStatus{
     PENDING,
     ACCEPTED,

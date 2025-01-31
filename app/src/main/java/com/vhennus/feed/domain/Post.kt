@@ -1,7 +1,9 @@
 package com.vhennus.feed.domain
 
 import com.vhennus.profile.domain.Profile
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Post(
     val id:String = "",
     val profile_image:String ="",
@@ -15,6 +17,7 @@ data class Post(
     val profile:Profile = Profile()
 )
 
+@Serializable
 data class Comment(
     val text: String,
     val id:String,

@@ -1,7 +1,10 @@
 package com.vhennus.chat.domain
 
 import com.vhennus.profile.domain.Profile
+import kotlinx.serialization.Serializable
 
+
+@Serializable
 data class ChatPair(
     val id:String = "",
     val user_name:String = "",
@@ -11,6 +14,7 @@ data class ChatPair(
     val updaed_at:String = "",
     var last_message:String = ""
 )
+
 
 data class MUser(
     val userName:String = "",

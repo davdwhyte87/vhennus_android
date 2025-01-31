@@ -1,7 +1,10 @@
 package com.vhennus.trade.domain
 
 import com.vhennus.trade.domain.requests.PaymentMethod
+import kotlinx.serialization.Serializable
 
+
+@Serializable
 data class PaymentMethodData(
     val id:String = "",
     val user_name:String = "",

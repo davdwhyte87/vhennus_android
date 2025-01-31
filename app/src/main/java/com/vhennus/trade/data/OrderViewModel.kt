@@ -18,9 +18,12 @@ import com.vhennus.trade.domain.requests.CreateBuyOrderReq
 import com.vhennus.trade.domain.requests.CreateOrderMessageReq
 import com.vhennus.trade.domain.requests.CreatePaymentMethod
 import com.vhennus.trade.domain.requests.CreateSellOrderReq
-import com.vhennus.trade.domain.response.GenericResp
+import com.vhennus.general.domain.GenericResp
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vhennus.general.domain.MyBuyOrdersResp
+import com.vhennus.general.domain.SingleBuyOrdersResp
+import com.vhennus.general.domain.SingleSellOrderResp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -203,7 +206,7 @@ class OrderViewModel @Inject constructor(
                     val token = getUserToken()
                     val resp = apiService.addPaymentMethods(createPaymentMethod, mapOf("Authorization" to token))
                     if (resp.isSuccessful){
-                        val data =  resp.body()?.data
+                        val data = resp.body()?.data
                         if (data != null){
                             val paymentMethodList = _paymentMethodDatas.value
                             paymentMethodList.toMutableList().add(data)
@@ -260,7 +263,7 @@ class OrderViewModel @Inject constructor(
                     val token = getUserToken()
                     val resp = apiService.getMyPaymentMethods(mapOf("Authorization" to token))
                     if (resp.isSuccessful){
-                        val data =  resp.body()?.data
+                        val data = resp.body()?.data
                         if (data != null){
                             _paymentMethodDatas.value = data
                         }
@@ -314,7 +317,7 @@ class OrderViewModel @Inject constructor(
                     val token = getUserToken()
                     val resp = apiService.deletePaymentMethod(id, mapOf("Authorization" to token))
                     if (resp.isSuccessful){
-                        val data =  resp.body()?.data
+                        val data = resp.body()?.data
 
                         //
                         _tradeUIState.update { it.copy(
@@ -480,7 +483,7 @@ class OrderViewModel @Inject constructor(
                     else{
                         _tradeUIState.update { it.copy(isSuccess = false,
                             isError = true,
-                            errorMessage = resp.body()?.message ?:""
+                            errorMessage =  resp.body()?.message ?:""
                         ) }
                     }
 
@@ -655,7 +658,7 @@ class OrderViewModel @Inject constructor(
                     if (resp.code() == 200){
                         _tradeUIState.update { it.copy(isSuccess = true,
                             isError = false) }
-                        val data = resp.body()?.data ?: SellOrder()
+                        val data =  resp.body()?.data ?: SellOrder()
                         if (data.created_at.isBlank()){
 //                            _tradeUIState.update {
 //                                it.copy(
@@ -805,7 +808,7 @@ class OrderViewModel @Inject constructor(
                     val resp = apiService.getSingleBuyOrder(buyOrderID, mapOf("Authorization" to token))
                     if (resp.code() == 200){
 
-                        val data = resp.body()?.data
+                        val data =  resp.body()?.data
                         if (data == null){
                             _tradeUIState.update {
                                 it.copy(
@@ -1227,7 +1230,7 @@ class OrderViewModel @Inject constructor(
                         _tradeUIState.update { it.copy(
                             isGetAllOrderMessagesError = true,
                             isGetAllOrderMessagesSuccess = false,
-                            getAllOrderMessagesErrorMessage = resp.body()?.message ?: ""
+                            getAllOrderMessagesErrorMessage =resp.body()?.message ?: ""
                         ) }
                         CLog.error("XXX CREATE ORDER MESSAGE ", resp.body().toString())
                     }
@@ -1300,7 +1303,7 @@ class OrderViewModel @Inject constructor(
                         _tradeUIState.update { it.copy(
                             isCreateOrderMessagesError = true,
                             isCreateOrderMessageSuccess = false,
-                            createOrderMessageErrorMessage = resp.body()?.message ?: ""
+                            createOrderMessageErrorMessage = resp.body()?.message  ?: ""
                         ) }
                         CLog.error("XXX CREATE ORDER MESSAGE", resp.body().toString())
                     }

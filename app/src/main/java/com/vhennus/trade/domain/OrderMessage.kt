@@ -1,5 +1,9 @@
 package com.vhennus.trade.domain
 
+import kotlinx.serialization.Serializable
+
+
+@Serializable
 data class OrderMessage(
     val id: String  = "",
     val text:String= "" ,

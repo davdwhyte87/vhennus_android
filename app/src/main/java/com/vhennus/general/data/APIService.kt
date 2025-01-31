@@ -3,6 +3,7 @@ package com.vhennus.general.data
 
 import com.vhennus.auth.domain.LoginReq
 import com.vhennus.auth.domain.SignupReq
+import com.vhennus.auth.domain.SignupResp
 import com.vhennus.chat.domain.Chat
 import com.vhennus.chat.domain.ChatPair
 import com.vhennus.chat.domain.CreateChatReq
@@ -23,11 +24,12 @@ import com.vhennus.trade.domain.requests.CreateBuyOrderReq
 import com.vhennus.trade.domain.requests.CreateOrderMessageReq
 import com.vhennus.trade.domain.requests.CreatePaymentMethod
 import com.vhennus.trade.domain.requests.CreateSellOrderReq
-import com.vhennus.trade.domain.response.GenericResp
-import com.vhennus.trade.domain.response.MyBuyOrdersResp
+import com.vhennus.general.domain.GenericResp
+//import com.vhennus.general.domain.LoginResp
+import com.vhennus.general.domain.MyBuyOrdersResp
 import com.vhennus.trade.domain.response.MySellOrdersResponse
-import com.vhennus.trade.domain.response.SingleBuyOrdersResp
-import com.vhennus.trade.domain.response.SingleSellOrderResp
+import com.vhennus.general.domain.SingleBuyOrdersResp
+import com.vhennus.general.domain.SingleSellOrderResp
 import com.vhennus.trivia.domain.TriviaGame
 import com.vhennus.trivia.domain.TriviaGameReq
 import retrofit2.Response
@@ -52,6 +54,7 @@ interface APIService {
 
     @GET("api/v1/auth/buy_order/single/{id}")
     suspend fun getSingleBuyOrder(@Path("id") id:String, @HeaderMap header:Map<String,String>):Response<SingleBuyOrdersResp>
+
     @GET("api/v1/auth/buy_order/my_orders")
     suspend fun getMyBuyOrders(@HeaderMap header:Map<String,String>):Response<MyBuyOrdersResp>
 
@@ -130,7 +133,7 @@ interface APIService {
     suspend fun likePost(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<Post>>
     // system data
     @GET("get_system_data")
-    suspend fun getSystemData():Response<GenericResp<SystemData>>
+    suspend fun getSystemData():Response< GenericResp<SystemData>>
 
 
     // trivia
@@ -188,6 +191,10 @@ interface APIService {
     // search
     @GET("api/v1/auth/profile/search/{data}")
     suspend fun searchProfile(@Path("data") data:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<List<Profile>>>
+
+    // delete account
+    @GET("api/v1/auth/profile/delete")
+    suspend fun deleteAccount( @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
 
 
 }
