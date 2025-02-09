@@ -242,7 +242,8 @@ fun post(
       ) {
         IconButton(
           onClick = {
-            navController.navigate(NavScreen.CreateCommentScreen.route+"/"+post.value.id)
+            //navController.navigate(NavScreen.CreateCommentScreen.route+"/"+post.value.id)
+            navController.navigate(NavScreen.SinglePost.route+"/${post.value.id}")
           },
           colors = IconButtonDefaults.iconButtonColors(
             containerColor = MaterialTheme.colorScheme.surface,

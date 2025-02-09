@@ -126,12 +126,19 @@ fun FriendRequestItem(
 
         }).fillMaxWidth()
     ) {
-        Image(
-            painter = painterResource(R.drawable.p1),
-            contentDescription = "",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.size(60.dp).clip(CircleShape)
-        )
+        if(request.requester_profile.image.isEmpty() || request.requester_profile.image.isBlank()){
+            Image(
+                painter = painterResource(R.drawable.p1),
+                contentDescription = "",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(60.dp).clip(CircleShape)
+            )
+        }else{
+            LoadImageWithPlaceholder(request.requester_profile.image,
+                modifier = Modifier.size(60.dp)
+                    .clip(CircleShape)
+            )
+        }
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(5.dp)

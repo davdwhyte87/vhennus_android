@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 
@@ -55,6 +56,7 @@ class ChatViewModel @Inject constructor(
     private val _singleChatReceiverProfile = MutableStateFlow(Profile())
     val singleChatReceiverProfile = _singleChatReceiverProfile.asStateFlow()
 
+    
 
 
     fun setSingleChatReceiverProfile(profile:Profile){
@@ -362,7 +364,7 @@ class ChatViewModel @Inject constructor(
         webSocketManager.connect(
             onMessageReceived = { text->
                 // convert text to chat model
-                val message = Gson().fromJson(text, Chat::class.java)
+                val message = Json.decodeFromString<Chat>(text)
                 // save last message locally
                 //saveLastMessage(message.pair_id, message.message)
                 addMessageWS(message)
@@ -374,9 +376,12 @@ class ChatViewModel @Inject constructor(
 
     }
     fun sendMessageToWS(createChatReq: CreateChatReq, userName:String){
+        CLog.debug("WS SEND MESSAGE", "starting send")
         val gson = Gson()
-        val text = gson.toJson(createChatReq)
+        val text = Json.encodeToString(CreateChatReq.serializer(), createChatReq)
+        CLog.debug("WS SEND MESSAGE", "text ... ${text}")
         if(!webSocketManager.sendMessage(text)){
+            CLog.debug("WS SEND MESSAGE", "error sending ")
             _chatsUIState.update { it.copy(
                 isCreateChatLoading = false,
                 isCreateChatError = true,

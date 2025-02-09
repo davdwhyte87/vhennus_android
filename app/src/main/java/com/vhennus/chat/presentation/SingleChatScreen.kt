@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -63,6 +64,7 @@ import com.vhennus.ui.GeneralScaffold
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 
 @Composable
@@ -215,7 +217,9 @@ fun SingleChatScreen(
                   placeholder = { Text(text = "Message") },
                   modifier = Modifier
                       .weight(1f)
-                      .padding(end = 1.dp),
+                      .padding(end = 1.dp)
+                      .imePadding()
+                  ,
                   trailingIcon =  {
                       IconButton(
                           onClick = {
@@ -223,15 +227,27 @@ fun SingleChatScreen(
                                   return@IconButton
                               }
 
-                              val createChatReq = CreateChatReq(
+
+                              var createChatReq = CreateChatReq(
                                   pair_id = chatPair.id,
                                   receiver = receiverUsername!!,
                                   message = newMessage.value,
                                   image = ""
                               )
+
+                              // we do not want pair id to be empty because its not optional on
+                              // the bakcned(this should change) for pairs that do not exist we send 0
+                              // the backend will figure it out and create a new pair ID
+                              if(chatPair.id.isBlank().or(chatPair.id.isEmpty())){
+                                  createChatReq = CreateChatReq(
+                                      pair_id ="0",
+                                      receiver = receiverUsername!!,
+                                      message = newMessage.value,
+                                      image = ""
+                                  )
+                              }
+
                              // chatViewModel.createChat(createChatReq)
-                              val gson = Gson()
-                              val text = gson.toJson(createChatReq)
                               newMessage.value = ""
 
                               // sned message to WS

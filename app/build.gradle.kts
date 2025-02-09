@@ -44,7 +44,7 @@ android {
         applicationId = "com.vhennus"
         minSdk = 28
         targetSdk = 34
-        versionCode = 4
+        versionCode = 7
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -61,6 +61,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
 //           isShrinkResources = true
 //            isDebuggable =true
 //            signingConfig = signingConfigs.getByName("debug")

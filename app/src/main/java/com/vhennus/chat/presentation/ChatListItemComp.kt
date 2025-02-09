@@ -88,6 +88,9 @@ fun ChatListItem(
         if(chat.last_message != lastMessage){
             newMessage = true
         }
+    }else{
+        // this is most likely a new message from a new chat pair
+        newMessage = true
     }
 
     CLog.debug("NEW MESSAGE FIL", lastMessage.toString())

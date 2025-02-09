@@ -160,8 +160,5 @@ fun createCommentScreen(
                 }
             )
         }
-
-
-
     }
 }

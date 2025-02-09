@@ -13,8 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Edit
@@ -62,6 +65,7 @@ fun profilePage(
 
     val lifecycleOwner = LocalLifecycleOwner.current
     val posts = feedViewModel.allMyPost.collectAsState().value
+    val listState = rememberLazyListState()
 
     //effects
     DisposableEffect(true) {
@@ -94,7 +98,7 @@ fun profilePage(
         floatingActionButton = {}
     ) {
         Column (
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // display default image if no ptofile pic exists
@@ -136,8 +140,6 @@ fun profilePage(
 
                 }
             }
-
-
 
             Spacer(modifier = Modifier.height(20.dp))
             Row (
@@ -202,18 +204,25 @@ fun profilePage(
 
             }else{
 
-                LazyColumn {
-                    items(posts){post->
-                        post(
-                            remember { mutableStateOf(post) },
-                            navController,
-                            profile.user_name,
-                            onLike = {}
-                        ) {
-                            navController.navigate(NavScreen.SinglePost.route+"/${post.id}")
-                        }
+                for(post in posts.reversed()){
+                    post(
+                        remember { mutableStateOf(post) },
+                        navController,
+                        profile.user_name,
+                        onLike = {}
+                    ) {
+                        navController.navigate(NavScreen.SinglePost.route+"/${post.id}")
                     }
                 }
+
+//                LazyColumn(
+//                    state = listState,
+//                    modifier = Modifier.fillMaxSize()
+//                ) {
+//                    items(posts){post->
+//
+//                    }
+//                }
 
             }
 

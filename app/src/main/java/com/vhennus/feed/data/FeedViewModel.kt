@@ -468,7 +468,7 @@ class  FeedViewModel @Inject constructor(
                         if (allPosts != null){
                             _allMyPosts.value = allPosts
                         }
-                        CLog.debug("ALL MY POSTS ", allPosts.toString())
+                        //CLog.debug("ALL MY POSTS ", allPosts.toString())
                         _feedUIState.update { it.copy(
                             isGetAllMyPostsLoading  = false,
                             isGetAllMyPostsError  = false,
