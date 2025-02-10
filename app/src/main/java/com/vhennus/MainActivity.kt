@@ -12,7 +12,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.cloudinary.android.MediaManager
 import com.google.firebase.FirebaseApp
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.ktx.storage
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.chat.data.ChatViewModel
@@ -29,6 +32,7 @@ import io.sentry.android.core.SentryAndroid
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        FirebaseApp.initializeApp(this) ?: throw IllegalStateException("FirebaseApp initialization failed")
@@ -36,6 +40,16 @@ class MainActivity : ComponentActivity() {
 
 //        val storage = Firebase.storage
 
+        firebaseAnalytics = Firebase.analytics
+        FirebaseMessaging.getInstance().token
+            .addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Log.w("FCM", "Fetching FCM registration token failed", task.exception)
+                    return@addOnCompleteListener
+                }
+                val token = task.result
+                Log.d("FCM", "FCM Token: $token")
+            }
 
 
 

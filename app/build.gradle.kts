@@ -186,7 +186,8 @@ dependencies {
     // firebase
     implementation(platform("com.google.firebase:firebase-bom:32.1.0"))
     implementation("com.google.firebase:firebase-storage-ktx")
-
+    implementation ("com.google.firebase:firebase-messaging:24.1.0")
+    implementation ("com.google.firebase:firebase-analytics:22.2.0")
     // cloudinary
     implementation(libs.cloudinary.android)
     implementation("androidx.activity:activity-compose:1.7.2")

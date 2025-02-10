@@ -93,6 +93,11 @@ fun ChatListItem(
         newMessage = true
     }
 
+    // set badge flaf
+    if(newMessage){
+        chatViewModel.updateUnreadMessageFlag(true)
+    }
+
     CLog.debug("NEW MESSAGE FIL", lastMessage.toString())
     // ui start
     Row  (

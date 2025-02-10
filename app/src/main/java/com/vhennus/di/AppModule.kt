@@ -10,6 +10,7 @@ import com.vhennus.BuildConfig
 import com.vhennus.general.data.AppDatabase
 import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.data.WebSocketManager
+import com.vhennus.general.utils.SoundVibratorHelper
 
 import com.vhennus.wallet.data.WalletService
 import com.vhennus.wallet.domain.dao.WalletDAO
@@ -49,6 +50,11 @@ object AppModule {
     @Provides
     fun getUserToken(@ApplicationContext context: Context):GetUserToken{
         return GetUserToken(context)
+    }
+
+    @Provides
+    fun getSoundManager(@ApplicationContext context: Context):SoundVibratorHelper{
+        return SoundVibratorHelper(context)
     }
 
     @Provides
