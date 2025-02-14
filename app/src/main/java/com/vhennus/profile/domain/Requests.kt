@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 data class UpdateProfileRequest(
     val image:String?,
     val bio:String?,
-    val name:String?
+    val name:String?,
+    val app_f_token: String?
 )
 
 

@@ -73,6 +73,9 @@ fun profilePage(
             if(event == Lifecycle.Event.ON_RESUME){
 //                profileViewModel.getMyProfile()
 //                feedViewModel.getAllMyPosts()
+
+                // update the users notifiy firebase token in the background
+                profileViewModel.updateNotificationToken()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)

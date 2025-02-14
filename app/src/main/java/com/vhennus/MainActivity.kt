@@ -1,9 +1,11 @@
 package com.vhennus
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,6 +22,7 @@ import com.google.firebase.storage.ktx.storage
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.feed.data.FeedViewModel
+import com.vhennus.general.utils.CLog
 import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.trade.data.OrderViewModel
 import com.vhennus.trivia.data.TriviaViewModel
@@ -28,11 +31,13 @@ import com.vhennus.wallet.data.WalletViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import io.sentry.SentryLevel
 import io.sentry.android.core.SentryAndroid
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class  MainActivity  : ComponentActivity() {
     private lateinit var firebaseAnalytics: FirebaseAnalytics
+    private val chatViewModel: ChatViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        FirebaseApp.initializeApp(this) ?: throw IllegalStateException("FirebaseApp initialization failed")
@@ -44,11 +49,16 @@ class MainActivity : ComponentActivity() {
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
-                    Log.w("FCM", "Fetching FCM registration token failed", task.exception)
+                    CLog.debug("FCM", "Fetching FCM registration token failed ${task.exception}",)
                     return@addOnCompleteListener
                 }
+
                 val token = task.result
-                Log.d("FCM", "FCM Token: $token")
+                val mshared = application.getSharedPreferences("firebase", Context.MODE_PRIVATE)
+                val edit = mshared.edit()
+                edit.putString("token", token)
+                edit.apply()
+                CLog.debug("FCM", "FCM Token: $token")
             }
 
 
@@ -92,6 +102,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        chatViewModel.disconnectWS()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        chatViewModel.connectToChatWS()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        chatViewModel.disconnectWS()
     }
 
 

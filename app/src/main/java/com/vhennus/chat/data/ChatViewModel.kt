@@ -421,6 +421,10 @@ class ChatViewModel @Inject constructor(
         )
 
     }
+
+    fun disconnectWS(){
+        webSocketManager.disconnect()
+    }
     fun sendMessageToWS(createChatReq: CreateChatReq, userName:String){
         CLog.debug("WS SEND MESSAGE", "starting send")
         val gson = Gson()

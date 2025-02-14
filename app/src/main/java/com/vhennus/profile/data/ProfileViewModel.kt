@@ -1,5 +1,6 @@
 package com.vhennus.profile.data
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -231,6 +232,51 @@ class ProfileViewModel @Inject constructor(
                         isGetProfileErrorMessage = "Network Error"
                     ) }
                     CLog.error("GET PROFILE RESPONSE", e.toString() +" ")
+                }
+            }
+        }
+    }
+
+    fun getNotificationToken(): String{
+        val mshared = application.getSharedPreferences("firebase", Context.MODE_PRIVATE)
+        val data = mshared.getString("token", "")
+        return data.toString()
+    }
+
+    fun updateNotificationToken(){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                try {
+                    val notifyToken = getNotificationToken()
+
+                    val data = UpdateProfileRequest(
+                        null, null, null, notifyToken
+                    )
+                    CLog.debug("STORED FCM TOKEN", notifyToken)
+                    if(notifyToken == ""){
+                        return@withContext
+                    }
+                    val token = getUserToken.getUserToken()
+                    val resp = apiService.updateProfile(data, mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        val data = resp.body()?.data
+                        if(data !=null){
+
+                        }else{
+
+                        }
+
+                    }else{
+                        val respString = resp.errorBody()?.string()
+                        CLog.error("UPDATE FIREBASE TOKEN ERROR", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                    }
+
+                }catch (e:Exception){
+
+                    CLog.error("UPDATE FIREBASE TOKEN ERROR", e.toString() +" ")
                 }
             }
         }
