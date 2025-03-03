@@ -159,7 +159,24 @@ fun FeedScreen(
   }
 }
 
+fun getPrettyDate(date: String): String{
+  val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS 'UTC'", Locale.getDefault())
+  if(date.isEmpty() || date.isBlank()){
+    return ""
+  }
 
+  var prettyPostDate = ""
+  // Parse the string into a Date object
+  try {
+    val parsedDate = inputFormat.parse(date)
+    val prettyTime = PrettyTime()
+    prettyPostDate = prettyTime.format(parsedDate)
+  } catch (e: ParseException) {
+    CLog.error("PRETTY DATE ERROR", e.toString())
+  }
+
+  return prettyPostDate
+}
 
 @Composable
 fun post(
@@ -174,18 +191,7 @@ fun post(
     horizontalArrangement = Arrangement.spacedBy(10.dp)
   ){
 
-    val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS 'UTC'", Locale.getDefault())
-    val likes = post.value.likes.toMutableList()
 
-    var prettyPostDate = ""
-    // Parse the string into a Date object
-    try {
-      val parsedDate = inputFormat.parse(post.value.created_at)
-      val prettyTime = PrettyTime()
-      prettyPostDate = prettyTime.format(parsedDate)
-    } catch (e: ParseException) {
-      CLog.error("PRETTY DATE ERROR", e.toString())
-    }
 
 
     // Format the parsed date using PrettyTime
@@ -222,7 +228,7 @@ fun post(
       modifier = Modifier
     ){
       Text(text = post.value.user_name, style=MaterialTheme.typography.titleLarge)
-      Text(text = prettyPostDate, style=MaterialTheme.typography.bodySmall)
+      Text(text = getPrettyDate(post.value.created_at), style=MaterialTheme.typography.bodySmall)
       Text(text = post.value.text, style=MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal),
         modifier = Modifier.clickable(onClick = {
           onPostClick()

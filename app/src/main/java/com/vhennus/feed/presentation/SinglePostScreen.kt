@@ -142,20 +142,6 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ){
 
-                    val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS 'UTC'", Locale.getDefault())
-
-
-                    var prettyPostDate = ""
-                    // Parse the string into a Date object
-                    try {
-                        val parsedDate = inputFormat.parse(post.value.created_at)
-                        val prettyTime = PrettyTime()
-                        prettyPostDate = prettyTime.format(parsedDate)
-                    } catch (e: ParseException) {
-                        CLog.error("PRETTY DATE ERROR", e.toString())
-                    }
-
-
                     // Format the parsed date using PrettyTime
 
                     // profile pic
@@ -193,7 +179,7 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
                         verticalArrangement = Arrangement.SpaceEvenly
                     ){
                         Text(text = post.value.user_name, style= MaterialTheme.typography.titleLarge)
-                        Text(text = prettyPostDate, style= MaterialTheme.typography.bodySmall)
+                        Text(text = getPrettyDate(post.value.created_at), style= MaterialTheme.typography.bodySmall)
                         Text(text = post.value.text, style= MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
 
                         if(post.value.image.isNotEmpty()){

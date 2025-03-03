@@ -190,6 +190,7 @@ class ProfileViewModel @Inject constructor(
                     val resp = apiService.getMyProfile(mapOf("Authorization" to token))
                     if (resp.code() == 200){
                         val data = resp.body()?.data
+
                         if(data !=null){
                             _profileUIState.update { it.copy(
                                 isGetProfileLoading = false,
@@ -368,7 +369,7 @@ class ProfileViewModel @Inject constructor(
                                 isGetFriendRequestsError = false,
                                 getFrienRequestsErrorMessage = ""
                             ) }
-                            _myFriendRequests.value = data
+                            _myFriendRequests.value = data.distinctBy { it.id }
 
                             CLog.debug("GET FRIEND REUQEST RESPONSE", data.toString())
                         }else{

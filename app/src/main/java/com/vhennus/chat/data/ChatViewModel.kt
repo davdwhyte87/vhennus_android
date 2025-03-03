@@ -240,7 +240,7 @@ class ChatViewModel @Inject constructor(
                         saveLastMessage(lastMessage.pair_id, lastMessage.message)
 
 
-                        CLog.debug("GET_CHATS_BY_PAIR_RESP", lastMessage.toString())
+                        //CLog.debug("GET_CHATS_BY_PAIR_RESP", lastMessage.toString())
                         _chatsUIState.update { it.copy(
                            isGetChatsLoading = false,
                             isGetChatsSuccess = true,
@@ -426,10 +426,17 @@ class ChatViewModel @Inject constructor(
         webSocketManager.disconnect()
     }
     fun sendMessageToWS(createChatReq: CreateChatReq, userName:String){
+        // check if websocket manager is connected if not connect
+        if(!webSocketManager.isConnected()){
+            connectToChatWS()
+        }
+
         CLog.debug("WS SEND MESSAGE", "starting send")
         val gson = Gson()
         val text = Json.encodeToString(CreateChatReq.serializer(), createChatReq)
         CLog.debug("WS SEND MESSAGE", "text ... ${text}")
+
+
         if(!webSocketManager.sendMessage(text)){
             CLog.debug("WS SEND MESSAGE", "error sending ")
             _chatsUIState.update { it.copy(

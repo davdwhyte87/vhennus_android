@@ -100,7 +100,7 @@ fun myFriendsPage(
             )
 
             // list of friends
-            val friends = profile.friends_models ?:emptyList()
+            val friends = profile.friends_models?.distinctBy { it.id } ?:emptyList()
 
             if (profileUIState.isGetProfileLoading){
                 FriendsPageLoadingState()

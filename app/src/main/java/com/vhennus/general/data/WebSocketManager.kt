@@ -64,4 +64,12 @@ class WebSocketManager @Inject constructor(
     fun disconnect() {
         webSocket?.close(1000, "App closed")
     }
+
+    fun isConnected(): Boolean {
+        return try {
+            webSocket?.send("") ?: false  // Empty message to check connection
+        } catch (e: Exception) {
+            false
+        }
+    }
 }

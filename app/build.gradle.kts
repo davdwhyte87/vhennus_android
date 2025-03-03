@@ -25,7 +25,7 @@ android {
 //            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
 
 //            buildConfigField("String", "API_URL", "\"http://0.0.0.0:8000\"")
-            buildConfigField("String", "API_URL", "\"http://155.138.221.87:8000\"")
+            buildConfigField("String", "API_URL", "\"http://155.138.221.87:7000\"")
             buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.221.87:3000\"")
         }
         create("dev") {
@@ -44,7 +44,7 @@ android {
         applicationId = "com.vhennus"
         minSdk = 28
         targetSdk = 34
-        versionCode = 7
+        versionCode = 9
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
