@@ -11,6 +11,8 @@ import com.vhennus.feed.domain.Comment
 import com.vhennus.feed.domain.CreateCommentReq
 import com.vhennus.feed.domain.CreatePostReq
 import com.vhennus.feed.domain.Post
+import com.vhennus.feed.domain.PostFeed
+import com.vhennus.feed.domain.PostWithComments
 import com.vhennus.general.domain.SystemData
 import com.vhennus.profile.domain.FriendRequest
 import com.vhennus.profile.domain.Profile
@@ -30,6 +32,9 @@ import com.vhennus.general.domain.MyBuyOrdersResp
 import com.vhennus.trade.domain.response.MySellOrdersResponse
 import com.vhennus.general.domain.SingleBuyOrdersResp
 import com.vhennus.general.domain.SingleSellOrderResp
+import com.vhennus.profile.domain.FriendRequestWithProfile
+import com.vhennus.profile.domain.MiniProfile
+import com.vhennus.profile.domain.ProfileWithFriends
 import com.vhennus.trivia.domain.TriviaGame
 import com.vhennus.trivia.domain.TriviaGameReq
 import retrofit2.Response
@@ -115,14 +120,14 @@ interface APIService {
     suspend fun createPost(@Body data:CreatePostReq, @HeaderMap header:Map<String,String> ):Response<GenericResp<Post>>
 
     @GET("api/v1/auth/post/all")
-    suspend fun getAllPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<Post>>>
+    suspend fun getAllPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<PostFeed>>>
 
     @GET("api/v1/auth/post/allmy")
-    suspend fun getAllMyPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<Post>>>
+    suspend fun getAllMyPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<PostFeed>>>
 
 
     @GET("api/v1/auth/post/single/{id}")
-    suspend fun getSinglePost(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<Post>>
+    suspend fun getSinglePost(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<PostWithComments>>
 
 
     @POST("api/v1/auth/post/{id}/comment/create")
@@ -157,19 +162,19 @@ interface APIService {
     @GET("api/v1/auth/chat/get_my_chat_pairs")
     suspend fun getAllChatPairs( @HeaderMap header:Map<String,String> ):Response<GenericResp<List<ChatPair>>>
 
-
-    // profile
-    @GET("api/v1/auth/profile/get")
-    suspend fun getMyProfile( @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
-
-    @GET("api/v1/auth/profile/get/{username}")
-    suspend fun getUserProfile(@Path("username") username:String,@HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
-
     @GET("api/v1/auth/chat/find_chat_pair/{username}")
     suspend fun findChatPair(@Path("username") username:String,@HeaderMap header:Map<String,String> ):Response<GenericResp<ChatPair>>
 
     @GET("api/v1/auth/chat/get_my_chat_pairs")
     suspend fun getMyChatPairs(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<ChatPair>>>
+
+
+    // profile
+    @GET("api/v1/auth/profile/get")
+    suspend fun getMyProfile( @HeaderMap header:Map<String,String> ):Response<GenericResp<ProfileWithFriends>>
+
+    @GET("api/v1/auth/profile/get/{username}")
+    suspend fun getUserProfile(@Path("username") username:String,@HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
 
     @POST("api/v1/auth/profile/update")
     suspend fun updateProfile(@Body data:UpdateProfileRequest, @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
@@ -177,7 +182,7 @@ interface APIService {
 
     //Friend request
     @GET("api/v1/auth/user/friend_requests")
-    suspend fun getMyFriendRequests( @HeaderMap header:Map<String,String> ):Response<GenericResp<List<FriendRequest>>>
+    suspend fun getMyFriendRequests( @HeaderMap header:Map<String,String> ):Response<GenericResp<List<FriendRequestWithProfile>>>
 
     @GET("api/v1/auth/user/friend_request/accept/{id}")
     suspend fun acceptFriendRequest(@Path("id") id:String, @HeaderMap header:Map<String,String>):Response<GenericResp<String>>
@@ -190,10 +195,10 @@ interface APIService {
 
     // search
     @GET("api/v1/auth/profile/search/{data}")
-    suspend fun searchProfile(@Path("data") data:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<List<Profile>>>
+    suspend fun searchProfile(@Path("data") data:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<List<MiniProfile>>>
 
     // delete account
-    @GET("api/v1/auth/profile/delete")
+    @GET("api/v1/auth/user/delete")
     suspend fun deleteAccount( @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
 
 

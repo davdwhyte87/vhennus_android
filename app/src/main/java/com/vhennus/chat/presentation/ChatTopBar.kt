@@ -33,7 +33,7 @@ import com.vhennus.profile.domain.Profile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatTopBar(navController: NavController, profile: Profile){
+fun ChatTopBar(navController: NavController, image: String, user_name:String){
     TopAppBar(
         title = {  },
         modifier = Modifier.fillMaxWidth(),
@@ -52,7 +52,7 @@ fun ChatTopBar(navController: NavController, profile: Profile){
                 }
 
 
-                if(profile.image.isEmpty() || profile.image.isBlank()){
+                if(image.isEmpty() || image.isBlank()){
                     Image(
                         painter = painterResource(R.drawable.p1),
                         contentDescription = "",
@@ -60,12 +60,13 @@ fun ChatTopBar(navController: NavController, profile: Profile){
                         modifier = Modifier.size(40.dp).clip(CircleShape)
                     )
                 }else{
-                    LoadImageWithPlaceholder(profile.image,
+                    LoadImageWithPlaceholder(
+                        image,
                         modifier = Modifier.size(40.dp)
                             .clip(CircleShape)
                     )
                 }
-                Text(profile.user_name, style = MaterialTheme.typography.titleMedium,
+                Text(user_name, style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(start = 10.dp))
             }
 

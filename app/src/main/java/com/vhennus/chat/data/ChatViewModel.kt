@@ -400,7 +400,8 @@ class ChatViewModel @Inject constructor(
         webSocketManager.connect(
             onMessageReceived = { text->
                 // convert text to chat model
-                val message = Json.decodeFromString<Chat>(text)
+                val json =  Json { coerceInputValues = true }
+                val message = json.decodeFromString<Chat>(text)
                 // save last message locally
                 //saveLastMessage(message.pair_id, message.message)
                 addMessageWS(message)

@@ -103,7 +103,7 @@ fun createCommentScreen(
                 var prettyPostDate = ""
                 // Parse the string into a Date object
                 try {
-                    val parsedDate = inputFormat.parse(post.value.created_at)
+                    val parsedDate = inputFormat.parse(post.value.post.created_at)
                     val prettyTime = PrettyTime()
                     prettyPostDate = prettyTime.format(parsedDate)
                 } catch (e: ParseException) {
@@ -139,9 +139,9 @@ fun createCommentScreen(
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.SpaceEvenly
                 ){
-                    Text(text = post.value.user_name, style=MaterialTheme.typography.titleLarge)
+                    Text(text = post.value.post.user_name, style=MaterialTheme.typography.titleLarge)
                     Text(text = prettyPostDate, style=MaterialTheme.typography.bodySmall)
-                    Text(text = post.value.text, style=MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
+                    Text(text = post.value.post.text, style=MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
                 }
             }
 

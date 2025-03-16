@@ -7,14 +7,18 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.vhennus.feed.domain.LikedPost
+import com.vhennus.feed.domain.LikedPostDao
 import com.vhennus.wallet.domain.Wallet
 import com.vhennus.wallet.domain.dao.WalletDAO
 
 
-@Database(entities = [Wallet::class], version = 2, exportSchema = false)
+@Database(entities = [Wallet::class, LikedPost::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract  class AppDatabase:RoomDatabase(){
     abstract fun walletDAO():WalletDAO
+    abstract fun likedPostDAO(): LikedPostDao
+
     companion object{
         @Volatile
         private var INSTANCE:AppDatabase? = null

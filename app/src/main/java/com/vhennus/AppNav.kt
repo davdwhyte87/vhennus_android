@@ -5,8 +5,11 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.auth.presentation.loginScreen
 import com.vhennus.auth.presentation.logoutScreen
@@ -142,12 +145,16 @@ fun AppNav(
         composable(NavScreen.AllChatsScreen.route){
             AllChatsScreen(navController, chatViewModel, authViewModel)
         }
-        composable(NavScreen.SingleChatScreen.route+"/{userName}"){backStackEntry->
+        composable(NavScreen.SingleChatScreen.route+"/{userName}",
+            arguments = listOf(navArgument("userName"){type= NavType.StringType}),
+            deepLinks = listOf(navDeepLink { uriPattern = "https://vhennus.com/single_chat/{userName}" })
+        ){backStackEntry->
             val userNameParam = backStackEntry.arguments?.getString("userName")
 //            val chatsPairIDParam = backStackEntry.arguments?.getString("chatPairID")
 
             val userName = if(userNameParam=="null") null else userNameParam
 //            val chatsPairID = if(chatsPairIDParam == "null") null else chatsPairIDParam
+
 
             SingleChatScreen(navController, chatViewModel,profileViewModel, authViewModel, userName)
         }

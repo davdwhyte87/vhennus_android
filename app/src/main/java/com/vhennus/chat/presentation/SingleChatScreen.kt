@@ -129,13 +129,13 @@ fun SingleChatScreen(
             // get chats if a chat pair exists
             CLog.debug("CHAT_PAIR_ID", singleChatPair.id)
             chatViewModel.getAllChatsByPair(singleChatPair.id)
+
         }
 
         if(chatsUIState.isFindChatPairSuccess && chatsUIState.isChatPairNull){
             chatPair = ChatPair(
-                user_name = userName,
-                users_ids = listOf(userName, receiverUsername!!)
-
+                user1 = userName,
+                user2 = receiverUsername!!
             )
         }
     }
@@ -156,10 +156,20 @@ fun SingleChatScreen(
         }
     }
 
+    var receiverImage = ""
+    var receiverUserName =""
+    if (chatPair.user1 == userName){
+        receiverImage = chatPair.user2_image.toString()
+        receiverUserName = chatPair.user2
+    }else{
+        receiverImage = chatPair.user1_image.toString()
+        receiverUserName = chatPair.user1
+    }
+
 
 
     GeneralScaffold(
-        { ChatTopBar(navController, receiverProfile) },
+        { ChatTopBar(navController, receiverImage, receiverUsername.toString()) },
         floatingActionButton = {  },
     ) {
       Column(

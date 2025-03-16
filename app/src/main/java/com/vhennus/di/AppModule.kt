@@ -7,6 +7,7 @@ import dagger.hilt.InstallIn
 
 import android.content.Context
 import com.vhennus.BuildConfig
+import com.vhennus.feed.domain.LikedPostDao
 import com.vhennus.general.data.AppDatabase
 import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.data.WebSocketManager
@@ -40,6 +41,13 @@ object AppModule {
     @Singleton
     fun getWalletDAO(appDatabase: AppDatabase):WalletDAO{
         return appDatabase.walletDAO()
+    }
+
+
+    @Provides
+    @Singleton
+    fun getLikedPostsDAO(appDatabase: AppDatabase): LikedPostDao{
+        return appDatabase.likedPostDAO()
     }
 
     @Provides

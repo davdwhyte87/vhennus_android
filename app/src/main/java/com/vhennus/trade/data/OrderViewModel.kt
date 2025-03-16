@@ -121,7 +121,7 @@ class OrderViewModel @Inject constructor(
 
                         val sharedPreferences = application.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
                         val edit = sharedPreferences.edit()
-                        edit.putString("NGN", systemData.price).apply()
+                        edit.putString("NGN", systemData.price.toString()).apply()
                     }else{
                         val errData = resp.errorBody()?.string()
                         CLog.error("ERROR GETTING SYSTEM DATA", resp.code().toString()+"err data")

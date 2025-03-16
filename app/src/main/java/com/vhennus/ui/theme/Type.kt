@@ -10,40 +10,54 @@ import androidx.compose.ui.unit.sp
 import com.vhennus.R
 
 
-val OpenSansFont = FontFamily(
-    Font(R.font.open_sans_bold, FontWeight.Bold),
-    Font(R.font.open_sans_regular, FontWeight.Normal),
-    Font(R.font.open_sans_medium, FontWeight.Medium)
+val RobotoFont = FontFamily(
+    Font(R.font.roboto_variable, FontWeight.Bold),
+    Font(R.font.roboto_bold, FontWeight.Bold),
+    Font(R.font.roboto_regular, FontWeight.Normal),
+    Font(R.font.roboto_medium, FontWeight.Medium),
+    Font(R.font.roboto_extra_bold, FontWeight.Bold),
+    Font(R.font.roboto_semi_bold, FontWeight.Bold),
 )
+
+
 // Set of Material typography styles to start with
 val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    ),
+
     titleLarge = TextStyle(
-        fontFamily = OpenSansFont,
+        fontFamily = RobotoFont,
         fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        lineHeight = 28.sp,
+        fontSize = 24.sp,
+        lineHeight = 24.sp,
         letterSpacing = 0.5.sp
     ),
     titleMedium = TextStyle(
-        fontFamily = OpenSansFont,
+        fontFamily = RobotoFont,
         fontWeight = FontWeight.Bold,
-        fontSize = 14.sp,
-        lineHeight = 28.sp,
+        fontSize = 20.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    ),
+    titleSmall = TextStyle(
+        fontFamily = RobotoFont,
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    ),
+
+    bodyLarge = TextStyle(
+        fontFamily = RobotoFont,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
         letterSpacing = 0.5.sp
     ),
     bodyMedium = TextStyle(
-        fontFamily = OpenSansFont,
+        fontFamily = RobotoFont,
         fontWeight = FontWeight.Normal,
-        fontSize = 10.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.25.sp
     ),
     /* Other default text styles to override
 
