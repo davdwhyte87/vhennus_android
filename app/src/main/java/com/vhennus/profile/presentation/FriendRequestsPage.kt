@@ -123,7 +123,7 @@ fun FriendRequestsPage(
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 items(requests){ request->
-                    FriendRequestItem(request, profileViewModel, profileUIState)
+                    FriendRequestItem(request, profileViewModel, profileUIState, navController)
                 }
             }
         }
@@ -135,7 +135,8 @@ fun FriendRequestsPage(
 fun FriendRequestItem(
     request: FriendRequestWithProfile,
     profileViewModel: ProfileViewModel,
-    profileUIState: ProfileUIState
+    profileUIState: ProfileUIState,
+    navController: NavController
     ){
 
     Card (
@@ -150,21 +151,28 @@ fun FriendRequestItem(
             modifier = Modifier.fillMaxWidth().height(92.dp).padding(start = 16.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if(request.image.isEmpty() == true || request.image.isBlank() == true){
-                Image(
-                    painter = painterResource(R.drawable.p1),
-                    contentDescription = "",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(40.dp).clip(CircleShape)
-                )
-            }else{
+            Column(
+                modifier = Modifier.fillMaxHeight().clickable(onClick = {
+                    navController.navigate(NavScreen.OtherUserProfileScreen.route+"/${request.user_name}")
+                })
+            ) {
+                if(request.image.isEmpty() == true || request.image.isBlank() == true){
+                    Image(
+                        painter = painterResource(R.drawable.p1),
+                        contentDescription = "",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(40.dp).clip(CircleShape)
+                    )
+                }else{
 
-                LoadImageWithPlaceholder(
-                    request.image.toString(),
-                    modifier = Modifier.size(40.dp)
-                        .clip(CircleShape)
-                )
+                    LoadImageWithPlaceholder(
+                        request.image.toString(),
+                        modifier = Modifier.size(40.dp)
+                            .clip(CircleShape)
+                    )
+                }
             }
+
 
             Column (
                 verticalArrangement = Arrangement.Center,
@@ -183,7 +191,6 @@ fun FriendRequestItem(
                 colors = ButtonDefaults.buttonColors(
                     containerColor =  MaterialTheme.colorScheme.primary,
                     contentColor = White,
-
                     ),
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.size(width = 85.dp, height = 44.dp).padding(0.dp),

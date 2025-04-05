@@ -1,6 +1,7 @@
 package com.vhennus
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -11,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.vhennus.auth.data.AuthViewModel
+import com.vhennus.auth.presentation.VerifyScreen
 import com.vhennus.auth.presentation.loginScreen
 import com.vhennus.auth.presentation.logoutScreen
 import com.vhennus.auth.presentation.preLoginScreen
@@ -27,8 +29,10 @@ import com.vhennus.home.presentation.HomeScreen
 import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.profile.domain.Profile
 import com.vhennus.profile.presentation.FriendRequestsPage
+import com.vhennus.profile.presentation.OtherUserProfile
 import com.vhennus.profile.presentation.editProfilePage
 import com.vhennus.profile.presentation.myFriendsPage
+import com.vhennus.profile.presentation.profilePage
 import com.vhennus.search.presentation.SearchPage
 import com.vhennus.settings.presentation.SettingsPage
 import com.vhennus.trade.data.OrderViewModel
@@ -158,6 +162,20 @@ fun AppNav(
 
             SingleChatScreen(navController, chatViewModel,profileViewModel, authViewModel, userName)
         }
+
+        composable(NavScreen.OtherUserProfileScreen.route+"/{userName}"){backStackEntry->
+            val userName = backStackEntry.arguments?.getString("userName")
+            if(userName!=null){
+                authViewModel.getUserName()
+                val myUserName = authViewModel.userName.collectAsState().value
+                if(myUserName == userName){
+                    profilePage(navController,profileViewModel,feedViewModel, true)
+                }else{
+                    OtherUserProfile(navController,profileViewModel,feedViewModel,userName)
+                }
+
+            }
+        }
         composable(route=NavScreen.MyOrdersScreen.route){
             myOrdersScreen(navController,orderViewModel )
         }
@@ -199,6 +217,16 @@ fun AppNav(
                 singlePostScreen(id, feedViewModel, navController)
             }
         }
+
+        composable(NavScreen.VerifyAccount.route+"/{email}"){
+            val email = it.arguments?.getString("email")
+            if(email!=null) {
+                VerifyScreen(authViewModel, navController, email)
+            }else{
+                VerifyScreen(authViewModel, navController, "x@x.com")
+            }
+        }
+
 
         composable(NavScreen.SettingsPage.route){
             SettingsPage(navController,profileViewModel, authViewModel)

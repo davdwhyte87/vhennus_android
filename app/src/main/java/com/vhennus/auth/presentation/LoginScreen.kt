@@ -44,6 +44,7 @@ import com.vhennus.R
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.auth.domain.LoginReq
 import com.vhennus.general.presentation.PasswordTextField
+import com.vhennus.general.utils.CLog
 import com.vhennus.ui.AnimatedPreloader
 
 @Composable
@@ -54,7 +55,9 @@ fun loginScreen(
 
     val authUIState = authViewModel.authUIState.collectAsState()
     val context = LocalContext.current
-
+    val tempEmail = authViewModel.tempLoginEmail.collectAsState()
+    val loginResp = authViewModel.loginResp.collectAsState().value
+    val tempEmailConfirmed =authViewModel.tempLoginEmailConfirmed.collectAsState().value
 
     LaunchedEffect(authUIState.value.isLoginError) {
         if(authUIState.value.isLoginError){
@@ -64,11 +67,21 @@ fun loginScreen(
     }
 
 
-    LaunchedEffect(authUIState.value.isLoginSuccess) {
+    LaunchedEffect(authUIState.value.isLoginSuccess, tempEmail ) {
+        CLog.debug("TEMP EMAIL", tempEmail.value)
         if(authUIState.value.isLoginSuccess){
             Toast.makeText(context, "Success!", Toast.LENGTH_SHORT).show()
-            navHostController.navigate(NavScreen.HomeScreen.route){
-                popUpTo(NavScreen.HomeScreen.route){inclusive = true}
+
+            // if users email is not confirmed, verify the user
+
+            if(!loginResp.email_confirmed){
+                navHostController.navigate(NavScreen.VerifyAccount.route+"/${loginResp.email}"){
+                    popUpTo(NavScreen.VerifyAccount.route+"/${loginResp.email}"){inclusive = true}
+                }
+            }else{
+                navHostController.navigate(NavScreen.HomeScreen.route){
+                    popUpTo(NavScreen.HomeScreen.route){inclusive = true}
+                }
             }
             authViewModel.resetLoginUIState()
         }
@@ -135,12 +148,12 @@ fun loginScreen(
                 AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
             }else {
                 Text(text = "Login",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleSmall
                 )
             }
         }
         Text(text = "Signup",
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
             textDecoration = TextDecoration.Underline,
             modifier = Modifier.clickable(onClick = {

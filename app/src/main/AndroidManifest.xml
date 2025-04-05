@@ -27,12 +27,13 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Vhennus">
+            android:theme="@style/Theme.Vhennus.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -43,6 +44,8 @@
                 <data android:scheme="vhennus" android:host="single_chat"/>
             </intent-filter>
         </activity>
+
+
         <receiver android:name=".trivia.presentation.AlarmReceiver"/>
         <meta-data
             android:name="io.sentry.dsn"

@@ -9,7 +9,20 @@ data class AuthUIState(
     val isLoginButtonLoading:Boolean = false,
     val isLoginSuccess:Boolean = false,
     val isLoginError:Boolean = false,
-    val loginErrorMessage:String = ""
+    val loginErrorMessage:String = "",
+
+    val isVerifyAccountLoading: Boolean = false,
+    val isVerifyAccountSuccess: Boolean = false,
+    val isVerifyAccountError: Boolean = false,
+    val verifyAccountErrorMessage:String = "",
 
 
-)
+    val resendCodeLoading: Boolean = false,
+    val resendCodeSuccess: Boolean = false,
+    val resendCodeError: Boolean = false,
+    val resendCodeErrorMessage:String = "",
+
+
+
+
+    )

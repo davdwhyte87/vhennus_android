@@ -36,6 +36,11 @@ data class FeedUIState(
     val isGetAllMyPostsLoading:Boolean = false,
     val isGetAllMyPostsSuccess:Boolean = false,
     val isGetAllMyPostsError:Boolean = false,
-    val getAllMyPostsErrorMessage:String  =""
+    val getAllMyPostsErrorMessage:String  ="",
+
+    val isGetAllOtherUserPostsLoading:Boolean = false,
+    val isGetAllOtherUserPostsSuccess:Boolean = false,
+    val isGetAllOtherUserPostsError:Boolean = false,
+    val getAllOtherUserPostsErrorMessage:String  =""
 
 )

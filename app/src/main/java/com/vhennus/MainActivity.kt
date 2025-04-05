@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -15,6 +16,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -38,6 +40,8 @@ import com.vhennus.wallet.data.WalletViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import io.sentry.SentryLevel
 import io.sentry.android.core.SentryAndroid
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 
@@ -47,6 +51,13 @@ class  MainActivity  : ComponentActivity() {
     private val chatViewModel: ChatViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Install splash screen (Android 12+)
+        installSplashScreen()
+
+        // Simulate a loading delay (optional)
+        runBlocking { delay(2000) }
+
 //        FirebaseApp.initializeApp(this) ?: throw IllegalStateException("FirebaseApp initialization failed")
 //        Log.d("FirebaseInit", "ApplicationId: ${BuildConfig.APPLICATION_ID}")
 
@@ -71,6 +82,13 @@ class  MainActivity  : ComponentActivity() {
                 CLog.debug("FCM", "FCM Token: $token")
             }
 
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(
+                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101
+            )
+        }
 
 
         SentryAndroid.init(this) { options ->

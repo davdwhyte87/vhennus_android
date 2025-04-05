@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 
@@ -173,8 +175,14 @@ class ChatViewModel @Inject constructor(
 
                     if(resp.code() == 200){
                         val data = resp.body()?.data
+
                         if(data !=null){
-                            _allChatPairs.value = data
+                            // sort so that the latest chat pair shows on top
+                            val formatter = DateTimeFormatter.ISO_DATE_TIME
+                            val sortedData = data.sortedByDescending {
+                                LocalDateTime.parse(it.updated_at, formatter)
+                            }
+                            _allChatPairs.value = sortedData
                         }
                         CLog.debug("GET_ALL_CHAT_PAIRS_RESP", data.toString())
                         _chatsUIState.update { it.copy(

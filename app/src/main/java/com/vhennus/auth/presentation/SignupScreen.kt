@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +48,10 @@ fun signUpScreen(
         mutableStateOf("")
     }
 
+    val email = remember {
+        mutableStateOf("")
+    }
+
 
     val password = remember {
         mutableStateOf("")
@@ -62,13 +67,22 @@ fun signUpScreen(
         Toast.makeText(LocalContext.current, authUIState.value.signupErrorMessage, Toast.LENGTH_SHORT).show()
         authViewModel.resetSignupUIState()
     }
-    if(authUIState.value.isSignupSuccess){
-        Toast.makeText(LocalContext.current, "Success. You can login now!", Toast.LENGTH_SHORT).show()
-        userName.value = ""
-        password.value = ""
-        password2.value =""
-        authViewModel.resetSignupUIState()
+
+    LaunchedEffect(authUIState.value.isSignupSuccess) {
+        if(authUIState.value.isSignupSuccess){
+            Toast.makeText(context, "Success. Verify Email!", Toast.LENGTH_SHORT).show()
+            userName.value = ""
+            password.value = ""
+            password2.value =""
+            authViewModel.resetSignupUIState()
+
+            // redirect to validate page
+            navHostController.navigate(NavScreen.VerifyAccount.route+"/${email.value}"){
+                popUpTo(NavScreen.VerifyAccount.route+"/${email.value}"){inclusive = true}
+            }
+        }
     }
+
 
     Column (
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -101,11 +115,21 @@ fun signUpScreen(
                 .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
         )
 
+        OutlinedTextField(value = email.value,
+            onValueChange = {
+                email.value = it
+            },
+            shape = RoundedCornerShape(20.dp),
+            placeholder = { Text(text = "Email") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
+        )
+
         PasswordTextField(
             password = password.value,
             onPasswordChange = { password.value = it }
         )
-
 
 
         PasswordTextField(
@@ -116,12 +140,13 @@ fun signUpScreen(
 
 
         Button(onClick = {
-            if (!validateInput(userName.value, password.value, password2.value, context)){
+            if (!validateInput(userName.value, password.value, password2.value, context, email.value)){
                 return@Button
             }
             val signupReq = SignupReq(
                 user_name =userName.value,
                 password= password.value,
+                email = email.value,
                 user_type = USER_TYPE.User
             )
             authViewModel.signup(signupReq)
@@ -138,13 +163,13 @@ fun signUpScreen(
                 AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
             }else {
                 Text(text = "Signup",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleSmall
                 )
             }
 
         }
         Text(text = "Login",
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
             textDecoration = TextDecoration.Underline,
             modifier = Modifier.clickable(onClick = {
@@ -154,7 +179,7 @@ fun signUpScreen(
     }
 }
 
-fun validateInput(userName:String, password:String, password2:String, context: Context):Boolean{
+fun validateInput(userName:String, password:String, password2:String, context: Context, email: String):Boolean{
     val isAllLowerCase = userName.all { it.isLowerCase() }
 //    if (!isAllLowerCase){
 //        Toast.makeText(context, "username should be all lowercase", Toast.LENGTH_SHORT).show()
@@ -176,6 +201,12 @@ fun validateInput(userName:String, password:String, password2:String, context: C
 
     if(password != password2){
         Toast.makeText(context, "passwords do not match", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
+    val isvalidEMail =email.isNotEmpty() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    if (!isvalidEMail){
+        Toast.makeText(context, "Invalid email", Toast.LENGTH_SHORT).show()
         return false
     }
     return true

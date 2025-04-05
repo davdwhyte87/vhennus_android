@@ -3,6 +3,7 @@ package com.vhennus.feed.presentation
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,15 +22,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -46,12 +52,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.google.gson.Gson
+import com.vhennus.NavScreen
 import com.vhennus.R
 import com.vhennus.chat.domain.CreateChatReq
 import com.vhennus.chat.presentation.validateCreateChat
@@ -60,13 +68,17 @@ import com.vhennus.feed.domain.Comment
 import com.vhennus.feed.domain.CreateCommentReq
 import com.vhennus.general.presentation.LoadImageWithPlaceholder
 import com.vhennus.general.utils.CLog
+import com.vhennus.general.utils.prettyDate2
 import com.vhennus.ui.AnimatedPreloader
 import com.vhennus.ui.BackTopBar
 import com.vhennus.ui.GeneralScaffold
+import com.vhennus.ui.theme.Gray
+import com.vhennus.ui.theme.Surf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.ocpsoft.prettytime.PrettyTime
+import java.nio.file.WatchEvent
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -75,7 +87,163 @@ import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: NavController){
+fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: NavController) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(true) {
+
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                feedViewModel.getSinglePosts(id)
+                feedViewModel.getUserName()
+                feedViewModel.getLikedPost()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            feedViewModel.clearModelData()
+        }
+    }
+
+
+    val post = feedViewModel.singlePost.collectAsState()
+    val comment = remember { mutableStateOf("") }
+    val feedUIState = feedViewModel.feedUIState.collectAsState().value
+    val context = LocalContext.current
+    val pullToRefreshState = rememberPullToRefreshState()
+    val userName = feedViewModel.userName.collectAsState().value
+    var isRefresh = remember { mutableStateOf(false) }
+    val likedPosts = feedViewModel.likedPosts.collectAsState()
+    val scrollState = rememberScrollState()
+
+
+
+    LaunchedEffect(feedUIState.isCreateCommentError) {
+        if (feedUIState.isCreateCommentError) {
+            Toast.makeText(context, feedUIState.createCommentErrorMessage, Toast.LENGTH_SHORT)
+                .show()
+            feedViewModel.clearUIData()
+        }
+    }
+
+    LaunchedEffect(feedUIState.isCreateCommentSuccess) {
+        if (feedUIState.isCreateCommentSuccess) {
+            Toast.makeText(context, "Sent!", Toast.LENGTH_SHORT).show()
+            feedViewModel.clearUIData()
+        }
+    }
+    LaunchedEffect(feedUIState.isGetSinglePostRefresh) {
+        if (feedUIState.isGetSinglePostRefresh) {
+            feedViewModel.getSinglePosts(id)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullToRefresh(feedUIState.isGetSinglePostRefresh, pullToRefreshState, onRefresh = {
+                CLog.debug("REFRESHING", "")
+                feedViewModel.updateSinglePOstRefresh(true)
+            })
+
+        ,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        BackTopBar("Post", navController)
+
+        if(feedUIState.isGetSinglePostRefresh){
+            AnimatedPreloader(modifier = Modifier.size(size = 60.dp), MaterialTheme.colorScheme.primary)
+        }
+
+        Column(
+            modifier= Modifier.weight(1f)
+                .verticalScroll(scrollState)
+        ) {
+            SinglePost(
+                post.value.post,
+                navController,
+                userName.toString(),
+                onLike = {
+                    feedViewModel.likePost(post.value.post.id)
+                    // remove post locally if it is already in db
+                    if(likedPosts.value.contains(post.value.post.id)){
+                        feedViewModel.removeLikeLocal(post.value.post.id)
+                    }else{
+                        feedViewModel.likePostLocal(post.value.post.id)
+                    }
+
+                    feedViewModel.getLikedPost()
+                },
+                onPostClick = {
+                    navController.navigate(NavScreen.SinglePost.route+"/${post.value.post.id}"){
+                        popUpTo(NavScreen.SinglePost.route+"/${post.value.post.id}"){inclusive=true}
+                    }
+                },
+                likedPosts = likedPosts.value
+            )
+
+            Row (
+                modifier = Modifier.fillMaxWidth().background(Surf).height(40.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Text("Comments", style = MaterialTheme.typography.titleMedium)
+            }
+
+            for (comment in post.value.comments){
+                comment(comment, navController)
+            }
+        }
+
+
+
+        Row (
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+
+        ){
+            OutlinedTextField(value = comment.value,
+                onValueChange = {
+                    comment.value = it
+                },
+                shape = RoundedCornerShape(30.dp),
+                placeholder = { Text(text = "Message") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 1.dp)
+                    .heightIn(min = 52.dp)
+                ,
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Send // Shows "Send" button on keyboard
+                ),
+                singleLine = false,
+                keyboardActions = KeyboardActions(
+                    onSend = {
+                        feedViewModel.createComment(id, CreateCommentReq(comment.value))
+                        comment.value = ""
+                        // refresh feed
+                        feedViewModel.getSinglePosts(id)
+                    }
+                ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.tertiary,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.tertiary,
+                    focusedBorderColor = MaterialTheme.colorScheme.tertiary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.tertiary
+                )
+
+            )
+        }
+
+    }
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun singlePostScreenxxx(id:String, feedViewModel: FeedViewModel, navController: NavController){
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(true) {
 
@@ -205,7 +373,7 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
 //            }
 
                 for (comment in post.value.comments){
-                    comment(comment)
+                    comment(comment, navController)
                 }
             }
 
@@ -254,54 +422,28 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
 }
 
 @Composable
-fun comment(comment:Comment){
-    val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS 'UTC'", Locale.getDefault())
-    var prettyPostDate = ""
-    // Parse the string into a Date object
-    try {
-        val parsedDate = inputFormat.parse(comment.created_at)
-        val prettyTime = PrettyTime()
-        prettyPostDate = prettyTime.format(parsedDate)
-    } catch (e: ParseException) {
-        CLog.error("PRETTY DATE ERROR", e.toString())
-    }
+fun comment(comment:Comment, navController: NavController){
 
-    // ui
-
-    Row (
-        modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        // profile pic
-        val images = listOf(
-            R.drawable.p1,
-            R.drawable.p2,
-            R.drawable.p3,
-            R.drawable.p4,
-            R.drawable.p5
-        )
-        var randomImage = images[0]
-        LaunchedEffect(true) {
-            randomImage = images[Random.nextInt(images.size)]
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(16.dp)
+    ){
+        Row {
+            Text(text ="@"+comment.user_name, style= MaterialTheme.typography.titleSmall,
+                modifier = Modifier.clickable(onClick = {
+                    navController.navigate(NavScreen.OtherUserProfileScreen.route+"/${comment.user_name}"){
+                        popUpTo(NavScreen.OtherUserProfileScreen.route+"/${comment.user_name}"){inclusive=true}
+                    }
+                })
+            )
         }
+        Text(text = getPrettyDate(comment.created_at), style= MaterialTheme.typography.bodySmall)
+        Text(text = comment.text, style= MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal))
 
-        val painter = painterResource(id = randomImage)
-//        Image(
-//            painter,
-//            contentDescription = null,
-//            modifier = Modifier
-//                .size(40.dp)
-//                .clip(CircleShape)
-//        )
-
-        Column (
-                horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.SpaceEvenly
-        ){
-        Text(text = comment.user_name, style= MaterialTheme.typography.titleLarge)
-        Text(text = prettyPostDate, style= MaterialTheme.typography.bodySmall)
-        Text(text = comment.text, style= MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
-    }
+        HorizontalDivider(
+            color = Gray,
+            thickness = 2.dp
+        )
     }
 
 }

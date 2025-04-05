@@ -25,7 +25,7 @@ android {
 //            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
 
             //buildConfigField("String", "API_URL", "\"http://0.0.0.0:8000\"")
-            buildConfigField("String", "API_URL", "\"http://155.138.221.87:7000\"")
+            buildConfigField("String", "API_URL", "\"https://bend.vhennus.com:7000\"")
             buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.221.87:3000\"")
         }
         create("dev") {
@@ -34,7 +34,7 @@ android {
             applicationIdSuffix = ".dev"
             //buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
             //buildConfigField("String", "API_URL", "\"http://10.0.2.2:8000\"")
-            buildConfigField("String", "API_URL", "\"http://155.138.221.87:8000\"")
+            buildConfigField("String", "API_URL", "\"https://bend.vhennus.com:8000\"")
             //buildConfigField("String", "API_URL", "\"http://172.20.10.2:8000\"")
             //buildConfigField("String", "API_URL", "\"http://0.0.0.0:8000\"")
             buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.221.87:3000\"")
@@ -45,7 +45,7 @@ android {
         applicationId = "com.vhennus"
         minSdk = 28
         targetSdk = 34
-        versionCode = 9
+        versionCode = 10
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -53,6 +53,15 @@ android {
             useSupportLibrary = true
         }
         multiDexEnabled = true
+        ndk {
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
+        }
+    }
+    splits {
+        abi {
+            isEnable = false
+            isUniversalApk = true
+        }
     }
 
     buildTypes {
@@ -62,7 +71,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+
+
 //           isShrinkResources = true
 //            isDebuggable =true
 //            signingConfig = signingConfigs.getByName("debug")
@@ -96,6 +106,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
 
 
 
@@ -205,6 +216,17 @@ dependencies {
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
 
 
+    // system ui controller
+    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.31.0-alpha")
+
+    // google font
+    implementation ("androidx.compose.ui:ui-text-google-fonts:1.7.8")
+
+    // splash screen
+    implementation ("androidx.core:core-splashscreen:1.0.1")
+
+    // link detection
+    implementation("sh.calvin.autolinktext:autolinktext:2.0.1")
 
 }
 
