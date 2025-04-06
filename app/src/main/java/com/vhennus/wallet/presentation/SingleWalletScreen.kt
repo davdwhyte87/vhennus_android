@@ -2,29 +2,50 @@ package com.vhennus.wallet.presentation
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CopyAll
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.RemoveRedEye
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.CopyAll
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material.icons.sharp.ArrowDownward
 import androidx.compose.material.icons.sharp.ArrowUpward
 import androidx.compose.material.icons.sharp.ContentCopy
 import androidx.compose.material.icons.sharp.Rocket
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +60,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -48,8 +70,13 @@ import com.vhennus.NavScreen
 import com.vhennus.ui.AnimatedPreloader
 import com.vhennus.ui.BackTopBar
 import com.vhennus.ui.GeneralScaffold
+import com.vhennus.ui.HomeTopBar
+import com.vhennus.ui.theme.Green
+import com.vhennus.ui.theme.Red
+import com.vhennus.ui.theme.White
 import com.vhennus.wallet.data.WalletViewModel
 import com.vhennus.wallet.domain.GetWalletReq
+import com.vhennus.wallet.domain.Transaction
 
 
 @Composable
@@ -262,5 +289,156 @@ fun WalletMenuItem(name:String, icon: ImageVector, onclick:()->Unit){
             )
             Text(text = name, style = MaterialTheme.typography.bodySmall)
         }
+    }
+}
+
+
+@Preview
+@Composable
+fun SingleWalletScreenxx(){
+//    HomeTopBar("Wallet")
+    Column(
+        verticalArrangement = Arrangement.spacedBy(32.dp)
+    ) {
+        Column(
+            modifier = Modifier.background(MaterialTheme.colorScheme.primary)
+                .padding(32.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                IconButton(onClick = {},
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.surface
+                    )
+                    ) {
+                    Icon(Icons.Default.KeyboardArrowDown, "", modifier = Modifier.size(30.dp))
+                }
+                Text("USD", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
+                Text("2,000.00", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
+                IconButton(onClick = {},
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Icon(Icons.Default.VisibilityOff, "Visibility",
+                        modifier = Modifier.size(25.dp)
+                        )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Row (
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ){
+                Text("Wallet Balance", style = MaterialTheme.typography.titleSmall,
+                    color =MaterialTheme.colorScheme.surface )
+            }
+            Row (
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ){
+                Text("2,000,000", style = MaterialTheme.typography.headlineLarge,
+                    color =MaterialTheme.colorScheme.surface )
+            }
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            WalletMenuItem("Copy", Icons.Outlined.CopyAll)
+            Spacer(modifier = Modifier.width(74.dp))
+            WalletMenuItem("Send", Icons.AutoMirrored.Default.Send)
+        }
+
+        Column(
+            modifier = Modifier.padding(24.dp)
+        ) {
+            val transactions = listOf<Transaction>(
+                Transaction(
+                    "", receiverAddress = "jamine",
+                    senderAddress = "berry",
+                    "40000",
+                    "34th June, 3035"
+                ),
+                Transaction(
+                    "",
+                    receiverAddress = "brennu",
+                    senderAddress = "sassy",
+                    "3000000",
+                    "34th June, 3035"
+                )
+            )
+            Text("Wallet Activities", style = MaterialTheme.typography.titleMedium)
+            LazyColumn {
+                items(transactions){transaction->
+                    TransactionListItem2("sassy", transaction) {
+
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TransactionListItem2(address:String, transaction: Transaction, onclick:()->Unit){
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(top = 16.dp)
+    ) {
+        IconButton(onClick = {},
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary),
+            modifier = Modifier.size(50.dp)
+            ) {
+            Icon(
+                if (transaction.senderAddress == address) Icons.Filled.Send else Icons.Filled.Add, "", tint = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.size(25.dp))
+        }
+        Row(
+
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Received", style = MaterialTheme.typography.titleSmall)
+                Text(transaction.receiverAddress, style = MaterialTheme.typography.bodySmall)
+            }
+
+            Column {
+                Text("+2,000,000,000 VEC", style = MaterialTheme.typography.bodyMedium, color = if (transaction.senderAddress == address) Red else Green)
+                Text(transaction.dateTime, style = MaterialTheme.typography.bodyMedium, color = if (transaction.senderAddress == address) Red else Green)
+            }
+        }
+
+    }
+}
+
+@Composable
+fun WalletMenuItem(name: String, icon: ImageVector){
+    Button(onClick = {},
+        colors = ButtonDefaults.buttonColors(
+            contentColor = MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.primary,
+        ),
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier.sizeIn(minWidth = 74.dp, minHeight = 56.dp)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(icon, name, Modifier.size(25.dp))
+            Text(name, style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.surface )
+        }
+
     }
 }
