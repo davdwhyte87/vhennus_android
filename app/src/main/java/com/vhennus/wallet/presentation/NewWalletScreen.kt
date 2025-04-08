@@ -6,20 +6,28 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.sharp.AddCard
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -32,15 +40,21 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.vhennus.general.presentation.AppButtonLarge
 import com.vhennus.ui.AnimatedPreloader
 import com.vhennus.ui.BackTopBar
 import com.vhennus.ui.GeneralScaffold
+import com.vhennus.ui.theme.Gray2
+import com.vhennus.ui.theme.Red
+import com.vhennus.ui.theme.White
 import com.vhennus.wallet.data.WalletViewModel
 import com.vhennus.wallet.domain.CreateWalletReq
 import com.vhennus.wallet.domain.GetWalletReq
@@ -231,4 +245,133 @@ fun formValidation(context: Context, req:CreateWalletReq):Boolean{
 
 
     return true
+}
+
+
+@Preview
+@Composable
+fun NewWalletScreen(){
+    val name = remember { mutableStateOf("") }
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(24.dp).fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
+    ) {
+        Text("Lets start by creating your wallet address, and seed phrase.",
+            style = MaterialTheme.typography.bodyMedium
+            )
+
+        // input fields
+        Column(
+            verticalArrangement = Arrangement.spacedBy(32.dp)
+        ) {
+            Column (
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+
+                Text("Create Wallet Address",
+                    style = MaterialTheme.typography.titleSmall
+                )
+
+                OutlinedTextField(
+                    value = name.value,
+                    onValueChange = {name.value = it},
+                    modifier = Modifier.fillMaxWidth()
+                        .height(56.dp)
+                    ,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = Gray2
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    placeholder = {Text("Public wallet address (e.g belgium340)",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.alpha(0.6f)
+                    )}
+                )
+            }
+
+            Column (
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+
+                Text("Create seed phrase",
+                    style = MaterialTheme.typography.titleSmall
+                )
+
+                OutlinedTextField(
+                    value = name.value,
+                    onValueChange = {name.value = it},
+                    modifier = Modifier.fillMaxWidth()
+                        .height(56.dp)
+                    ,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = Gray2
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    placeholder = {Text("Pass key",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.alpha(0.6f)
+                    )}
+                )
+            }
+
+            Column (
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+
+                Text("Confirm seed phrase",
+                    style = MaterialTheme.typography.titleSmall
+                )
+
+                OutlinedTextField(
+                    value = name.value,
+                    onValueChange = {name.value = it},
+                    modifier = Modifier.fillMaxWidth()
+                        .height(56.dp)
+                    ,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = Gray2
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    placeholder = {Text("Confirm passkey ",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.alpha(0.6f)
+                    )}
+                )
+            }
+        }
+
+        // caution text
+        Row (
+            horizontalArrangement = Arrangement.spacedBy(15.dp)
+        ){
+            IconButton(onClick = {},
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Red,
+                    contentColor = Red
+                ),
+                modifier = Modifier.size(30.dp)
+                ) {
+                Icon(Icons.Default.Info, "",
+                    modifier = Modifier.size(30.dp),
+                    tint = White
+                    )
+            }
+
+            Text("Vhennus does not save your password. Do not forget this password or give it out to anybody.",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding( end = 10.dp).alpha(0.6f)
+                )
+        }
+
+        AppButtonLarge(text = "Continue",
+            isLoading = false,
+
+            ) { }
+
+
+    }
 }

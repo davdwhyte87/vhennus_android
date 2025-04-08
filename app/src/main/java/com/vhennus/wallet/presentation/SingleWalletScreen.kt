@@ -387,6 +387,8 @@ fun SingleWalletScreenxx(){
     }
 }
 
+
+
 @Composable
 fun TransactionListItem2(address:String, transaction: Transaction, onclick:()->Unit){
     Row(

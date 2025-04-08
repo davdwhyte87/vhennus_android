@@ -1,15 +1,21 @@
 package com.vhennus.wallet.presentation
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.outlined.Rocket
 import androidx.compose.material.icons.sharp.Rocket
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -26,8 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.vhennus.general.presentation.AppButtonLarge
+import com.vhennus.general.presentation.InputField
+import com.vhennus.general.presentation.InputFieldWithLabel
+import com.vhennus.general.presentation.showCustomToast
 import com.vhennus.ui.AnimatedPreloader
 import com.vhennus.ui.BackTopBar
 import com.vhennus.ui.GeneralScaffold
@@ -142,6 +153,62 @@ fun TransferScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+
+@Preview
+@Composable
+fun TransferScreenxxx(){
+    val name = remember { mutableStateOf("") }
+    val amount = remember { mutableStateOf("") }
+    val context =  LocalContext.current
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(24.dp).fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
+    ) {
+
+        // input fields
+        Column(
+            verticalArrangement = Arrangement.spacedBy(32.dp)
+        ) {
+            InputField(
+                name,
+                "Wallet Address"
+            )
+
+           InputField(
+               amount,
+               "Amount",
+               bottomView = {
+
+               }
+           )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("USD 0", style = MaterialTheme.typography.bodySmall)
+                Icon(Icons.Filled.CurrencyExchange, "",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text("Max", style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable(onClick = {})
+                )
+            }
+        }
+
+        // action button
+
+        AppButtonLarge(text = "Send",
+            isLoading = false,
+            isIcon = true,
+            icon = Icons.Outlined.Rocket
+            ) {
+            context.showCustomToast("Successful")
         }
     }
 }

@@ -8,11 +8,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +29,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.vhennus.NavScreen
+import com.vhennus.ui.theme.Green
+import com.vhennus.ui.theme.Red
+import com.vhennus.wallet.domain.Transaction
 import com.vhennus.wallet.domain.Wallet
 import java.math.BigDecimal
 
@@ -82,5 +93,46 @@ fun getExchangeValue(application: Context, amount:BigDecimal):BigDecimal{
         return rate.multiply(amount)
     }catch (e:Exception){
         return BigDecimal("0.00")
+    }
+}
+
+
+
+@Composable
+fun WalletListItem(wallet: Wallet, onclick:()->Unit){
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(top = 16.dp)
+    ) {
+        IconButton(onClick = {},
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary),
+            modifier = Modifier.size(50.dp)
+        ) {
+            Icon(
+                 Icons.Outlined.AccountBalanceWallet, "", tint = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.size(25.dp))
+        }
+        Row(
+
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(wallet.walletAddress, style = MaterialTheme.typography.titleSmall)
+                Text(wallet.balance.toString() + " VEC", style = MaterialTheme.typography.bodySmall)
+            }
+            Column(
+                modifier = Modifier
+            ) {
+                Text(wallet.balance.toString()+" USD", style = MaterialTheme.typography.titleSmall)
+
+            }
+
+
+
+
+        }
+
     }
 }
