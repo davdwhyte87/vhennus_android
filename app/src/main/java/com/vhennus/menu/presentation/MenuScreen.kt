@@ -39,11 +39,11 @@ fun MenuScreen(navController: NavController){
 //                color = MaterialTheme.colorScheme.secondary)
 
         val menus = listOf(
-//                MenuItemData(
-//                    title = "Wallet",
-//                    route = "wallet",
-//                    icon = Icons.Outlined.AccountBalanceWallet
-//                ),
+            MenuItemData(
+                    title = "Wallet",
+                    route = "wallet",
+                    icon = Icons.Outlined.AccountBalanceWallet
+            ),
             MenuItemData(
                 title = "Logout",
                 route = "logout",

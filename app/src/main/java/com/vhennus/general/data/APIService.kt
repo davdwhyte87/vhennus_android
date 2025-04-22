@@ -40,6 +40,7 @@ import com.vhennus.profile.domain.MiniProfile
 import com.vhennus.profile.domain.ProfileWithFriends
 import com.vhennus.trivia.domain.TriviaGame
 import com.vhennus.trivia.domain.TriviaGameReq
+import com.vhennus.wallet.domain.AddWalletReq
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -191,6 +192,11 @@ interface APIService {
 
     @POST("api/v1/auth/profile/update")
     suspend fun updateProfile(@Body data:UpdateProfileRequest, @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
+
+    @POST("api/v1/auth/profile/add_wallet")
+    suspend fun addWallet(@Body data: AddWalletReq, @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
+
+
 
 
     //Friend request

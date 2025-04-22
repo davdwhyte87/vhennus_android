@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
+import com.vhennus.ui.theme.Red
 
 fun Context.showCustomToast(message: String) {
     val toast = Toast(this)
@@ -26,6 +27,36 @@ fun Context.showCustomToast(message: String) {
             Row(
                 modifier = Modifier
                     .background(Color(0xFF323232), shape = RoundedCornerShape(8.dp))
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = message,
+                    color = Color.White
+                )
+            }
+        }
+    }
+
+    toast.view = view
+    toast.duration = Toast.LENGTH_SHORT
+    toast.show()
+}
+
+fun Context.showCustomErrorToast(message: String) {
+    val toast = Toast(this)
+
+    val view = ComposeView(this).apply {
+        setContent {
+            Row(
+                modifier = Modifier
+                    .background(Red, shape = RoundedCornerShape(8.dp))
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {

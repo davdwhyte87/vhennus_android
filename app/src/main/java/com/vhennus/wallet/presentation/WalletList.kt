@@ -31,6 +31,7 @@ import androidx.navigation.NavController
 import com.vhennus.NavScreen
 import com.vhennus.ui.theme.Green
 import com.vhennus.ui.theme.Red
+import com.vhennus.wallet.domain.Account
 import com.vhennus.wallet.domain.Transaction
 import com.vhennus.wallet.domain.Wallet
 import java.math.BigDecimal
@@ -99,10 +100,12 @@ fun getExchangeValue(application: Context, amount:BigDecimal):BigDecimal{
 
 
 @Composable
-fun WalletListItem(wallet: Wallet, onclick:()->Unit){
+fun WalletListItem(wallet: Account, onclick:()->Unit){
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.padding(top = 16.dp)
+        modifier = Modifier.padding(top = 16.dp).clickable(onClick = {
+            onclick()
+        })
     ) {
         IconButton(onClick = {},
             colors = IconButtonDefaults.iconButtonColors(
@@ -119,7 +122,7 @@ fun WalletListItem(wallet: Wallet, onclick:()->Unit){
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(wallet.walletAddress, style = MaterialTheme.typography.titleSmall)
+                Text(wallet.address, style = MaterialTheme.typography.titleSmall)
                 Text(wallet.balance.toString() + " VEC", style = MaterialTheme.typography.bodySmall)
             }
             Column(

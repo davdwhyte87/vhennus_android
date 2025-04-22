@@ -70,7 +70,7 @@ fun AppNav(
 //            HomeScreen(navController)
 //        }
         composable(route=NavScreen.WalletScreen.route){
-            WalletScreen(navController, walletViewModel)
+            WalletScreen(navController, walletViewModel, profileViewModel)
         }
         composable(route=NavScreen.SingleWalletScreen.route+"/{address}"){navBackStack->
             val address = navBackStack.arguments?.getString("address")

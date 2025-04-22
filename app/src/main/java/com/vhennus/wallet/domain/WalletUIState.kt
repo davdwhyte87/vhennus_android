@@ -25,5 +25,10 @@ data class WalletUIState (
     val isTransferSuccessful:Boolean = false,
     val isTransferError:Boolean = false,
     val isTransferButtonLoading:Boolean = false,
-    val transferErrorMessage:String = " "
+    val transferErrorMessage:String = " ",
+
+    val isGetAllWalletsLoading: Boolean = false,
+    val isGetAllWalletsSuccess: Boolean = false,
+    val isGetAllWalletsError: Boolean = false,
+    val getAllWalletsErrorMessage:String = ""
 )

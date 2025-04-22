@@ -1,9 +1,11 @@
 package com.vhennus.wallet.domain
 
+import kotlinx.serialization.Serializable
+
+
+@Serializable
 data class CreateWalletReq (
     val address:String,
-    val password:String,
     val wallet_name:String,
-    val vcid_username:String,
-    val is_vcid:Boolean
+    val public_key:String
 )

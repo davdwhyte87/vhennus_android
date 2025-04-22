@@ -32,7 +32,7 @@ fun AppButtonLarge(
     onclick: ()-> Unit
 ){
     Button(onClick = {
-        onclick
+        onclick()
     },
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,

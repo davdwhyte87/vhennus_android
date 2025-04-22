@@ -37,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -44,6 +45,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -54,8 +56,16 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.vhennus.NavScreen
+import com.vhennus.general.presentation.AppScaffold
+import com.vhennus.general.presentation.CustomSnackbarVisuals
+import com.vhennus.general.presentation.SnackbarType
+import com.vhennus.general.presentation.showCustomErrorToast
+import com.vhennus.general.utils.CLog
+import com.vhennus.general.utils.formatBigDecimalWithCommas
+import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.ui.AnimatedPreloader
 import com.vhennus.ui.GeneralScaffold
+import com.vhennus.ui.HomeTopBar
 import com.vhennus.ui.HomeTopBarWithOptions
 import com.vhennus.wallet.data.WalletViewModel
 import com.vhennus.wallet.domain.Transaction
@@ -64,14 +74,21 @@ import java.math.BigDecimal
 
 
 @Composable
-fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel){
+fun WalletScreen(
+    navController: NavController,
+    walletViewModel: WalletViewModel,
+    profileViewModel: ProfileViewModel
+){
+
     val lifecycleOwner = LocalLifecycleOwner.current
+    val profile = profileViewModel.myProfile.collectAsState().value
+    val profileUIState  = profileViewModel.profileUIState.collectAsState().value
     // clear model data
     DisposableEffect(true) {
 
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                walletViewModel.getAllWallets()
+                profileViewModel.getMyProfile()
                 walletViewModel.getExchangeRate()
             }
         }
@@ -84,232 +101,150 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
     }
 
 
-    // get all wallets
-//    LaunchedEffect(true) {
-//        walletViewModel.getAllWallets()
-//    }
 
 
+    var expanded = remember { mutableStateOf(false) }
     val wallets = walletViewModel.allWallets.collectAsState().value
-
-    // update wallet locally
-    LaunchedEffect(Unit) {
-        //walletViewModel.getAllWallets()
-        val walletNames = mutableListOf<String>()
-
-//        wallets.forEachIndexed { index, wallet ->
-//            walletNames.add(wallet.walletAddress)
-//        }
-//        Log.d("WALLET NAMES XXXX", walletNames.toString())
-//        walletViewModel.updateWalletsLocal(walletNames)
-    }
-
     val walletUIState = walletViewModel.walletUIState.collectAsState().value
+    val context = LocalContext.current
+    var totalAsset = remember { mutableStateOf(BigDecimal.ZERO) }
+    var totalAssetString = remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
 
-    // show error toast if loading wallets data fails
-    if (walletUIState.isError){
-        Log.d("XXXXX GOT ERROR", "YEt")
-        Toast.makeText(LocalContext.current,walletUIState.errorMessage, Toast.LENGTH_SHORT).show()
-        walletViewModel.clearError()
-    }
 
-    var totalBalance = BigDecimal("0.0")
-
-    wallets.forEachIndexed { index, wallet ->
-        totalBalance = totalBalance.add(wallet.balance)
-        //Log.d("XXDECIMAL", "${scaledBigDecimal}")
-    }
-    Log.d("XXFLOAT ${wallets.getOrNull(0)?.balance}", "totalBalance")
-    GeneralScaffold(topBar = { HomeTopBarWithOptions("Wallets", navController) }, floatingActionButton = {  }) {
-        var isExpanded = remember {
-            mutableStateOf(false)
+    LaunchedEffect(profileUIState.isGetProfileSuccess) {
+        if (profile.profile.wallets.isNotBlank()&&profile.profile.wallets.isNotEmpty()){
+            walletViewModel.getAllWallets(profile.profile.wallets)
         }
-        Column  (
-            modifier = Modifier.fillMaxHeight(),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ){
-
-
-            ElevatedCard(
-                shape = RoundedCornerShape(10.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                modifier = Modifier.padding(0.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column (
-                        modifier = Modifier
-                            .padding(1.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-
-                    ) {
-                        Text(text =String.format("%,.2f", totalBalance) ,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.surface
-                        )
-                        Text(text = "Total assets",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.surface
-                        )
-                    }
-                    Row (
-                        modifier = Modifier
-                            .padding(1.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text =  "NGN "+String.format("%,.2f", getExchangeValue(LocalContext.current, totalBalance)),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.surface
-                        )
-                        Box (
-                            modifier = Modifier.clickable(onClick = {
-                                if (isExpanded.value) isExpanded.value = false else isExpanded.value = true
-                            })
-                        ){
-                            Row {
-                               Icon(imageVector = Icons.Outlined.KeyboardArrowDown, contentDescription ="" )
-                                Text(text = "NGN",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.surface
-                                )
-                            }
-                        }
-                        DropdownMenu(expanded = isExpanded.value, onDismissRequest = { isExpanded.value = false }) {
-                            DropdownMenuItem(text = { Text(text = "USD")}, onClick = {  })
-                        }
-                    }
-
-                }
-            }
-
-            Row {
-
-                val menus = listOf(
-                    WalletMenu("Add", Icons.Default.Add),
-                    WalletMenu("New", Icons.Default.AddCard),
-                    WalletMenu("Orders", Icons.Default.Storage)
-                )
-                menus.forEachIndexed { index, walletMenu ->
-                    WalletMenuItem(iconImage = walletMenu.icon , menuTitle = walletMenu.name) {
-                        if (index == 0){
-                            navController.navigate(NavScreen.AddWalletScreen.route)
-                        }
-
-                        if (index ==1){
-                            navController.navigate(NavScreen.NewWalletScreen.route)
-                        }
-
-                        if (index==2){
-                            navController.navigate(NavScreen.MyOrdersScreen.route)
-                        }
-
-                    }
-                }
-            }
-
-            Log.d("Syncing?? XXX", walletUIState.isSyncingLocalWallet.toString())
-            if (walletUIState.isSyncingLocalWallet){
-
-                AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.primary)
-            }
-
-            WalletList(navController,wallets)
+        profileViewModel.resetUIState()
+    }
+    LaunchedEffect(walletUIState.isGetAllWalletsError) {
+        if (walletUIState.isGetAllWalletsError){
+           //context.showCustomErrorToast(walletUIState.getAllWalletsErrorMessage)
+            snackbarHostState.showSnackbar(visuals = CustomSnackbarVisuals(
+                message = walletUIState.getAllWalletsErrorMessage,
+                type = SnackbarType.ERROR
+            ))
         }
     }
-}
+    LaunchedEffect(wallets) {
+        wallets.forEach { it->
+            CLog.debug("ALL WALLETS TOTAL CALC", it.address+ it.balance.toString())
+            totalAsset.value = totalAsset.value + it.balance
+
+        }
+        val tstring =formatBigDecimalWithCommas(totalAsset.value)
+        totalAssetString.value = tstring
+
+    }
 
 
-
-@Preview
-@Composable
-fun WalletScreenxxx(){
-//    HomeTopBar("Wallet")
-    Column(
-        verticalArrangement = Arrangement.spacedBy(32.dp)
+    AppScaffold(
+        topBar ={ HomeTopBar("Wallets", navController)} ,
+        snackbarHostState=snackbarHostState
     ) {
         Column(
-            modifier = Modifier.background(MaterialTheme.colorScheme.primary)
-                .padding(32.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+
+            Column(
+                modifier = Modifier.background(MaterialTheme.colorScheme.primary)
+                    .padding(32.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+
             ) {
-                IconButton(onClick = {},
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = MaterialTheme.colorScheme.surface
-                    )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(Icons.Default.KeyboardArrowDown, "", modifier = Modifier.size(30.dp))
+                    Box {
+                        IconButton(onClick = {expanded.value = true},
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.surface
+                            )
+                        ) {
+                            Icon(Icons.Default.KeyboardArrowDown, "", modifier = Modifier.size(30.dp))
+                        }
+
+                        DropdownMenu(
+                            expanded = expanded.value,
+                            onDismissRequest = { expanded.value = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("NGN") },
+                                onClick = {
+                                    // Handle click
+                                    expanded.value = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("USD") },
+                                onClick = {
+                                    // Handle click
+                                    expanded.value = false
+                                }
+                            )
+                        }
+                    }
+
+                    Text("USD", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
+                    Text("13,000.00", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
+                    IconButton(onClick = {},
+                        colors = IconButtonDefaults.iconButtonColors(
+                            contentColor = MaterialTheme.colorScheme.surface
+                        )
+                    ) {
+                        Icon(Icons.Default.VisibilityOff, "Visibility",
+                            modifier = Modifier.size(25.dp)
+                        )
+                    }
                 }
-                Text("USD", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
-                Text("13,000.00", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
-                IconButton(onClick = {},
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = MaterialTheme.colorScheme.surface
-                    )
-                ) {
-                    Icon(Icons.Default.VisibilityOff, "Visibility",
-                        modifier = Modifier.size(25.dp)
-                    )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Row (
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ){
+                    Text("Total Asset", style = MaterialTheme.typography.titleSmall,
+                        color =MaterialTheme.colorScheme.surface )
+                }
+                Row (
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ){
+                    Text(totalAssetString.value, style = MaterialTheme.typography.headlineMedium,
+                        color =MaterialTheme.colorScheme.surface )
                 }
             }
+            Spacer(modifier=Modifier.height(32.dp))
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Row (
+            Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
-            ){
-                Text("Total Asset", style = MaterialTheme.typography.titleSmall,
-                    color =MaterialTheme.colorScheme.surface )
+            ) {
+                WalletMenuItem("Add", Icons.Outlined.Add){
+                    navController.navigate(NavScreen.AddWalletScreen.route)
+                }
+                Spacer(modifier = Modifier.width(74.dp))
+                WalletMenuItem("New", Icons.Outlined.Check){
+                    navController.navigate(NavScreen.NewWalletScreen.route)
+                }
             }
-            Row (
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ){
-                Text("13,000,000,000 VEC", style = MaterialTheme.typography.headlineLarge,
-                    color =MaterialTheme.colorScheme.surface )
-            }
-        }
+            Spacer(modifier=Modifier.height(32.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            WalletMenuItem("Add", Icons.Outlined.Add)
-            Spacer(modifier = Modifier.width(74.dp))
-            WalletMenuItem("New", Icons.Outlined.Check)
-        }
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
 
-        Column(
-            modifier = Modifier.padding(24.dp)
-        ) {
-            val wallets = listOf<Wallet>(
-                Wallet(
-                    walletName = "saidi numer",
-                    walletAddress = "arsenal_xenno_mobia",
-                    balance = BigDecimal("200000")
-                ),
-                Wallet(
-                    walletName = "saidi numer",
-                    walletAddress = "romaneshalone#2900",
-                    balance = BigDecimal("39490000")
-                )
-            )
-            Text("Wallet List", style = MaterialTheme.typography.titleMedium)
-            LazyColumn {
-                items(wallets){wallet->
-                    WalletListItem(wallet) {
-
+                Text("Wallet List", style = MaterialTheme.typography.titleMedium)
+                LazyColumn {
+                    items(wallets){wallet->
+                        WalletListItem(wallet) {
+                            navController.navigate(NavScreen.SingleWalletScreen.route+"/${wallet.address}")
+                        }
                     }
                 }
             }

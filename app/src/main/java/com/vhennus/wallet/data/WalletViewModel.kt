@@ -16,7 +16,15 @@ import com.vhennus.wallet.presentation.formatter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vhennus.general.data.APIService
+import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.domain.GenericResp
+import com.vhennus.general.utils.KeyGenerator
+import com.vhennus.general.utils.signMessage
+import com.vhennus.wallet.domain.Account
+
+import com.vhennus.wallet.domain.AddWalletReq
+import com.vhennus.wallet.domain.BlockchainRequest
+import com.vhennus.wallet.domain.BlockchainResp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +33,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.math.BigDecimal
 import java.util.UUID
@@ -37,6 +47,8 @@ class WalletViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
     private val application: Application,
     private val apiService: APIService,
+    private val jsonService: Json,
+    private val tokenService: GetUserToken,
 ) : ViewModel(){
     val defaultSingleWallet = Wallet()
 
@@ -46,7 +58,7 @@ class WalletViewModel @Inject constructor(
     private val _singleWalletC = MutableStateFlow(WalletC())
     val singleWalletC = _singleWalletC.asStateFlow()
 
-    private val _allWallets = MutableStateFlow(listOf(defaultSingleWallet))
+    private val _allWallets = MutableStateFlow(listOf(Account()))
     val allWallets = _allWallets.asStateFlow()
 
     private val _userName = MutableStateFlow("")
@@ -74,45 +86,60 @@ class WalletViewModel @Inject constructor(
     fun updateSingleWallet(wallet:Wallet){
         _singleWallet.value = wallet
     }
-    fun createWallet(createWalletRequest:CreateWalletReq){
-        val gson= Gson()
-        val reqString = gson.toJson(createWalletRequest)
-        val message = formatter("CreateWallet", reqString)
+    fun createWallet(createWalletRequest:CreateWalletReq, priv:String){
+        _walletUIState.update { it.copy(
+            isCreateWalletButtonLoading = true,
+        ) }
+        val req = BlockchainRequest<CreateWalletReq>(
+            action = "create_wallet",
+            data = createWalletRequest
+        )
+        val reqString = jsonService.encodeToString(BlockchainRequest.serializer(CreateWalletReq.serializer()),req )
 
         viewModelScope.launch {
             withContext(Dispatchers.IO){
                 try {
-                    val resp = walletService.sendData(message)
-                    CLog.error("RESPDATA XXXX", resp)
-                    // seperate response string
-                    val respPack = resp.split("\n")
-                    if(respPack.get(0) == "1"){
-                        // success
-                        _walletUIState.update { it.copy(createWalletSuccess = true, createWalletSuccessMessage = respPack.get(1)) }
-                        _walletUIState.update { it.copy(createWalletError = false, createWalletErrorMessage = "" )}
-                        // add wallet locally
-                        // save wallet data to database
-                        val wallet = Wallet("",createWalletRequest.wallet_name,createWalletRequest.address, BigDecimal("0.0"), getUserName(application))
-                        walletRepository.insertWallet(wallet)
+                    val resp = walletService.sendData(reqString)
+                    CLog.debug("CREATE WALLET RESP", resp)
+                    val respData = jsonService.decodeFromString(BlockchainResp.serializer(String.serializer()), resp)
+                    CLog.debug("CREATE WALLET RESP JSON", respData.toString())
 
+                    if (respData.status == 1){
+                        _walletUIState.update { it.copy(
+                            isCreateWalletButtonLoading = false,
+                            createWalletSuccess = true,
+                            createWalletError = false,
+                            createWalletErrorMessage = ""
+                        ) }
+
+                        val smessage = "north pole"
+                        val sig =signMessage(smessage,priv)
+                        val addReq = AddWalletReq(
+                            address = createWalletRequest.address,
+                            message = smessage,
+                            signature = sig
+                        )
+                        addWallet(addReq)
                     }else{
-                        _walletUIState.update { it.copy(createWalletError = true, createWalletErrorMessage = respPack.get(1)) }
-                        clearSuccess()
-                        _walletUIState.update { it.copy(createWalletSuccess = false, createWalletSuccessMessage = "" )}
+                        _walletUIState.update { it.copy(
+                            isCreateWalletButtonLoading = false,
+                            createWalletSuccess = false,
+                            createWalletError = true,
+                            createWalletErrorMessage = respData.message
+                        ) }
                     }
                 }catch (exception:IOException){
-                    println("ERROR XXXX"+ exception.toString())
-                    CLog.error("ERROR XXXX", exception.toString())
-                    _walletUIState.update { it.copy(createWalletError = true, createWalletErrorMessage = exception.toString()) }
-                    clearSuccess()
-                    _walletUIState.update { it.copy(createWalletSuccess = false, createWalletSuccessMessage = "" )}
+                    CLog.error("CREATE WALLET ERROR ", exception.toString())
+
+                    _walletUIState.update { it.copy(
+                        isCreateWalletButtonLoading = false,
+                        createWalletSuccess = false,
+                        createWalletError = true,
+                        createWalletErrorMessage = exception.toString()
+                    ) }
                 }
             }
-            updateIsCreateWalletButtonLoading(false)
-            updateCreateWalletScreenNavigateBack(true)
         }
-
-
     }
 
     fun getBalanceRemote(getWalletReq:GetBalanceReq){
@@ -160,53 +187,40 @@ class WalletViewModel @Inject constructor(
         return  _userName.value
     }
 
-    fun addWallet(getWalletReq:GetWalletReq){
-        val gson= Gson()
-        val reqString = gson.toJson(getWalletReq)
-        val message = formatter("GetWalletData", reqString)
+    fun addWallet(req: AddWalletReq){
+        _walletUIState.update { it.copy(isAddWalletButtonLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                _walletUIState.update { it.copy(isAddWalletButtonLoading = true) }
                 try{
-                    val resp = walletService.sendData(message)
-                    val respPack = resp.split("\n")
-                    CLog.error("XXX RESPONSE", resp)
-                    if(respPack[0] == "1"){
-                        // success
+                    val token = tokenService.getUserToken()
+                    val resp = apiService.addWallet(req, mapOf("Authorization" to token))
+                    val respMessage = resp.message()
 
-//                        _walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
-//                        clearError()
-                        // convert response data to object
-                        val walletC = gson.fromJson(respPack[2], WalletC::class.java)
-                        CLog.error("Converted OBJ XXX", walletC.toString())
-
-                        // update single wallet variable
-                        //_singleWalletC.value = walletC
-                        // trigger back navigation
-                        // save wallet data to database
-                        val wallet = Wallet(walletC.id,walletC.address, getWalletReq.address, walletC.chain.chain.last().balance, getUserName(application))
-                        walletRepository.insertWallet(wallet)
-
-                        // update ui state
+                    if (resp.isSuccessful){
                         _walletUIState.update { it.copy(
                             isAddWalletButtonLoading = false,
                             isAddWalletSuccess = true,
                             isAddWalletError = false,
                             isAddWalletDone = true,
-                            addWalletErrorMessage = ""
+                            addWalletErrorMessage =  ""
                         ) }
-                    }else{
 
-                        // error
+                        CLog.error("ADD WALLET RESP ",resp.toString())
+
+                    }else{
+                        val errorResp = jsonService.decodeFromString(GenericResp.serializer(String.serializer()),
+                            resp.errorBody()?.string() ?: ""
+                        )
+                        val errMessage = ""
+
                         _walletUIState.update { it.copy(
                             isAddWalletButtonLoading = false,
                             isAddWalletSuccess = false,
                             isAddWalletError = true,
                             isAddWalletDone = false,
-                            addWalletErrorMessage =  respPack.get(1)
+                            addWalletErrorMessage =  errorResp.message
                         ) }
-                        CLog.error("GET WALLET ERROR ", respPack.get(1) )
-
+                        CLog.error("ADD WALLET ERROR ",errorResp.toString())
                     }
                 }catch (exception:Exception){
                     CLog.error("XXX Yola", exception.toString())
@@ -384,16 +398,61 @@ class WalletViewModel @Inject constructor(
 
 
     // get all wallets in local db for the logged in user
-    fun getAllWallets(){
+    fun getAllWallets(walletsString: String){
+        _walletUIState.update { it.copy(
+            isGetAllWalletsLoading = true,
+        ) }
         viewModelScope.launch {
             withContext(Dispatchers.IO){
-                try {
-                    _allWallets.value= walletRepository.getAllWallets2(getUserName(application)).first()
-                }catch (e:Exception){
+                val walletAddresses =  walletsString.split(",")
+                // get wallet from blockchain api
+                val accounts = mutableListOf<Account>()
+                walletAddresses.forEach{it->
+                    val req = BlockchainRequest<GetWalletReq>(
+                        action = "get_account",
+                        data = GetWalletReq(address = it)
+                    )
+                    try {
+                        val json =  jsonService
+                        val reqString = json.encodeToString(BlockchainRequest.serializer(GetWalletReq.serializer()), req)
+                        val resp = walletService.sendData(reqString)
+                        CLog.debug("GET ALL WALLETS RESP", resp)
+                        val respData = json.decodeFromString(BlockchainResp.serializer(Account.serializer()), resp)
+                        CLog.debug("GET ALL WALLETS RESP Json", respData.toString())
+                        if (respData.status == 1){
+                            if(respData.data != null){
+                                accounts.add(respData.data)
+                            }
 
-                    CLog.error("GET ALL WALLETS ERROR", e.toString())
+                            _walletUIState.update { it.copy(
+                                isGetAllWalletsLoading = false,
+                                isGetAllWalletsSuccess = true,
+                                isGetAllWalletsError = false,
+                                getAllWalletsErrorMessage = ""
+                            ) }
+                        }else{
+                            CLog.error("GET ALL WALLETS", respData.message)
+                            _walletUIState.update { it.copy(
+                                isGetAllWalletsLoading = false,
+                                isGetAllWalletsSuccess = false,
+                                isGetAllWalletsError = true,
+                                getAllWalletsErrorMessage = respData.message
+                            ) }
+                        }
+
+                    }catch (e: Exception){
+                        CLog.error("GET ALL WALLETS", e.toString())
+                        _walletUIState.update { it.copy(
+                            isGetAllWalletsLoading = false,
+                            isGetAllWalletsSuccess = false,
+                            isGetAllWalletsError = true,
+                            getAllWalletsErrorMessage = "Error getting Wallet"
+                        ) }
+                    }
+
                 }
 
+                _allWallets.value = accounts
             }
         }
     }
@@ -453,7 +512,6 @@ class WalletViewModel @Inject constructor(
     }
 
     fun resetUIState(){
-        CLog.error("RESET UI XXXXX","yes")
         _walletUIState.value =  defaultUIState
     }
 

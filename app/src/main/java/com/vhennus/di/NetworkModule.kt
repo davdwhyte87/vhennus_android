@@ -11,12 +11,14 @@ import com.vhennus.general.data.APIService
 import com.vhennus.general.domain.GenericResp
 import com.vhennus.general.domain.GenericRespAdapter
 import com.vhennus.general.domain.GenericRespAdapterFactory
+import com.vhennus.general.utils.BigDecimalSerializer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
 
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
@@ -24,6 +26,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
@@ -86,6 +89,21 @@ object NetworkModule {
         return retrofit.create(APIService::class.java)
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
+    @Provides
+    @Singleton
+    fun provideJson(): Json{
+        val json = Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+            coerceInputValues = true
+            serializersModule = SerializersModule {
+                contextual(BigDecimal::class, BigDecimalSerializer)
+            }
+        }
 
+        return json
+
+    }
 }
 

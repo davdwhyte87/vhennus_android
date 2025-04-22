@@ -113,7 +113,7 @@ fun triviaPage(
                     // get game
                     triviaViewModel.resetUiState()
                     triviaViewModel.getTriviaGame()
-                    walletViewModel.getAllWallets()
+                    //walletViewModel.getAllWallets()
                     triviaViewModel.hasPlayedTriviaToday()
                 }
             }
@@ -152,7 +152,7 @@ fun triviaPage(
 
                 }
             }else{
-                game(triviaGame.value, wallets.value, triviaViewModel, navController)
+                //game(triviaGame.value, wallets.value, triviaViewModel, navController)
             }
         }else{
             nonGame()
