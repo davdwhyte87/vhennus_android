@@ -1,10 +1,15 @@
 package com.vhennus.wallet.domain
 
-data class Transaction(
-    val id:String,
-    val receiverAddress:String,
-    val senderAddress:String,
-    var amount: String,
-    var dateTime:String,
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
+import java.math.BigDecimal
 
+
+@Serializable
+data class Transaction(
+    val sender: String,
+    val receiver: String,
+    @Contextual val amount: BigDecimal,
+    val nonce: Int,
+    val signature: String,
     )

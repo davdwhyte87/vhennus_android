@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -86,6 +87,7 @@ import com.vhennus.ui.theme.Red
 import com.vhennus.ui.theme.White
 import com.vhennus.wallet.data.WalletViewModel
 import com.vhennus.wallet.domain.GetWalletReq
+import com.vhennus.wallet.domain.GetWalletTransactionsReq
 import com.vhennus.wallet.domain.Transaction
 import java.math.BigDecimal
 
@@ -103,7 +105,8 @@ fun SingleWalletScreen(
 
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-
+                walletViewModel.getWalletFromBlockchain(GetWalletReq(address))
+                walletViewModel.getWalletTransactionsFromBlockchain(GetWalletTransactionsReq(address))
             }
         }
 
@@ -118,7 +121,8 @@ fun SingleWalletScreen(
 
 
     var expanded = remember { mutableStateOf(false) }
-    val wallets = walletViewModel.allWallets.collectAsState().value
+    val singleWallet = walletViewModel.singleWalletC.collectAsState().value
+    val transactions = walletViewModel.singleWalletTransactions.collectAsState().value
     val walletUIState = walletViewModel.walletUIState.collectAsState().value
     val context = LocalContext.current
     var totalAsset = remember { mutableStateOf(BigDecimal.ZERO) }
@@ -142,7 +146,7 @@ fun SingleWalletScreen(
 
 
     AppScaffold(
-        topBar ={ HomeTopBar("Wallets", navController)} ,
+        topBar ={ BackTopBar("Wallet", navController)} ,
         snackbarHostState=snackbarHostState
     ) {
         Column(
@@ -215,7 +219,7 @@ fun SingleWalletScreen(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
                 ){
-                    Text(totalAssetString.value, style = MaterialTheme.typography.headlineMedium,
+                    Text("${formatBigDecimalWithCommas(singleWallet.balance)} VEC", style = MaterialTheme.typography.headlineMedium,
                         color =MaterialTheme.colorScheme.surface )
                 }
             }
@@ -225,12 +229,12 @@ fun SingleWalletScreen(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                WalletMenuItem("Add", Icons.Outlined.Add){
-                    navController.navigate(NavScreen.AddWalletScreen.route)
+                WalletMenuItem("Copy", Icons.Outlined.CopyAll){
+                    //navController.navigate(NavScreen.AddWalletScreen.route)
                 }
                 Spacer(modifier = Modifier.width(74.dp))
-                WalletMenuItem("New", Icons.Outlined.Check){
-                    navController.navigate(NavScreen.NewWalletScreen.route)
+                WalletMenuItem("Send", Icons.AutoMirrored.Outlined.Send){
+                    navController.navigate(NavScreen.TransferScreen.route+"/${address}")
                 }
             }
             Spacer(modifier=Modifier.height(32.dp))
@@ -239,11 +243,11 @@ fun SingleWalletScreen(
                 modifier = Modifier.padding(24.dp)
             ) {
 
-                Text("Wallet List", style = MaterialTheme.typography.titleMedium)
+                Text("Wallet Activities", style = MaterialTheme.typography.titleMedium)
                 LazyColumn {
-                    items(wallets){wallet->
-                        WalletListItem(wallet) {
-                            navController.navigate(NavScreen.SingleWalletScreen.route+"/${wallet.address}")
+                    items(transactions){trans->
+                        TransactionListItem2(address,trans) {
+
                         }
                     }
                 }
@@ -271,7 +275,7 @@ fun TransactionListItem2(address:String, transaction: Transaction, onclick:()->U
             modifier = Modifier.size(50.dp)
             ) {
             Icon(
-                if (transaction.senderAddress == address) Icons.Filled.Send else Icons.Filled.Add, "", tint = MaterialTheme.colorScheme.surface,
+                if (transaction.sender == address) Icons.Filled.Send else Icons.Filled.Add, "", tint = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.size(25.dp))
         }
         Row(
@@ -280,13 +284,13 @@ fun TransactionListItem2(address:String, transaction: Transaction, onclick:()->U
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Received", style = MaterialTheme.typography.titleSmall)
-                Text(transaction.receiverAddress, style = MaterialTheme.typography.bodySmall)
+                Text(if(transaction.sender == address) "Sent" else "Received", style = MaterialTheme.typography.titleSmall)
+                Text(if(transaction.sender == address) transaction.receiver else transaction.sender, style = MaterialTheme.typography.bodySmall)
             }
 
             Column {
-                Text("+2,000,000,000 VEC", style = MaterialTheme.typography.bodyMedium, color = if (transaction.senderAddress == address) Red else Green)
-                Text(transaction.dateTime, style = MaterialTheme.typography.bodyMedium, color = if (transaction.senderAddress == address) Red else Green)
+                Text("${formatBigDecimalWithCommas(transaction.amount)} VEC", style = MaterialTheme.typography.bodyMedium, color = if (transaction.sender == address) Red else Green)
+//                Text(transaction.dateTime, style = MaterialTheme.typography.bodyMedium, color = if (transaction.senderAddress == address) Red else Green)
             }
         }
 

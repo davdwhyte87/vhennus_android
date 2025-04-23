@@ -30,5 +30,17 @@ data class WalletUIState (
     val isGetAllWalletsLoading: Boolean = false,
     val isGetAllWalletsSuccess: Boolean = false,
     val isGetAllWalletsError: Boolean = false,
-    val getAllWalletsErrorMessage:String = ""
+    val getAllWalletsErrorMessage:String = "",
+
+    val isGetSingleWalletLoading: Boolean = false,
+    val isGetSingleWalletSuccess: Boolean = false,
+    val isGetSingleWalletError: Boolean = false,
+    val getSingleWalletErrorMessage:String = "",
+
+
+    val isGetSingleWalletTransactionsLoading: Boolean = false,
+    val isGetSingleWalletTransactionsSuccess: Boolean = false,
+    val isGetSingleWalletTransactionsError: Boolean = false,
+    val getSingleWalletTransactionsErrorMessage:String = ""
+
 )

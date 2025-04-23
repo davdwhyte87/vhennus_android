@@ -25,6 +25,8 @@ import com.vhennus.wallet.domain.Account
 import com.vhennus.wallet.domain.AddWalletReq
 import com.vhennus.wallet.domain.BlockchainRequest
 import com.vhennus.wallet.domain.BlockchainResp
+import com.vhennus.wallet.domain.GetWalletTransactionsReq
+import com.vhennus.wallet.domain.Transaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +35,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import java.io.IOException
@@ -55,14 +58,18 @@ class WalletViewModel @Inject constructor(
     private val _singleWallet = MutableStateFlow(defaultSingleWallet)
     val singleWallet = _singleWallet.asStateFlow()
 
-    private val _singleWalletC = MutableStateFlow(WalletC())
+    private val _singleWalletC = MutableStateFlow(Account())
     val singleWalletC = _singleWalletC.asStateFlow()
 
-    private val _allWallets = MutableStateFlow(listOf(Account()))
+    private val _allWallets = MutableStateFlow(emptyList<Account>())
     val allWallets = _allWallets.asStateFlow()
 
     private val _userName = MutableStateFlow("")
     val userName = _userName.asStateFlow()
+
+    private val _singleWalletTransactions = MutableStateFlow(emptyList<Transaction>())
+    val singleWalletTransactions = _singleWalletTransactions.asStateFlow()
+
 
     val defaultUIState = WalletUIState()
     val _walletUIState = MutableStateFlow(defaultUIState)
@@ -72,7 +79,7 @@ class WalletViewModel @Inject constructor(
 
     fun clearModelData(){
         _walletUIState.value = WalletUIState()
-        _singleWalletC.value = WalletC()
+
         _allWallets.value = emptyList()
         _singleWallet.value = Wallet()
 
@@ -236,52 +243,99 @@ class WalletViewModel @Inject constructor(
         }
     }
 
-    fun getWalletRemote(getWalletReq:GetWalletReq){
+    fun getWalletFromBlockchain(getWalletReq:GetWalletReq){
         // change loading state
-        _walletUIState.update { it.copy(isSingleWalletPageLoading = true) }
+        _walletUIState.update { it.copy(isGetSingleWalletLoading = true) }
 
-        val gson= Gson()
-        val reqString = gson.toJson(getWalletReq)
-        val message = formatter("GetWalletData", reqString)
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                try{
-                    val resp = walletService.sendData(message)
-                    val respPack = resp.split("\n")
-                    CLog.error("XXX RESPONSE", resp)
-                    if(respPack[0] == "1"){
-                        _walletUIState.update { it.copy(isSingleWalletPageLoading = false) }
-                        // success
-                        //_walletUIState.update { it.copy(isSuccess = true, successMessage = respPack[1]) }
-                        // clear error
-                        clearError()
-                        // convert response data to object
-                        val walletC = gson.fromJson(respPack[2], WalletC::class.java)
-                        CLog.error("Converted OBJ XXX", walletC.toString())
-
-                        // update single wallet variable
-                        _singleWalletC.value = walletC
-
-
-                        // update wallet data locally
-                        val wallet = Wallet(walletC.id,walletC.address, getWalletReq.address, walletC.chain.chain.last().balance, getUserName(application))
-                        walletRepository.updateWallet(wallet)
-
-                        // trigger back navigation
-                        updateIsAddWalletDone(true)
-
-
+                val req = BlockchainRequest<GetWalletReq>(
+                    action = "get_account",
+                    data = GetWalletReq(address = getWalletReq.address)
+                )
+                try {
+                    val json =  jsonService
+                    val reqString = json.encodeToString(BlockchainRequest.serializer(GetWalletReq.serializer()), req)
+                    val resp = walletService.sendData(reqString)
+                    CLog.debug("GET WALLET RESP", resp)
+                    val respData = json.decodeFromString(BlockchainResp.serializer(Account.serializer()), resp)
+                    CLog.debug("GET WALLET RESP Json", respData.toString())
+                    if (respData.status == 1) {
+                        if (respData.data != null) {
+                            _singleWalletC.value = respData.data
+                        }
+                        _walletUIState.update { it.copy(
+                            isGetSingleWalletLoading = false,
+                            isGetSingleWalletSuccess = true,
+                            isGetSingleWalletError = false,
+                            getSingleWalletErrorMessage = ""
+                        ) }
                     }else{
-                        _walletUIState.update { it.copy(isSingleWalletPageLoading = false) }
-                        // error
-                        _walletUIState.update { it.copy(isError = true, errorMessage = respPack.get(1)) }
-                        clearSuccess()
+                        _walletUIState.update { it.copy(
+                            isGetSingleWalletLoading = false,
+                            isGetSingleWalletSuccess = false,
+                            isGetSingleWalletError = true,
+                            getSingleWalletErrorMessage = respData.message
+                        ) }
                     }
-                }catch (exception:Exception){
-                    _walletUIState.update { it.copy(isSingleWalletPageLoading = false) }
-                    CLog.error("XXX Yola", exception.toString())
-                    _walletUIState.update { it.copy(isError = true, errorMessage ="Network Error") }
-                    clearSuccess()
+                } catch (exception:Exception){
+                    _walletUIState.update { it.copy(
+                        isGetSingleWalletLoading = false,
+                        isGetSingleWalletSuccess = false,
+                        isGetSingleWalletError = true,
+                        getSingleWalletErrorMessage = "A network error occurred"
+                    ) }
+                }
+            }
+        }
+    }
+
+    fun getWalletTransactionsFromBlockchain(req: GetWalletTransactionsReq){
+        // change loading state
+        _walletUIState.update { it.copy(isGetSingleWalletTransactionsLoading = true) }
+
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val req = BlockchainRequest<GetWalletTransactionsReq>(
+                    action = "get_user_transactions",
+                    data = GetWalletTransactionsReq(address = req.address)
+                )
+                try {
+                    val json =  jsonService
+                    val reqString = json.encodeToString(BlockchainRequest.serializer(
+                        GetWalletTransactionsReq.serializer()), req)
+                    val resp = walletService.sendData(reqString)
+                    CLog.debug("GET WALLET TRANSACTIONS RESP", resp)
+                    val respData = json.decodeFromString(BlockchainResp.serializer(ListSerializer(
+                        Transaction.serializer())), resp)
+                    CLog.debug("GET WALLET TRANSACTIONS RESP Json", respData.toString())
+                    if (respData.status == 1) {
+                        if (respData.data != null) {
+                            _singleWalletTransactions.value = respData.data
+                        }
+                        _walletUIState.update { it.copy(
+                            isGetSingleWalletTransactionsLoading  = false,
+                            isGetSingleWalletTransactionsSuccess = true,
+                            isGetSingleWalletTransactionsError = false,
+                            getSingleWalletTransactionsErrorMessage = ""
+                        ) }
+                    }else{
+                        CLog.debug("GET WALLET TRANSACTIONS ERROR ", respData.message)
+                        _walletUIState.update { it.copy(
+                            isGetSingleWalletTransactionsLoading  = false,
+                            isGetSingleWalletTransactionsSuccess = false,
+                            isGetSingleWalletTransactionsError = true,
+                            getSingleWalletTransactionsErrorMessage = respData.message
+                        ) }
+                    }
+                } catch (exception:Exception){
+                    _walletUIState.update { it.copy(
+                        isGetSingleWalletTransactionsLoading  = false,
+                        isGetSingleWalletTransactionsSuccess = false,
+                        isGetSingleWalletTransactionsError = true,
+                        getSingleWalletTransactionsErrorMessage = "Network error"
+                    ) }
+                    CLog.debug("GET WALLET TRANSACTIONS ERROR ", exception.toString())
                 }
             }
         }
@@ -290,51 +344,46 @@ class WalletViewModel @Inject constructor(
     fun transfer(transferReq: TransferReq){
         // change loading state
         _walletUIState.update { it.copy(isTransferButtonLoading = true) }
-
-        val gson= Gson()
-        val reqString = gson.toJson(transferReq)
-        val message = formatter("Transfer", reqString)
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                try{
-                    val resp = walletService.sendData(message)
-                    val respPack = resp.split("\n")
-                    CLog.error("XXX RESPONSE", resp)
-                    if(respPack[0] == "1"){
-                        _walletUIState.update { it.copy(isTransferButtonLoading = false) }
-                        // success
-                        _walletUIState.update {
-                            it.copy(
-                                isTransferSuccessful = true,
-                                isTransferError = false,
-                                isTransferButtonLoading = false,
-                                transferErrorMessage = ""
-                            )
-                        }
+                val req = BlockchainRequest<TransferReq>(
+                    action = "transfer",
+                    data = transferReq
+                )
+                try {
+                    val json =  jsonService
+                    val reqString = json.encodeToString(BlockchainRequest.serializer(
+                        TransferReq.serializer()), req)
+                    CLog.debug("TRANSFER REQUEST STRING", reqString)
+                    val resp = walletService.sendData(reqString)
+                    CLog.debug("TRANSFER RESP", resp)
+                    val respData = json.decodeFromString(BlockchainResp.serializer(String.serializer()), resp)
+                    CLog.debug("TRANSFER RESP Json", respData.toString())
+                    if (respData.status == 1) {
 
-                        // trigger back navigation
-
+                        _walletUIState.update { it.copy(
+                            isTransferButtonLoading  = false,
+                            isTransferSuccessful = true,
+                            isTransferError = false,
+                            transferErrorMessage = ""
+                        ) }
                     }else{
-                        _walletUIState.update {
-                            it.copy(
-                                isTransferSuccessful = false,
-                                isTransferError = true,
-                                isTransferButtonLoading = false,
-                                transferErrorMessage = respPack[2]
-                            )
-                        }
-                    }
-                }catch (exception:Exception){
-
-                    CLog.error("XXX Yola", exception.toString())
-                    _walletUIState.update {
-                        it.copy(
+                        CLog.debug("TRANSFER ERROR ", respData.message)
+                        _walletUIState.update { it.copy(
+                            isTransferButtonLoading  = false,
                             isTransferSuccessful = false,
                             isTransferError = true,
-                            isTransferButtonLoading = false,
-                            transferErrorMessage = exception.toString()
-                        )
+                            transferErrorMessage = respData.message
+                        ) }
                     }
+                } catch (exception:Exception){
+                    _walletUIState.update { it.copy(
+                        isTransferButtonLoading  = false,
+                        isTransferSuccessful = false,
+                        isTransferError = true,
+                        transferErrorMessage = "Network error"
+                    ) }
+                    CLog.debug("TRANSFER ERROR ", exception.toString())
                 }
             }
         }

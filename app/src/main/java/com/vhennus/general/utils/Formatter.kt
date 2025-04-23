@@ -6,6 +6,11 @@ import java.text.NumberFormat
 import java.util.Locale
 
 fun formatBigDecimalWithCommas(value: BigDecimal): String {
-    val formatter = NumberFormat.getNumberInstance(Locale.US)
-    return formatter.format(value)
+    try {
+        val formatter = NumberFormat.getNumberInstance(Locale.US)
+        return formatter.format(value)
+    }catch (e: Exception){
+        return ""
+    }
+
 }
