@@ -1,7 +1,12 @@
 [versions]
 agp = "8.9.2"
+firebaseBom = "33.13.0"
 kotlin = "2.1.10"
 coreKtx = "1.16.0"
+accompanistCoil = "9"
+cloudinaryAndroid = "2.1.0"
+coilCompose = "2.7.0"
+foundation = "1.8.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
@@ -17,11 +22,26 @@ hiltAndroid = "2.55"
 loggingInterceptor = "4.12.0"
 hiltNavigationCompose = "1.2.0"
 room = "2.7.1"
+prettytime = "5.0.1.Final"
+securityCrypto = "1.1.0-alpha07"
+sentryAndroid = "8.7.0"
+volley = "1.2.1"
+playServicesCastTv = "21.1.1"
+workRuntimeKtx = "2.10.1"
 
 [libraries]
+accompanist-coil = { module = "com.google.accompanist:accompanist-coil", version.ref = "accompanistCoil" }
+android-volley = { module = "com.android.volley:volley" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+cloudinary-android = { module = "com.cloudinary:cloudinary-android", version.ref = "cloudinaryAndroid" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-storage-ktx = { module = "com.google.firebase:firebase-storage-ktx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -47,6 +67,10 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 
+prettytime = { module = "org.ocpsoft.prettytime:prettytime", version.ref = "prettytime" }
+sentry-android = { module = "io.sentry:sentry-android", version.ref = "sentryAndroid" }
+volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
+play-services-cast-tv = { group = "com.google.android.gms", name = "play-services-cast-tv", version.ref = "playServicesCastTv" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

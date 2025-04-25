@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.amorgens"
+    namespace = "com.vhennus"
     compileSdk = 35
 
     flavorDimensions +="environment"
@@ -16,20 +16,27 @@ android {
         create("prod") {
             dimension = "environment"
             // Additional configurations for this flavor
-            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
+
+//            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
+
+//            buildConfigField("String", "API_URL", "\"http://0.0.0.0:8000\"")
+            buildConfigField("String", "API_URL", "\"http://172.20.10.2:8000\"")
             buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.224.183:3000\"")
         }
         create("dev") {
             dimension = "environment"
             // Additional configurations for this flavor
             applicationIdSuffix = ".dev"
-            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
-            buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.224.183:3000\"")
+            //buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
+//            buildConfigField("String", "API_URL", "\"http://10.0.2.2:8000\"")
+            buildConfigField("String", "API_URL", "\"http://155.138.221.87:8000\"")
+//            buildConfigField("String", "API_URL", "\"http://172.20.10.2:8000\"")
+            buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.221.87:3000\"")
 
         }
     }
     defaultConfig {
-        applicationId = "com.amorgens"
+        applicationId = "com.vhennus"
         minSdk = 28
         targetSdk = 34
         versionCode = 1
@@ -44,7 +51,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -73,9 +80,6 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-
-
-
 }
 
 dependencies {
@@ -96,7 +100,6 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.hilt.navigation.compose)
 
-
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -114,11 +117,27 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.play.services.cast.tv)
 
     // crypto shared
-    implementation ("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation (libs.androidx.security.crypto)
 
     // sentry
     implementation (libs.sentry.android)
+
+    // pretty date
+    implementation (libs.prettytime)
+
+    // image
+    implementation(libs.coil.compose)
+
+    // firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.storage.ktx)
+
+    // cloudinary
+    implementation(libs.cloudinary.android)
+    implementation(libs.androidx.work.runtime.ktx)
+
 
 }
