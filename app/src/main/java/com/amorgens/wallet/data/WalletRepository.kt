@@ -17,4 +17,7 @@ class WalletRepository @Inject constructor(private val walletDAO: WalletDAO) {
     suspend fun getAllWallets():Flow<List<Wallet>>{
         return walletDAO.getAllWallet()
     }
+    suspend fun getAllWallets2(userName:String):Flow<List<Wallet>>{
+        return walletDAO.getAllWallet2(userName)
+    }
 }

@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.Flow
 interface WalletDAO{
     @Query("SELECT * FROM wallet")
     fun getAllWallet() : Flow<List<Wallet>>
+    @Query("SELECT * FROM wallet WHERE userName = :uname")
+    fun getAllWallet2(uname:String) : Flow<List<Wallet>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertWallet(wallet : Wallet)
 

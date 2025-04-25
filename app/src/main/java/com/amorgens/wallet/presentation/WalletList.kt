@@ -1,5 +1,6 @@
 package com.amorgens.wallet.presentation
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.amorgens.NavScreen
@@ -41,12 +43,8 @@ fun WalletList(navController: NavController, wallets:List<Wallet>){
 
 @Composable
 fun WalletListItem(wallet: Wallet, navController: NavController){
-    var amount = BigDecimal("0.0")
-    try {
-        amount = BigDecimal(wallet.balance)
-    }catch (e:Exception){
+    val context = LocalContext.current
 
-    }
     ElevatedCard(
         shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
@@ -64,15 +62,25 @@ fun WalletListItem(wallet: Wallet, navController: NavController){
                 color = MaterialTheme.colorScheme.secondary
             )
             Column {
-                Text(text = String.format("%,.2f", amount)+"Kc",
+                Text(text = String.format("%,.2f", wallet.balance)+"Kc",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
-                Text(text = "USD 5,000",
+                Text(text = "NGN "+String.format("%,.2f", getExchangeValue(context, wallet.balance)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
             }
         }
+    }
+}
+
+fun getExchangeValue(application: Context, amount:BigDecimal):BigDecimal{
+    val sharedPreferences = application.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
+    try {
+        val rate = BigDecimal( sharedPreferences.getString("NGN", "0.5"))
+        return rate.multiply(amount)
+    }catch (e:Exception){
+        return BigDecimal("0.00")
     }
 }

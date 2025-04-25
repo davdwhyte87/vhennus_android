@@ -1,5 +1,6 @@
 package com.amorgens.wallet.presentation
 
+import android.content.ClipboardManager
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -15,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.sharp.ArrowDownward
+import androidx.compose.material.icons.sharp.ArrowUpward
 import androidx.compose.material.icons.sharp.Cloud
 import androidx.compose.material.icons.sharp.ContentCopy
 import androidx.compose.material.icons.sharp.Rocket
@@ -28,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -35,9 +39,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import androidx.navigation.NavDeepLinkRequest
 import com.amorgens.NavScreen
 import com.amorgens.ui.AnimatedPreloader
 import com.amorgens.ui.BackTopBar
@@ -53,14 +63,31 @@ fun SingleWalletScreen(
     navController: NavController,
     walletViewModel: WalletViewModel
 ){
+    val lifecycleOwner = LocalLifecycleOwner.current
+    // clear model data
+    DisposableEffect(true) {
+        //walletViewModel.clearModelData()
+
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                walletViewModel.getWalletRemote(GetWalletReq(address))
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            walletViewModel.clearModelData()
+        }
+    }
     // reset all ui data
     LaunchedEffect(true) {
+        // clear state data
        walletViewModel.resetUIState()
     }
     // get single wallet from remote server
-    LaunchedEffect(true){
-        walletViewModel.getWalletRemote(GetWalletReq(address))
-    }
+//    LaunchedEffect(true){
+//        walletViewModel.getWalletRemote(GetWalletReq(address))
+//    }
     val singleWallet = walletViewModel.singleWalletC.collectAsState().value
     val uiState = walletViewModel.walletUIState.collectAsState().value
 
@@ -72,6 +99,8 @@ fun SingleWalletScreen(
         //walletViewModel.clearError()
     }
 
+    val clipboardManager: androidx.compose.ui.platform.ClipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
     GeneralScaffold(topBar = { BackTopBar("Wallet", navController) }, floatingActionButton = {  }) {
         var isExpanded = remember {
             mutableStateOf(false)
@@ -165,13 +194,30 @@ fun SingleWalletScreen(
             Row (
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                val menus = listOf(WalletMenu("Send", Icons.Sharp.Rocket),
-                    WalletMenu("Trade", Icons.Sharp.Cloud),
+                val menus = listOf(
+                    WalletMenu("Send", Icons.Sharp.Rocket),
+                    WalletMenu("Buy", Icons.Sharp.ArrowUpward),
+                    WalletMenu("Sell", Icons.Sharp.ArrowDownward),
                     WalletMenu("Copy", Icons.Sharp.ContentCopy)
                 )
                 menus.forEachIndexed { index, walletMenu ->
                     WalletMenuItem(name = walletMenu.name, icon = walletMenu.icon ) {
-                        navController.navigate(NavScreen.TransferScreen.route+"/${address}")
+                        when (walletMenu.name){
+                            "Send"-> {
+                                navController.navigate(NavScreen.TransferScreen.route+"/${address}")
+                            }
+                            "Buy"->{
+                                navController.navigate(NavScreen.ShopCoinsScreen.route+"/${address}")
+                            }
+                            "Sell"->{
+                                navController.navigate(NavScreen.CreateSellOrderScreen.route+"/"+address)
+                            }
+                            "Copy"->{
+                                clipboardManager.setText(AnnotatedString(address))
+                                Toast.makeText(context, "Address Copied!", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+
                     }
                 }
             }
@@ -200,7 +246,7 @@ fun WalletMenuItem(name:String, icon: ImageVector, onclick:()->Unit){
         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
         modifier = Modifier
             .padding(10.dp)
-            .size(width = 100.dp, height = 100.dp),
+            .size(width = 60.dp, height = 60.dp),
         onClick = {
             onclick()
         }
@@ -216,9 +262,9 @@ fun WalletMenuItem(name:String, icon: ImageVector, onclick:()->Unit){
             Icon(imageVector = icon,
                 contentDescription = name,
                 tint = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(24.dp)
             )
-            Text(text = name)
+            Text(text = name, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

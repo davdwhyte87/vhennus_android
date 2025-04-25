@@ -5,8 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -32,11 +35,13 @@ fun  TransactionList(address:String, blocks: List<Block>){
 //        Transaction("", "Gerrinu_899", "4,9900", "3th, Joune, 2024")
 //    )
 
-    blocks.forEachIndexed { index, block ->
-        val transaction = Transaction(block.id,block.receiver_address, block.sender_address,block.amount.toString(), block.date_created)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        items(blocks){block->
+            val transaction = Transaction(block.id,block.receiver_address, block.sender_address,block.amount.toString(), block.date_created)
 
-        TransactionListItem(address, transaction = transaction) {
-            // nothing
+            TransactionListItem(address, transaction = transaction){}
         }
     }
 }

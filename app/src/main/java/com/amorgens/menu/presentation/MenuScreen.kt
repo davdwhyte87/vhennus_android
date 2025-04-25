@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.MaterialTheme
@@ -16,6 +17,7 @@ import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.GeneralTopBar
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.amorgens.NavScreen
 import com.amorgens.menu.domain.MenuItemData
 
 @Composable
@@ -35,14 +37,9 @@ fun MenuScreen(navController: NavController){
                     icon = Icons.Outlined.AccountBalanceWallet
                 ),
                 MenuItemData(
-                    title = "Shop Coins",
-                    route = "shop",
-                    icon = Icons.Outlined.ShoppingCart
-                ),
-                MenuItemData(
-                    title = "Music",
-                    route = "music",
-                    icon = Icons.Outlined.Headphones
+                    title = "Logout",
+                    route = "logout",
+                    icon = Icons.Outlined.Close
                 )
             )
            LazyVerticalGrid(

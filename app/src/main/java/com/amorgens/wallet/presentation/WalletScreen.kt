@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCard
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -32,12 +34,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import androidx.navigation.NavDeepLinkRequest
 import com.airbnb.lottie.parser.IntegerParser
 import com.amorgens.NavScreen
 import com.amorgens.ui.AnimatedPreloader
 import com.amorgens.ui.GeneralScaffold
 import com.amorgens.ui.HomeTopBar
+import com.amorgens.ui.HomeTopBarWithOptions
 import com.amorgens.wallet.data.WalletViewModel
 import java.io.File.separator
 import java.math.BigDecimal
@@ -48,29 +56,42 @@ import java.util.Locale
 
 @Composable
 fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel){
-    // reset all ui data
-    LaunchedEffect(true) {
-        walletViewModel.resetUIState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    // clear model data
+    DisposableEffect(true) {
+
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                walletViewModel.getAllWallets()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            //walletViewModel.clearModelData()
+        }
     }
 
+
     // get all wallets
-    LaunchedEffect(Unit) {
-        walletViewModel.getAllWallets()
-    }
+//    LaunchedEffect(true) {
+//        walletViewModel.getAllWallets()
+//    }
 
 
     val wallets = walletViewModel.allWallets.collectAsState().value
 
     // update wallet locally
     LaunchedEffect(Unit) {
-        walletViewModel.getAllWallets()
+        //walletViewModel.getAllWallets()
         val walletNames = mutableListOf<String>()
 
-        wallets.forEachIndexed { index, wallet ->
-            walletNames.add(wallet.walletAddress)
-        }
-        Log.d("WALLET NAMES XXXX", walletNames.toString())
-        walletViewModel.updateWalletsLocal(walletNames)
+//        wallets.forEachIndexed { index, wallet ->
+//            walletNames.add(wallet.walletAddress)
+//        }
+//        Log.d("WALLET NAMES XXXX", walletNames.toString())
+//        walletViewModel.updateWalletsLocal(walletNames)
     }
 
     val walletUIState = walletViewModel.walletUIState.collectAsState().value
@@ -86,23 +107,11 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
     var totalBalance = BigDecimal("0.0")
 
     wallets.forEachIndexed { index, wallet ->
-        var bigDecimal = BigDecimal("0.0")
-        try {
-            bigDecimal = BigDecimal(wallet.balance)
-        }catch (e:Exception){
-            bigDecimal = BigDecimal("0.0")
-            Log.d("Bigdecimal XXXX", e.toString())
-        }
-        // Set precision (scale) and rounding mode
-        val scaledBigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_UP)
-
-        // Convert to Float or Double if needed
-        val floatValue = scaledBigDecimal.toFloat()
-        totalBalance = totalBalance.add(scaledBigDecimal)
+        totalBalance = totalBalance.add(wallet.balance)
         //Log.d("XXDECIMAL", "${scaledBigDecimal}")
     }
-    Log.d("XXFLOAT ${wallets[0].balance}", "totalBalance")
-    GeneralScaffold(topBar = { HomeTopBar("Wallets", navController) }, floatingActionButton = {  }) {
+    Log.d("XXFLOAT ${wallets.getOrNull(0)?.balance}", "totalBalance")
+    GeneralScaffold(topBar = { HomeTopBarWithOptions("Wallets", navController) }, floatingActionButton = {  }) {
         var isExpanded = remember {
             mutableStateOf(false)
         }
@@ -144,7 +153,7 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
                             .padding(1.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "35,000",
+                        Text(text =  "NGN "+String.format("%,.2f", getExchangeValue(LocalContext.current, totalBalance)),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.surface
                         )
@@ -155,7 +164,7 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
                         ){
                             Row {
                                Icon(imageVector = Icons.Outlined.KeyboardArrowDown, contentDescription ="" )
-                                Text(text = "USD",
+                                Text(text = "NGN",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.surface
                                 )
@@ -171,8 +180,10 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
 
             Row {
 
-                val menus = listOf(WalletMenu("Add", Icons.Default.Add),
-                    WalletMenu("New", Icons.Default.AddCard)
+                val menus = listOf(
+                    WalletMenu("Add", Icons.Default.Add),
+                    WalletMenu("New", Icons.Default.AddCard),
+                    WalletMenu("Orders", Icons.Default.Storage)
                 )
                 menus.forEachIndexed { index, walletMenu ->
                     WalletMenuItem(iconImage = walletMenu.icon , menuTitle = walletMenu.name) {
@@ -182,6 +193,10 @@ fun WalletScreen(navController: NavController, walletViewModel: WalletViewModel)
 
                         if (index ==1){
                             navController.navigate(NavScreen.NewWalletScreen.route)
+                        }
+
+                        if (index==2){
+                            navController.navigate(NavScreen.MyOrdersScreen.route)
                         }
 
                     }

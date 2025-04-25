@@ -4,9 +4,8 @@ import dagger.Module
 import dagger.hilt.InstallIn
 
 
-import android.app.Application
 import android.content.Context
-import androidx.room.Room
+import com.amorgens.general.data.GetUserToken
 import com.amorgens.wallet.data.AppDatabase
 import com.amorgens.wallet.data.WalletService
 import com.amorgens.wallet.domain.dao.WalletDAO
@@ -23,11 +22,12 @@ object AppModule {
     @Provides
     @Singleton
     fun getAppDatabase(@ApplicationContext context: Context):AppDatabase{
-        return Room.databaseBuilder(
-            context.applicationContext,
-            AppDatabase::class.java,
-            "app_database"
-        ).build()
+        return AppDatabase.getDatabase(context.applicationContext)
+//        return Room.databaseBuilder(
+//            context.applicationContext,
+//            AppDatabase::class.java,
+//            "app_database"
+//        ).build()
     }
 
     @Provides
@@ -39,5 +39,10 @@ object AppModule {
     @Provides
     fun getWalletService():WalletService{
         return WalletService()
+    }
+
+    @Provides
+    fun getUserToken(@ApplicationContext context: Context):GetUserToken{
+        return GetUserToken(context)
     }
 }
