@@ -11,6 +11,11 @@ data class AuthUIState(
     val isLoginError:Boolean = false,
     val loginErrorMessage:String = "",
 
+    val isSendResetPasswordCodeLoading:Boolean = false,
+    val isSendResetPasswordCodeSuccess:Boolean = false,
+    val isSendResetPasswordCodeError:Boolean = false,
+    val sendResetPasswordCodeErrorMessage:String = "",
+
     val isVerifyAccountLoading: Boolean = false,
     val isVerifyAccountSuccess: Boolean = false,
     val isVerifyAccountError: Boolean = false,

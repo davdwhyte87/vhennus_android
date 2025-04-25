@@ -1,6 +1,5 @@
 package com.vhennus.auth.presentation
 
-import android.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,7 +21,7 @@ import com.vhennus.general.presentation.InputField
 
 @Preview
 @Composable
-fun ForgotPasswordTryAgainScreen(){
+fun ResetPasswordScreen(){
     val email = remember { mutableStateOf("") }
     Column (
         verticalArrangement = Arrangement.spacedBy(25.dp),
@@ -45,7 +43,7 @@ fun ForgotPasswordTryAgainScreen(){
 
         InputField(
             email,
-            "Enter email address"
+            ""
         )
         AppButtonLarge(
             "Reset Password",

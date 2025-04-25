@@ -15,6 +15,7 @@ import com.vhennus.general.domain.GenericResp
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vhennus.auth.domain.ConfirmAccountReq
+import com.vhennus.auth.domain.GetResetPasswordCodeReq
 import com.vhennus.auth.domain.LoginResp
 import com.vhennus.auth.domain.ResendCodeReq
 import com.vhennus.general.utils.CLog
@@ -290,6 +291,23 @@ class AuthViewModel  @Inject constructor(
                 }
 
                 _authUIState.update { it.copy(isLoginButtonLoading = false) }
+            }
+        }
+    }
+
+    fun sendResetPasswordCode(data: GetResetPasswordCodeReq) {
+
+        _authUIState.update { it.copy(isSendResetPasswordCodeLoading = true) }
+
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                // send data to api
+                var resp = apiService.getResetPasswordCode(data)
+                if 
+                try {
+                }catch (e: Exception){
+
+                }
             }
         }
     }

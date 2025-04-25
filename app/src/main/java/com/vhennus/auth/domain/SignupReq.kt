@@ -18,6 +18,12 @@ data class LoginReq(
     val password:String,
 )
 
+@Serializable
+data class GetResetPasswordCodeReq(
+    val user_name:String,
+)
+
+
 
 @Serializable
 data class ConfirmAccountReq(

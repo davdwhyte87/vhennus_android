@@ -158,4 +158,14 @@ sealed class NavScreen(
         title = "Verify Account"
     )
 
+    object SendForgotPasswordCodeScreen: NavScreen(
+        route = "send_forgot_password_code",
+        title = "Forgot Password"
+    )
+
+    object ResetPasswordScreen: NavScreen(
+        route = "reset_password",
+        title = "Forgot Password"
+    )
+
 }

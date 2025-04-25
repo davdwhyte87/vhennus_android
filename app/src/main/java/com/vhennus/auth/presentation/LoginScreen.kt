@@ -160,6 +160,15 @@ fun loginScreen(
                navHostController.navigate(NavScreen.SignupScreen.route)
             }).padding(5.dp)
         )
+
+        Text(text = "Forgot Password?",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable(onClick = {
+                navHostController.navigate(NavScreen.SendForgotPasswordCodeScreen.route)
+            }).padding(5.dp)
+        )
     }
 }
 

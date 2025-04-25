@@ -2,6 +2,7 @@ package com.vhennus.general.data
 
 
 import com.vhennus.auth.domain.ConfirmAccountReq
+import com.vhennus.auth.domain.GetResetPasswordCodeReq
 import com.vhennus.auth.domain.LoginReq
 import com.vhennus.auth.domain.LoginResp
 import com.vhennus.auth.domain.ResendCodeReq
@@ -111,6 +112,9 @@ interface APIService {
 
     @POST("/login")
     suspend fun login2(@Body data: LoginReq):Response<GenericResp<LoginResp>>
+
+    @POST("/get_reset_password_code")
+    suspend fun getResetPasswordCode(@Body data: GetResetPasswordCodeReq): Response<GenericResp<String>>
 
 
     // payment method
