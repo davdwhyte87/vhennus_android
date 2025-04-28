@@ -12,7 +12,8 @@ data class Profile(
     val name:String = "",
     val created_at :String = "",
     val updated_at:String = "",
-    val app_f_token: String = ""
+    val app_f_token: String = "",
+    val wallets:String =""
 )
 
 @Serializable

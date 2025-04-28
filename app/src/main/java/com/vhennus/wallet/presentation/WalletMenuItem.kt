@@ -6,6 +6,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -19,28 +23,25 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun WalletMenuItem(iconImage:ImageVector, menuTitle:String, onClick:()->Unit){
-    ElevatedCard (
-        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
-        modifier = Modifier
-            .padding(10.dp)
-            .size(width = 80.dp, height = 80.dp),
-        onClick = {
-            onClick()
-        }
+fun WalletMenuItem(name: String, icon: ImageVector, onClick:()-> Unit){
+    Button(onClick = {
+        onClick()
+    },
+        colors = ButtonDefaults.buttonColors(
+            contentColor = MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.primary,
+        ),
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier.sizeIn(minWidth = 74.dp, minHeight = 56.dp)
     ) {
-        Column (
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+        Column(
             verticalArrangement = Arrangement.Center,
-
-            ){
-            Icon(imageVector = iconImage,
-                contentDescription = menuTitle,
-                tint = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.size(20.dp)
-            )
-            Text(text = menuTitle)
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(icon, name, Modifier.size(25.dp))
+            Text(name, style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.surface )
         }
+
     }
 }

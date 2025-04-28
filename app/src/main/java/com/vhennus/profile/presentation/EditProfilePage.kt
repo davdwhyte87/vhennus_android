@@ -77,7 +77,6 @@ import com.vhennus.ui.BackTopBar
 import com.vhennus.ui.GeneralScaffold
 import com.vhennus.ui.theme.Gray2
 import com.vhennus.wallet.domain.CreateWalletReq
-import com.vhennus.wallet.presentation.formValidation
 import kotlin.contracts.contract
 
 @Composable

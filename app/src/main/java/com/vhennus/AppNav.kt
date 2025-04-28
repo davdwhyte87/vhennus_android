@@ -12,6 +12,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.vhennus.auth.data.AuthViewModel
+import com.vhennus.auth.presentation.ForgotPasswordScreen
+import com.vhennus.auth.presentation.ResetPasswordScreen
 import com.vhennus.auth.presentation.VerifyScreen
 import com.vhennus.auth.presentation.loginScreen
 import com.vhennus.auth.presentation.logoutScreen
@@ -70,7 +72,7 @@ fun AppNav(
 //            HomeScreen(navController)
 //        }
         composable(route=NavScreen.WalletScreen.route){
-            WalletScreen(navController, walletViewModel)
+            WalletScreen(navController, walletViewModel, profileViewModel)
         }
         composable(route=NavScreen.SingleWalletScreen.route+"/{address}"){navBackStack->
             val address = navBackStack.arguments?.getString("address")
@@ -109,6 +111,12 @@ fun AppNav(
 
         composable(route=NavScreen.EditProfilePage.route){
             editProfilePage(navController, profileViewModel)
+        }
+        composable(route= NavScreen.SendForgotPasswordCodeScreen.route){
+            ForgotPasswordScreen(navController, authViewModel)
+        }
+        composable(route= NavScreen.ResetPasswordScreen.route){
+            ResetPasswordScreen()
         }
 
         composable(route=NavScreen.FriendRequestPage.route){

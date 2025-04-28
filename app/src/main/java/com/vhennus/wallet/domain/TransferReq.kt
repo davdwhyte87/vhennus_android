@@ -1,9 +1,13 @@
 package com.vhennus.wallet.domain
 
+import kotlinx.serialization.Serializable
+
+
+@Serializable
 data class TransferReq(
     val sender:String,
     val receiver:String,
     val amount:String,
-    val transaction_id:String,
-    val sender_password:String
+    val nonce: String,
+    val signature:String
 )

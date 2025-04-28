@@ -182,6 +182,9 @@ dependencies {
     // link detection
     implementation("sh.calvin.autolinktext:autolinktext:2.0.1")
 
+    // bouncy castle encryption
+    implementation("org.bouncycastle:bcprov-jdk15to18:1.78")
+
 }
 
 hilt {

@@ -2,6 +2,7 @@ package com.vhennus.general.data
 
 
 import com.vhennus.auth.domain.ConfirmAccountReq
+import com.vhennus.auth.domain.GetResetPasswordCodeReq
 import com.vhennus.auth.domain.LoginReq
 import com.vhennus.auth.domain.LoginResp
 import com.vhennus.auth.domain.ResendCodeReq
@@ -40,6 +41,7 @@ import com.vhennus.profile.domain.MiniProfile
 import com.vhennus.profile.domain.ProfileWithFriends
 import com.vhennus.trivia.domain.TriviaGame
 import com.vhennus.trivia.domain.TriviaGameReq
+import com.vhennus.wallet.domain.AddWalletReq
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -110,6 +112,9 @@ interface APIService {
 
     @POST("/login")
     suspend fun login2(@Body data: LoginReq):Response<GenericResp<LoginResp>>
+
+    @POST("/get_reset_password_code")
+    suspend fun getResetPasswordCode(@Body data: GetResetPasswordCodeReq): Response<GenericResp<String>>
 
 
     // payment method
@@ -191,6 +196,11 @@ interface APIService {
 
     @POST("api/v1/auth/profile/update")
     suspend fun updateProfile(@Body data:UpdateProfileRequest, @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
+
+    @POST("api/v1/auth/profile/add_wallet")
+    suspend fun addWallet(@Body data: AddWalletReq, @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
+
+
 
 
     //Friend request

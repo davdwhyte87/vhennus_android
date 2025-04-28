@@ -1,24 +1,32 @@
 package com.vhennus.wallet.presentation
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.outlined.Rocket
 import androidx.compose.material.icons.sharp.Rocket
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,13 +34,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.vhennus.general.presentation.AppButtonLarge
+import com.vhennus.general.presentation.AppScaffold
+import com.vhennus.general.presentation.CustomSnackbarVisuals
+import com.vhennus.general.presentation.InputField
+import com.vhennus.general.presentation.InputFieldWithLabel
+import com.vhennus.general.presentation.SnackbarType
+import com.vhennus.general.presentation.showCustomToast
+import com.vhennus.general.utils.KeyGenerator
+import com.vhennus.general.utils.formatBigDecimalWithCommas
+import com.vhennus.general.utils.signTransaction
 import com.vhennus.ui.AnimatedPreloader
 import com.vhennus.ui.BackTopBar
 import com.vhennus.ui.GeneralScaffold
 import com.vhennus.wallet.data.WalletViewModel
+import com.vhennus.wallet.domain.GetWalletReq
+import com.vhennus.wallet.domain.GetWalletTransactionsReq
 import com.vhennus.wallet.domain.TransferReq
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.math.BigInteger
 import java.util.UUID
 
 
@@ -42,106 +71,174 @@ fun TransferScreen(
     walletAddress:String,
     walletViewModel: WalletViewModel
 ){
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     // clear model data
-    DisposableEffect(true) {
-        //walletViewModel.clearModelData()
-        onDispose {
-            walletViewModel.clearModelData()
+//    DisposableEffect(true) {
+//
+//        val observer = LifecycleEventObserver { _, event ->
+//            if (event == Lifecycle.Event.ON_RESUME) {
+//                walletViewModel.getWalletFromBlockchain(GetWalletReq(address))
+//
+//            }
+//        }
+//
+//        lifecycleOwner.lifecycle.addObserver(observer)
+//
+//        onDispose {
+//            //walletViewModel.clearModelData()
+//        }
+//    }
+//
+    val address = remember { mutableStateOf("") }
+    val amount = remember { mutableStateOf("") }
+    val seed = remember { mutableStateOf("") }
+    val walletUIState = walletViewModel.walletUIState.collectAsState().value
+    val singleWallet = walletViewModel.singleWalletC.collectAsState().value
+    val context =  LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = CoroutineScope(Dispatchers.Main)
+
+    LaunchedEffect(walletUIState.isTransferSuccessful) {
+        if(walletUIState.isTransferSuccessful){
+            scope.launch{
+                snackbarHostState.showSnackbar(visuals = CustomSnackbarVisuals(
+                    message = "Successful",
+                    type = SnackbarType.SUCCESS
+                ))
+            }
+            address.value = ""
+            seed.value = ""
+            amount.value = ""
+            walletViewModel.resetUIState()
         }
     }
 
-    val walletUIState = walletViewModel._walletUIState.collectAsState().value
+    LaunchedEffect(walletUIState.isTransferError) {
+        if(walletUIState.isTransferError){
+            snackbarHostState.showSnackbar(visuals = CustomSnackbarVisuals(
+                message = walletUIState.transferErrorMessage,
+                type = SnackbarType.ERROR
+            ))
 
-    val walletPassPhrase = remember{
-        mutableStateOf("")
+            walletViewModel.resetUIState()
+        }
+
     }
-    val amount = remember{
-        mutableStateOf("")
-    }
-    val receiver_address = remember{
-        mutableStateOf("")
-    }
 
-    // show toast for success and error
+    AppScaffold(
+        snackbarHostState= snackbarHostState,
+        topBar = {BackTopBar("Transfer", navController)}
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(24.dp).fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(32.dp)
+        ) {
 
-    if (walletUIState.isTransferSuccessful){
-        Toast.makeText(LocalContext.current, "OK!", Toast.LENGTH_SHORT).show()
-        walletViewModel.clearModelData()
-    }
-    if (walletUIState.isTransferError){
-        Toast.makeText(LocalContext.current,walletUIState.transferErrorMessage, Toast.LENGTH_SHORT).show()
-        walletViewModel.clearModelData()
-    }
-    GeneralScaffold(topBar = { BackTopBar(pageName = "Transfer", navController = navController) }, floatingActionButton = { /*TODO*/ }) {
+            // input fields
+            Column(
+                verticalArrangement = Arrangement.spacedBy(32.dp)
+            ) {
+                InputField(
+                    address,
+                    "Wallet Address"
+                )
 
-        Column {
-            Text(text = walletAddress,
-                style = MaterialTheme.typography.titleLarge
-            )
+                InputField(
+                    amount,
+                    "Amount",
+                    bottomView = {
 
-            Box(modifier = Modifier.fillMaxWidth()){
-                Column (
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(value = amount.value,
-                        onValueChange = {
-                            amount.value =it
-                                        },
-                        shape = RoundedCornerShape(20.dp),
-                        placeholder = { Text(text = "Amount")},
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 16.dp)
-                    )
-                    OutlinedTextField(value = receiver_address.value,
-                        onValueChange = {
-                                        receiver_address.value = it
-                        },
-                        shape = RoundedCornerShape(20.dp),
-                        placeholder = { Text(text = "Wallet Address")},
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 16.dp)
-                    )
-                    OutlinedTextField(value = walletPassPhrase.value,
-                        onValueChange = {walletPassPhrase.value = it},
-                        shape = RoundedCornerShape(20.dp),
-                        placeholder = { Text(text = "Pass Phrase")},
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 16.dp)
-                    )
-
-                    Button(onClick = {
-                        walletViewModel.transfer(TransferReq(
-                                         sender = walletAddress.lowercase(),
-                                         receiver = receiver_address.value.lowercase(),
-                                         amount = amount.value,
-                                         sender_password = walletPassPhrase.value,
-                                         transaction_id = UUID.randomUUID().toString()
-                                     ))
-
-                    },
-                        modifier = Modifier.size(width = 200.dp, height = 50.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.surface
-                        ),
-                        enabled = if (walletUIState.isTransferButtonLoading){false}else{true}
-
-                        ) {
-                        if(walletUIState.isTransferButtonLoading){
-                            AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
-                        }else {
-                            Text(text = "Transfer")
-                            Icon(imageVector = Icons.Sharp.Rocket, contentDescription = "Send" )
-                        }
                     }
+                )
+                Text("${formatBigDecimalWithCommas(textToBigDecimal(amount.value))} VEC",
+                    style = MaterialTheme.typography.titleSmall
+                    )
+                InputField(
+                    seed,
+                    "Seed phrase",
+                    bottomView = {
+
+                    }
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("USD 0", style = MaterialTheme.typography.bodySmall)
+                    Icon(Icons.Filled.CurrencyExchange, "",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text("Max", style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable(onClick = {
+                            amount.value = singleWallet.balance.toString()
+                        })
+                    )
                 }
             }
+
+            // action button
+
+            AppButtonLarge(text = "Send",
+                isLoading = walletUIState.isTransferButtonLoading,
+                isIcon = true,
+                icon = Icons.Outlined.Rocket
+            ) {
+                if(!validateTransferInput(amount.value, address.value, snackbarHostState)){
+                    return@AppButtonLarge
+                }
+                val (priv, pub) =KeyGenerator.generateKeysFromSeed(seed.value)
+                val signature = signTransaction(walletAddress, address.value, amount.value,
+                    singleWallet.nonce.toString(),priv)
+                val req = TransferReq(
+                    sender = walletAddress,
+                    receiver = address.value,
+                    amount = amount.value,
+                    nonce = singleWallet.nonce.toString(),
+                    signature
+                )
+                walletViewModel.transfer(req)
+            }
         }
+    }
+
+}
+
+fun validateTransferInput(amount: String, address:String, snackbarHostState: SnackbarHostState): Boolean{
+    val scope = CoroutineScope(Dispatchers.Main)
+    if (address.isBlank() || address.isEmpty()){
+        scope.launch{
+            snackbarHostState.showSnackbar(visuals = CustomSnackbarVisuals(
+                message = "Address cannot be blank",
+                type = SnackbarType.ERROR
+            ))
+        }
+
+        return false
+    }
+
+     try {
+        BigInteger(amount)
+
+    } catch (e: NumberFormatException) {
+         scope.launch{
+             snackbarHostState.showSnackbar(visuals = CustomSnackbarVisuals(
+                 message = "Invalid amount",
+                 type = SnackbarType.ERROR
+             ))
+         }
+        false
+    }
+
+    return true
+}
+
+fun textToBigDecimal(number: String): BigDecimal{
+    try {
+       return  BigDecimal(number)
+    }catch (e: Exception){
+        return BigDecimal.ZERO
     }
 }
