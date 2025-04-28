@@ -1,6 +1,7 @@
 package com.vhennus.chat.presentation
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +17,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,15 +29,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.vhennus.NavScreen
 import com.vhennus.R
 import com.vhennus.general.presentation.LoadImageWithPlaceholder
 import com.vhennus.profile.domain.Profile
+import com.vhennus.ui.theme.Purple
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatTopBar(navController: NavController, image: String, user_name:String){
-    TopAppBar(
+    val systemUiController = rememberSystemUiController()
+    SideEffect {
+        systemUiController.setStatusBarColor(Purple)
+    }
+
+    CenterAlignedTopAppBar(
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Purple
+        ),
         title = {  },
         modifier = Modifier.fillMaxWidth(),
         navigationIcon = {
@@ -47,7 +61,7 @@ fun ChatTopBar(navController: NavController, image: String, user_name:String){
                 }) {
                     Icon(imageVector = Icons.Sharp.ArrowBackIosNew ,
                         contentDescription = "Home",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.surface
                     )
                 }
 
@@ -67,7 +81,9 @@ fun ChatTopBar(navController: NavController, image: String, user_name:String){
                     )
                 }
                 Text(user_name, style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 10.dp))
+                    modifier = Modifier.padding(start = 10.dp).clickable(onClick = {
+                        navController.navigate(NavScreen.OtherUserProfileScreen.route+"/${user_name}")
+                    }), color = MaterialTheme.colorScheme.surface)
             }
 
 

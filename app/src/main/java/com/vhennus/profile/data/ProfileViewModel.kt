@@ -50,6 +50,10 @@ class ProfileViewModel @Inject constructor(
     private val _profile = MutableStateFlow(Profile())
     val profile = _profile.asStateFlow()
 
+    private val _otherUserProfile = MutableStateFlow(ProfileWithFriends())
+    val otherUserProfile = _otherUserProfile.asStateFlow()
+
+
     private val _myProfile = MutableStateFlow(ProfileWithFriends())
     val myProfile = _myProfile.asStateFlow()
 
@@ -144,9 +148,9 @@ class ProfileViewModel @Inject constructor(
                                 isGetUserProfileError = false,
                                 getUserProfileErrorMessage = ""
                             ) }
-                            _profile.value = data
+                            _otherUserProfile.value = data
 
-                            CLog.debug("GET PROFILE RESPONSE", data.toString())
+                            CLog.debug("GET Other PROFILE RESPONSE", data.toString())
                         }else{
                             _profileUIState.update { it.copy(
                                 isGetUserProfileLoading = false,
@@ -159,7 +163,7 @@ class ProfileViewModel @Inject constructor(
 
                     }else{
                         val respString = resp.errorBody()?.string()
-                        CLog.error("GET PROFILE RESPONSE", respString +" ")
+                        CLog.error("GET other PROFILE RESPONSE", respString +" ")
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<String>>() {}.type
                         val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
@@ -178,7 +182,7 @@ class ProfileViewModel @Inject constructor(
                         isGetUserProfileError = true,
                         getUserProfileErrorMessage = "Network Error"
                     ) }
-                    CLog.error("GET PROFILE RESPONSE", e.toString() +" ")
+                    CLog.error("GET other PROFILE RESPONSE", e.toString() +" ")
                 }
             }
         }

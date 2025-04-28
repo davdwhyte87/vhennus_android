@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
 
-    <style name="Theme.Vhennus" parent="android:Theme.Material.Light.NoActionBar" />
+<resources>
+<style name="Theme.Vhennus.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <item name="android:windowBackground">@color/white</item>
+</style>
 </resources>

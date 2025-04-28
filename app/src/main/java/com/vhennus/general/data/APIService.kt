@@ -1,7 +1,10 @@
 package com.vhennus.general.data
 
 
+import com.vhennus.auth.domain.ConfirmAccountReq
 import com.vhennus.auth.domain.LoginReq
+import com.vhennus.auth.domain.LoginResp
+import com.vhennus.auth.domain.ResendCodeReq
 import com.vhennus.auth.domain.SignupReq
 import com.vhennus.auth.domain.SignupResp
 import com.vhennus.chat.domain.Chat
@@ -99,8 +102,14 @@ interface APIService {
     @POST("/create_account")
     suspend fun create_account(@Body data: SignupReq):Response<GenericResp<String>>
 
+    @POST("/confirm_account")
+    suspend fun confirm_account(@Body data: ConfirmAccountReq):Response<GenericResp<String>>
+
+    @POST("/resend_code")
+    suspend fun resend_code(@Body data: ResendCodeReq):Response<GenericResp<String>>
+
     @POST("/login")
-    suspend fun login2(@Body data: LoginReq):Response<GenericResp<String>>
+    suspend fun login2(@Body data: LoginReq):Response<GenericResp<LoginResp>>
 
 
     // payment method
@@ -121,6 +130,10 @@ interface APIService {
 
     @GET("api/v1/auth/post/all")
     suspend fun getAllPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<PostFeed>>>
+
+    @GET("api/v1/auth/post/all/{userName}")
+    suspend fun getAllUserPosts(@Path("userName") userName: String, @HeaderMap header:Map<String,String> ):Response<GenericResp<List<PostFeed>>>
+
 
     @GET("api/v1/auth/post/allmy")
     suspend fun getAllMyPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<PostFeed>>>
@@ -174,7 +187,7 @@ interface APIService {
     suspend fun getMyProfile( @HeaderMap header:Map<String,String> ):Response<GenericResp<ProfileWithFriends>>
 
     @GET("api/v1/auth/profile/get/{username}")
-    suspend fun getUserProfile(@Path("username") username:String,@HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
+    suspend fun getUserProfile(@Path("username") username:String,@HeaderMap header:Map<String,String> ):Response<GenericResp<ProfileWithFriends>>
 
     @POST("api/v1/auth/profile/update")
     suspend fun updateProfile(@Body data:UpdateProfileRequest, @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>

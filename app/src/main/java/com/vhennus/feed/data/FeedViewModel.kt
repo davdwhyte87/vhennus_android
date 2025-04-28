@@ -23,6 +23,8 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vhennus.feed.domain.Comment
 import com.vhennus.feed.domain.CreateCommentReq
+import com.vhennus.feed.domain.LikedPost
+import com.vhennus.feed.domain.LikedPostDao
 import com.vhennus.feed.domain.PostFeed
 import com.vhennus.feed.domain.PostWithComments
 import com.vhennus.general.utils.ImageUploadWorker
@@ -43,7 +45,8 @@ import javax.inject.Inject
 class  FeedViewModel @Inject constructor(
     private val apiService: APIService,
     private val application: Application,
-    private val getUserToken: GetUserToken
+    private val getUserToken: GetUserToken,
+    private val likedPostDao: LikedPostDao
 ) : ViewModel() {
 
     private val _newPost = MutableStateFlow(Post())
@@ -54,6 +57,10 @@ class  FeedViewModel @Inject constructor(
 
     private val _allMyPosts = MutableStateFlow<List<PostFeed>>(emptyList())
     val allMyPost = _allMyPosts.asStateFlow()
+
+    private val _allOtherUserPost = MutableStateFlow<List<PostFeed>>(emptyList())
+    val allOtherUserPost = _allOtherUserPost.asStateFlow()
+
 
     private val _feedUIState = MutableStateFlow(FeedUIState())
     val feedUIState= _feedUIState.asStateFlow()
@@ -105,7 +112,7 @@ class  FeedViewModel @Inject constructor(
                             return@withContext
                         }
                         _systemData.value = systemData
-                        _feedUIState.update { it.copy(isGetSystemDataSuccess = false) }
+                        _feedUIState.update { it.copy(isGetSystemDataSuccess = true) }
 
                     }else{
                         val errData = resp.errorBody()?.string()
@@ -427,6 +434,13 @@ class  FeedViewModel @Inject constructor(
                             isLikePostError = false,
                             likePostErrorMessage = ""
                         ) }
+
+                        // remove or add liked post to local database to keep track
+//                        if(likedPosts.value.contains(id)){
+//                            removeLikeLocal(id)
+//                        }else{
+//                            likePostLocal(id)
+//                        }
                     }else{
                         //CLog.error("XX ERROR CREATING POST ", resp.errorBody()?.string() +"")
                         val gson = Gson()
@@ -506,6 +520,89 @@ class  FeedViewModel @Inject constructor(
                 }
 
             }
+        }
+    }
+
+
+    fun getAllUserPosts(userName:String){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                _feedUIState.update { it.copy(isGetAllMyPostsLoading = true) }
+                val token = getUserToken.getUserToken()
+                if (token.isBlank()){
+                    _feedUIState.update { it.copy(
+                        isGetAllOtherUserPostsLoading  = false,
+                        isGetAllOtherUserPostsError  = true,
+                        isGetAllOtherUserPostsSuccess  = false,
+                        getAllOtherUserPostsErrorMessage = "Unauthorized"
+                    ) }
+                }
+                try {
+                    val resp = apiService.getAllUserPosts(userName,mapOf("Authorization" to token))
+                    if (resp.isSuccessful){
+                        val allPosts = resp.body()?.data
+                        if (allPosts != null){
+                            _allOtherUserPost.value = allPosts
+                        }
+                        //CLog.debug("ALL MY POSTS ", allPosts.toString())
+                        _feedUIState.update { it.copy(
+                            isGetAllOtherUserPostsLoading  = false,
+                            isGetAllOtherUserPostsError  = false,
+                            isGetAllOtherUserPostsSuccess  = true,
+                            getAllOtherUserPostsErrorMessage = ""
+                        ) }
+                    }else{
+                        //CLog.error("XX ERROR CREATING POST ", resp.errorBody()?.string() +"")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(resp.errorBody()?.string() , genericType)
+                        _feedUIState.update { it.copy(
+                            isGetAllOtherUserPostsLoading  = false,
+                            isGetAllOtherUserPostsError  = true,
+                            isGetAllOtherUserPostsSuccess  = false,
+                            getAllOtherUserPostsErrorMessage = errorResp.message
+                        ) }
+                        CLog.error("ALL OTHER USER POSTS ERROR ", errorResp.server_message+"")
+                    }
+
+
+                }catch (e:Exception){
+                    _feedUIState.update { it.copy(
+                        isGetAllOtherUserPostsLoading  = false,
+                        isGetAllOtherUserPostsError  = true,
+                        isGetAllOtherUserPostsSuccess  = false,
+                        getAllOtherUserPostsErrorMessage = e.toString()
+                    ) }
+                    CLog.error("ALL OTHER USER POSTS ERROR", e.toString())
+                }
+
+            }
+        }
+    }
+
+    fun getLikedPost(){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+               _likedPosts.value = likedPostDao.getAllLikedPosts()
+            }
+        }
+    }
+
+    fun likePostLocal(id: String){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                likedPostDao.insertLikedPost(LikedPost(postId = id))
+            }
+            getLikedPost()
+        }
+    }
+
+    fun removeLikeLocal(id:String){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                likedPostDao.removeLikedPost(LikedPost(postId = id))
+            }
+            getLikedPost()
         }
     }
 

@@ -14,6 +14,9 @@ import com.vhennus.general.data.APIService
 import com.vhennus.general.domain.GenericResp
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vhennus.auth.domain.ConfirmAccountReq
+import com.vhennus.auth.domain.LoginResp
+import com.vhennus.auth.domain.ResendCodeReq
 import com.vhennus.general.utils.CLog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +43,14 @@ class AuthViewModel  @Inject constructor(
     private val _userName = MutableStateFlow("")
     val userName = _userName.asStateFlow()
 
+    private val _tempLoginEmail = MutableStateFlow("")
+    val tempLoginEmail = _tempLoginEmail.asStateFlow()
+
+    private val _loginResp = MutableStateFlow(LoginResp())
+    val loginResp = _loginResp.asStateFlow()
+
+    private val _tempLoginEmailConfirmed = MutableStateFlow(false)
+    val tempLoginEmailConfirmed = _tempLoginEmailConfirmed.asStateFlow()
 
     fun signup(data: SignupReq){
         // start loading button
@@ -87,6 +98,100 @@ class AuthViewModel  @Inject constructor(
         }
     }
 
+
+
+    fun verifyAccount(data: ConfirmAccountReq){
+        // start loading button
+        _authUIState.update { it.copy(isVerifyAccountLoading = true) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                // send data to api
+                try {
+                    val resp = apiService.confirm_account(data)
+                    Log.d("VERIFY ACCOUNT RESP", resp.body().toString())
+                    if (resp.code() == 200){
+                        _authUIState.update { it.copy(
+                            isVerifyAccountLoading = false,
+                            isVerifyAccountSuccess = true,
+                            isVerifyAccountError = false,
+                            verifyAccountErrorMessage = ""
+                        ) }
+
+                    }else{
+                        Log.d("VERIFY ACCOUNT ERROR !", resp.errorBody().toString())
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(resp.errorBody()?.string() , genericType)
+                        _authUIState.update { it.copy(
+                            isVerifyAccountLoading = false,
+                            isVerifyAccountSuccess = false,
+                            isVerifyAccountError = true,
+                            verifyAccountErrorMessage = errorResp.message
+                        ) }
+
+                        Log.d("VERIFY ACCOUNT ERROR ", errorResp.message + " "+ errorResp.server_message)
+                    }
+                }catch (e:Exception){
+                    _authUIState.update { it.copy(
+                        isVerifyAccountLoading = false,
+                        isVerifyAccountSuccess = false,
+                        isVerifyAccountError = true,
+                        verifyAccountErrorMessage = "Network Error"
+                    ) }
+                    Log.d("VERIFY ACCOUNT ERROR", e.toString())
+                }
+
+
+            }
+        }
+    }
+
+
+    fun resendCode(data: ResendCodeReq){
+        // start loading button
+        _authUIState.update { it.copy(resendCodeLoading = true) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                // send data to api
+                try {
+                    val resp = apiService.resend_code(data)
+                    Log.d("Resend code RESP", resp.body().toString())
+                    if (resp.code() == 200){
+                        _authUIState.update { it.copy(
+                            resendCodeLoading = false,
+                            resendCodeSuccess = true,
+                            resendCodeError = false,
+                            resendCodeErrorMessage = ""
+                        ) }
+
+                    }else{
+                        Log.d("Resend code ERROR !", resp.errorBody().toString())
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(resp.errorBody()?.string() , genericType)
+                        _authUIState.update { it.copy(
+                            resendCodeLoading = false,
+                            resendCodeSuccess = false,
+                            resendCodeError = true,
+                            resendCodeErrorMessage = errorResp.message
+                        ) }
+
+                        Log.d("resend code ERROR ", errorResp.message + " "+ errorResp.server_message)
+                    }
+                }catch (e:Exception){
+                    _authUIState.update { it.copy(
+                        resendCodeLoading = false,
+                        resendCodeSuccess = false,
+                        resendCodeError = true,
+                        resendCodeErrorMessage = "Network Error"
+                    ) }
+                    Log.d("resend code ERROR", e.toString())
+                }
+
+
+            }
+        }
+    }
 
     fun getSys(){
 
@@ -136,8 +241,8 @@ class AuthViewModel  @Inject constructor(
                 try {
                     Log.d("LOGIN ****", "calling api " )
                     val resp = apiService.login2(data)
-                    Log.d("LOGIN ****", "done calling api " )
-                    Log.d("LOGIN ****", resp.body().toString())
+                    //Log.d("LOGIN ****", "done calling api " )
+                    //Log.d("LOGIN ****", resp.body().toString())
                     if (resp.code() == 200){
                         _authUIState.update { it.copy(
                             isLoginButtonLoading = false,
@@ -145,11 +250,20 @@ class AuthViewModel  @Inject constructor(
                             isLoginError = false,
                             loginErrorMessage = ""
                         ) }
-                        // save token to local
-                        loginMani(resp.body()?.data ?: "")
-                        // save username to device
-                        saveUserName(data.user_name)
-                        Log.d("LOGIN RESP", resp.body().toString())
+                        val respData = resp.body()?.data
+                        if (respData != null) {
+                            _loginResp.value = respData
+//                            Log.d("LOGIN RESP", respData.toString())
+
+                            if(loginResp.value.email_confirmed){
+                                // save token to local
+                                loginMani(loginResp.value.token)
+                                // save username to device
+                                saveUserName(data.user_name)
+                            }
+                        }
+
+
 
                     }else{
                         Log.d("LOGIN ERROR !", resp.errorBody().toString())

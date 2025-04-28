@@ -148,4 +148,14 @@ sealed class NavScreen(
         title = "Settings"
     )
 
+    object OtherUserProfileScreen:NavScreen(
+        route = "other_user_profile",
+        title = "User Profile"
+    )
+
+    object VerifyAccount: NavScreen(
+        route = "verify_account",
+        title = "Verify Account"
+    )
+
 }

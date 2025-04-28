@@ -7,16 +7,28 @@ import kotlinx.serialization.Serializable
 data class SignupReq(
     val user_name:String,
     val password:String,
-    val user_type:USER_TYPE
+    val user_type:USER_TYPE,
+    val email:String
 )
 
 
 @Serializable
 data class LoginReq(
     val user_name:String,
-    val password:String
+    val password:String,
 )
 
+
+@Serializable
+data class ConfirmAccountReq(
+    val code:String,
+    val email:String
+)
+
+@Serializable
+data class ResendCodeReq(
+    val email:String
+)
 
 @Serializable
 enum class USER_TYPE{

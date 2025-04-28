@@ -28,6 +28,10 @@ fun MenuItem(
     navController: NavController
 ){
     ElevatedCard (
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+
         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
         modifier = Modifier
             .padding(10.dp)

@@ -83,11 +83,13 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import com.vhennus.feed.presentation.SinglePost
 import com.vhennus.general.utils.CLog
 import com.vhennus.ui.AnimatedPreloader
 import com.vhennus.ui.theme.Blue_Gray
 import com.vhennus.ui.theme.Gray2
 import com.vhennus.ui.theme.Red
+import com.vhennus.ui.theme.Surf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -396,7 +398,8 @@ fun AppRoundIconButton(
 fun profilePage(
     navController: NavController,
     profileViewModel: ProfileViewModel,
-    feedViewModel: FeedViewModel
+    feedViewModel: FeedViewModel,
+    showBackButton: Boolean = false
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(true) {
@@ -404,6 +407,9 @@ fun profilePage(
             if(event == Lifecycle.Event.ON_RESUME){
                 // update the users notifiy firebase token in the background
                 profileViewModel.updateNotificationToken()
+                feedViewModel.getLikedPost()
+                feedViewModel.getUserName()
+                feedViewModel.getAllMyPosts()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -417,6 +423,10 @@ fun profilePage(
     val myProfile = profileViewModel.myProfile.collectAsState().value
     val profileUiState = profileViewModel.profileUIState.collectAsState().value
     val pullToRefreshState = rememberPullToRefreshState()
+    val posts = feedViewModel.allMyPost.collectAsState().value
+    val likedPosts = feedViewModel.likedPosts.collectAsState()
+    val userName = feedViewModel.userName.collectAsState().value
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.pullToRefresh(profileUiState.isGetProfileLoading, pullToRefreshState, onRefresh = {
@@ -464,19 +474,22 @@ fun profilePage(
 //            }
 
             // Top Navigation Bar (Transparent)
-//        TopAppBar(
-//            title = { /* Empty for cleaner UI */ },
-//            navigationIcon = {
-//                IconButton(onClick = { navController.navigate(NavScreen.HomeScreen.route)  }) {
-//                    CircularIconButton()
-//                }
-//            },
-//            colors = TopAppBarDefaults.topAppBarColors(
-//                containerColor = Color.Transparent, // Transparent background
-//                navigationIconContentColor = Color.White
-//            ),
-//            modifier = Modifier.background(Color.Transparent)
-//        )
+            if(showBackButton){
+                TopAppBar(
+                    title = { /* Empty for cleaner UI */ },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigate(NavScreen.HomeScreen.route)  }) {
+                            CircularIconButton({navController.popBackStack() })
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent, // Transparent background
+                        navigationIconContentColor = Color.White
+                    ),
+                    modifier = Modifier.background(Color.Transparent)
+                )
+            }
+
 
 
             // Content Below Image
@@ -489,132 +502,174 @@ fun profilePage(
                 shadowElevation = 8.dp
             ) {
                 Box(
-                    modifier = Modifier.padding(start = 16.dp, end=16.dp)
+                    modifier = Modifier.padding(start = 0.dp, end=0.dp)
                         .fillMaxSize()
                     ,
 
                     ){
+
                     Column (
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        Column (
+                            modifier = Modifier.padding(start = 16.dp, end=16.dp)
+                                .fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ){
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.padding(top = 32.dp).fillMaxWidth()
+                            ) {
+                                Column {
+                                    Text(myProfile.profile.name, style = MaterialTheme.typography.titleMedium)
+                                    Text("@${myProfile.profile.user_name}", style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Normal,
+                                        modifier = Modifier.alpha(0.6f).padding(top=4.dp)
+                                    )
+                                }
 
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.padding(top = 32.dp).fillMaxWidth()
-                        ) {
-                            Column {
-                                Text(myProfile.profile.name, style = MaterialTheme.typography.titleMedium)
-                                Text("@${myProfile.profile.user_name}", style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Normal,
-                                    modifier = Modifier.alpha(0.6f).padding(top=4.dp)
+                                Button(
+                                    onClick = {navController.navigate(NavScreen.EditProfilePage.route)},
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.White,
+                                        contentColor = MaterialTheme.colorScheme.secondary,
+
+                                        ),
+                                    border = BorderStroke(2.dp, Gray2)
+                                ) {
+                                    Text("Edit Profile", style = MaterialTheme.typography.titleSmall)
+                                }
+                            }
+                            if(myProfile.profile.bio.isEmpty() || myProfile.profile.bio.isBlank()){
+                                Text(
+                                    "About me .....",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.alpha(0.6f).fillMaxWidth()
+                                )
+                            }else{
+                                Text(
+                                    myProfile.profile.bio,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.alpha(0.6f).fillMaxWidth()
                                 )
                             }
 
-                            Button(
-                                onClick = {navController.navigate(NavScreen.EditProfilePage.route)},
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.White,
-                                    contentColor = MaterialTheme.colorScheme.secondary,
 
-                                    ),
-                                border = BorderStroke(2.dp, Gray2)
+                            Row (
+                                modifier = Modifier
+                                    .size(width = 80.dp, 30.dp).clickable(onClick = {
+                                        navController.navigate(NavScreen.MyFriendsPage.route)
+                                    })
                             ) {
-                                Text("Edit Profile", style = MaterialTheme.typography.titleSmall)
+                                Text(myProfile.friends.size.toString(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,)
+                                Text("Friends", style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Normal,
+                                    modifier = Modifier.padding(start = 8.dp).alpha(0.6f)
+                                )
                             }
-                        }
-                        if(myProfile.profile.bio.isEmpty() || myProfile.profile.bio.isBlank()){
-                            Text(
-                                "About me .....",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.alpha(0.6f).fillMaxWidth()
+
+
+                            Text("Friends", style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier,
+                                fontWeight = FontWeight.Bold
                             )
-                        }else{
-                            Text(
-                                myProfile.profile.bio,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.alpha(0.6f).fillMaxWidth()
-                            )
+
+
+                            ElevatedButton(
+                                onClick = {
+                                    navController.navigate(NavScreen.SearchPage.route)
+                                },
+                                colors = ButtonDefaults.elevatedButtonColors(
+                                    containerColor = Color.White, // Background color
+                                    contentColor = MaterialTheme.colorScheme.secondary // Text color
+                                ),
+                                modifier = Modifier.fillMaxWidth().height(70.dp),
+                                contentPadding = PaddingValues(top = 23.dp, start = 16.dp, end = 16.dp, bottom = 23.dp),
+                                shape = RoundedCornerShape(20.dp),
+                                elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ){
+                                    Icon(Icons.Outlined.PersonAddAlt, "Add friend",
+                                        Modifier.size(24.dp)
+                                    )
+                                    Text("Add Friends", style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Normal,
+                                        modifier = Modifier.padding(start = 23.dp)
+                                    )
+                                }
+                            }
+
+
+                            ElevatedButton(
+                                onClick = { navController.navigate(NavScreen.FriendRequestPage.route) },
+                                colors = ButtonDefaults.elevatedButtonColors(
+                                    containerColor = Color.White, // Background color
+                                    contentColor = MaterialTheme.colorScheme.secondary // Text color
+                                ),
+                                modifier = Modifier.fillMaxWidth().height(70.dp),
+                                contentPadding = PaddingValues(top = 23.dp, start = 16.dp, end = 16.dp, bottom = 23.dp),
+                                shape = RoundedCornerShape(20.dp),
+                                elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ){
+                                    Icon(Icons.Outlined.FormatListNumbered, "Friend Requests", Modifier.size(24.dp))
+                                    Text("Requests", style = MaterialTheme.typography.titleSmall,
+                                        modifier = Modifier.padding(start = 23.dp)
+                                    )
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Icon(Icons.AutoMirrored.Filled.ArrowRight, "Requests",
+
+                                        )
+                                }
+                            }
+
                         }
+
 
 
                         Row (
-                            modifier = Modifier
-                                .size(width = 80.dp, 30.dp).clickable(onClick = {
-                                    navController.navigate(NavScreen.MyFriendsPage.route)
-                                })
-                        ) {
-                            Text(myProfile.friends.size.toString(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,)
-                            Text("Friends", style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Normal,
-                                modifier = Modifier.padding(start = 8.dp).alpha(0.6f)
-                            )
+                            modifier = Modifier.fillMaxWidth().background(Surf).height(40.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ){
+                            Text("Posts", style = MaterialTheme.typography.titleMedium)
                         }
 
-
-                        Text("Friends", style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier,
-                            fontWeight = FontWeight.Bold
-                        )
-
-
-                        ElevatedButton(
-                            onClick = { /* Handle button click */ },
-                            colors = ButtonDefaults.elevatedButtonColors(
-                                containerColor = Color.White, // Background color
-                                contentColor = MaterialTheme.colorScheme.secondary // Text color
-                            ),
-                            modifier = Modifier.fillMaxWidth().height(70.dp),
-                            contentPadding = PaddingValues(top = 23.dp, start = 16.dp, end = 16.dp, bottom = 23.dp),
-                            shape = RoundedCornerShape(20.dp),
-                            elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 10.dp)
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxSize(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ){
-                                Icon(Icons.Outlined.PersonAddAlt, "Add friend",
-                                    Modifier.size(24.dp)
-                                )
-                                Text("Add Friends", style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Normal,
-                                    modifier = Modifier.padding(start = 23.dp)
+                            for (post in posts){
+                                SinglePost(
+                                    post,
+                                    navController,
+                                    userName.toString(),
+                                    onLike = {
+                                        feedViewModel.likePost(post.id)
+                                        // remove post locally if it is already in db
+                                        if(likedPosts.value.contains(post.id)){
+                                            feedViewModel.removeLikeLocal(post.id)
+                                        }else{
+                                            feedViewModel.likePostLocal(post.id)
+                                        }
+
+                                        feedViewModel.getLikedPost()
+                                    },
+                                    onPostClick = {
+                                        navController.navigate(NavScreen.SinglePost.route+"/${post.id}")
+                                    },
+                                    likedPosts = likedPosts.value
                                 )
                             }
                         }
-
-
-                        ElevatedButton(
-                            onClick = { navController.navigate(NavScreen.FriendRequestPage.route) },
-                            colors = ButtonDefaults.elevatedButtonColors(
-                                containerColor = Color.White, // Background color
-                                contentColor = MaterialTheme.colorScheme.secondary // Text color
-                            ),
-                            modifier = Modifier.fillMaxWidth().height(70.dp),
-                            contentPadding = PaddingValues(top = 23.dp, start = 16.dp, end = 16.dp, bottom = 23.dp),
-                            shape = RoundedCornerShape(20.dp),
-                            elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 10.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxSize(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ){
-                                Icon(Icons.Outlined.FormatListNumbered, "Friend Requests", Modifier.size(24.dp))
-                                Text("Requests", style = MaterialTheme.typography.titleSmall,
-                                    modifier = Modifier.padding(start = 23.dp)
-                                )
-                                Spacer(modifier = Modifier.weight(1f))
-                                Icon(Icons.AutoMirrored.Filled.ArrowRight, "Requests",
-
-                                    )
-                            }
-                        }
-
-
-
-
                     }
 
 

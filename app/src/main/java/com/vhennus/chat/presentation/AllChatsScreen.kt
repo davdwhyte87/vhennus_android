@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,6 +34,7 @@ import com.vhennus.chat.domain.ChatPair
 import com.vhennus.chat.domain.MUser
 import com.vhennus.trivia.presentation.shimmerEffect
 import com.vhennus.ui.AnimatedPreloader
+import com.vhennus.ui.ChatListTopBar
 import com.vhennus.ui.GeneralScaffold
 import com.vhennus.ui.GeneralTopBar
 
@@ -66,7 +68,7 @@ fun AllChatsScreen(
     }
 
     GeneralScaffold(
-        { GeneralTopBar() },
+        { ChatListTopBar() },
         floatingActionButton = {},
     ) {
 
@@ -74,8 +76,9 @@ fun AllChatsScreen(
             if (chatUIState.isGetAllChatsLoading){
                 AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.primary)
             }
+
             LazyColumn (
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(top = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {

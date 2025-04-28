@@ -35,7 +35,7 @@ fun createPostNav(
         title = { Text(text = "", textAlign = TextAlign.Center) },
         navigationIcon = {
             Text(text = "Cancel",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.clickable (onClick = {navController.navigateUp()})
             )
@@ -48,7 +48,7 @@ fun createPostNav(
                 if(feedUIState.value.isCreatePostLoading){
                     AnimatedPreloader(modifier = Modifier.size(size = 30.dp), MaterialTheme.colorScheme.surface)
                 }else {
-                    Text(text = "Post", style = MaterialTheme.typography.titleLarge)
+                    Text(text = "Post", style = MaterialTheme.typography.titleSmall)
                 }
 
             }

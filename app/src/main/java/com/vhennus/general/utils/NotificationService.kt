@@ -16,12 +16,14 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.vhennus.MainActivity
 import com.vhennus.R
+import javax.inject.Inject
 
-class MyFirebaseMessagingService : FirebaseMessagingService() {
+class MyFirebaseMessagingService :FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         CLog.debug("FCM", "New Token: $token")
+
         // Send the token to your server if needed
     }
 

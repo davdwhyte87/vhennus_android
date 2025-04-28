@@ -43,7 +43,7 @@ fun logoutScreen(
 
             // text
             Text(text = "Are You Sure You Want To Logout? ",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleMedium
             )
             // signup button
             Button(onClick = {
@@ -57,7 +57,7 @@ fun logoutScreen(
                 modifier = Modifier.size(width = 200.dp, height = 50.dp)
             ) {
                 Text(text = "Logout",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleSmall
                 )
             }
 
@@ -72,7 +72,7 @@ fun logoutScreen(
                 modifier = Modifier.size(width = 200.dp, height = 50.dp)
             ) {
                 Text(text = "Cancel",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleSmall
                 )
             }
         }

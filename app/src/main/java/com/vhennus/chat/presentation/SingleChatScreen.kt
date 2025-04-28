@@ -4,6 +4,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -172,117 +173,116 @@ fun SingleChatScreen(
         { ChatTopBar(navController, receiverImage, receiverUsername.toString()) },
         floatingActionButton = {  },
     ) {
-      Column(
-          modifier = Modifier.fillMaxSize(),
-          horizontalAlignment = Alignment.CenterHorizontally,
-          verticalArrangement = Arrangement.spacedBy(10.dp)
-      ){
+        Column(
+            modifier = Modifier
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
-          if(chatsUIState.isGetChatsLoading){
-              AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.primary)
-          }
+            if(chatsUIState.isGetChatsLoading){
+                AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.primary)
+            }
 
-          LazyColumn(
-              modifier = Modifier.weight(1f)
-                  .fillMaxWidth()
-                  .padding(top = 40.dp)
-              ,
-              state = listState ,
-              verticalArrangement = Arrangement.spacedBy(10.dp),
-              reverseLayout = true
-          ) {
+            LazyColumn(
+                modifier = Modifier.weight(1f)
+                    .fillMaxWidth()
+                    .padding(top = 40.dp)
+                ,
+                state = listState ,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                reverseLayout = true
+            ) {
 //              .align(if(chat.sender == userName) Alignment.End else Alignment.Start),
-              items(chats.reversed()){chat->
-                  Row(
+                items(chats.reversed()){chat->
+                    Row(
 
-                      horizontalArrangement = if(chat.sender == userName) Arrangement.End else Arrangement.Start,
-                      modifier = Modifier.fillMaxWidth()
-                  ) {
-                      Card (
-                          modifier = Modifier
-                              .fillMaxWidth(0.8f),
-                          colors = CardDefaults.cardColors(containerColor =if(chat.sender == userName) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary)
-                      ) {
-                          Text(text = chat.message,
-                              color = if(chat.sender == userName) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.secondary ,
-                              style = MaterialTheme.typography.bodyMedium,
-                              modifier = Modifier.padding(15.dp)
-                          )
-                      }
-                  }
-
-
-              }
-          }
-
-          // input
-          Row (
-              modifier = Modifier.fillMaxWidth()
-          ){
-              OutlinedTextField(value = newMessage.value,
-                  onValueChange = {
-                      newMessage.value = it
-                  },
-                  shape = RoundedCornerShape(30.dp),
-                  placeholder = { Text(text = "Message") },
-                  modifier = Modifier
-                      .weight(1f)
-                      .padding(end = 1.dp)
-                      .imePadding()
-                  ,
-                  trailingIcon =  {
-                      IconButton(
-                          onClick = {
-                              if(!validateCreateChat(context, newMessage.value)){
-                                  return@IconButton
-                              }
+                        horizontalArrangement = if(chat.sender == userName) Arrangement.End else Arrangement.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Card (
+                            modifier = Modifier
+                                .fillMaxWidth(0.8f),
+                            colors = CardDefaults.cardColors(containerColor =if(chat.sender == userName) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary)
+                        ) {
+                            Text(text = chat.message,
+                                color = if(chat.sender == userName) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.secondary ,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(15.dp)
+                            )
+                        }
+                    }
 
 
-                              var createChatReq = CreateChatReq(
-                                  pair_id = chatPair.id,
-                                  receiver = receiverUsername!!,
-                                  message = newMessage.value,
-                                  image = ""
-                              )
+                }
+            }
+            // input
+            Row (
+                modifier = Modifier.fillMaxWidth()
+            ){
+                OutlinedTextField(value = newMessage.value,
+                    onValueChange = {
+                        newMessage.value = it
+                    },
+                    shape = RoundedCornerShape(30.dp),
+                    placeholder = { Text(text = "Message") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 1.dp)
+                        .imePadding()
+                    ,
+                    trailingIcon =  {
+                        IconButton(
+                            onClick = {
+                                if(!validateCreateChat(context, newMessage.value)){
+                                    return@IconButton
+                                }
 
-                              // we do not want pair id to be empty because its not optional on
-                              // the bakcned(this should change) for pairs that do not exist we send 0
-                              // the backend will figure it out and create a new pair ID
-                              if(chatPair.id.isBlank().or(chatPair.id.isEmpty())){
-                                  createChatReq = CreateChatReq(
-                                      pair_id ="0",
-                                      receiver = receiverUsername!!,
-                                      message = newMessage.value,
-                                      image = ""
-                                  )
-                              }
 
-                             // chatViewModel.createChat(createChatReq)
-                              newMessage.value = ""
+                                var createChatReq = CreateChatReq(
+                                    pair_id = chatPair.id,
+                                    receiver = receiverUsername!!,
+                                    message = newMessage.value,
+                                    image = ""
+                                )
 
-                              // sned message to WS
-                              chatViewModel.sendMessageToWS(createChatReq, userName)
+                                // we do not want pair id to be empty because its not optional on
+                                // the bakcned(this should change) for pairs that do not exist we send 0
+                                // the backend will figure it out and create a new pair ID
+                                if(chatPair.id.isBlank().or(chatPair.id.isEmpty())){
+                                    createChatReq = CreateChatReq(
+                                        pair_id ="0",
+                                        receiver = receiverUsername!!,
+                                        message = newMessage.value,
+                                        image = ""
+                                    )
+                                }
 
-                              //chatViewModel.getAllChatsByPair(createChatReq.pair_id, true)
-                              // Scroll to the bottom (newest message)
-                              CoroutineScope(Dispatchers.Main).launch {
-                                  listState.scrollToItem(0)
-                              }
-                          },
-                          colors = IconButtonDefaults.iconButtonColors(
-                              contentColor = MaterialTheme.colorScheme.surface,
-                              containerColor = MaterialTheme.colorScheme.primary
-                          )
+                                // chatViewModel.createChat(createChatReq)
+                                newMessage.value = ""
 
-                      ) {
-                          if(chatsUIState.isCreateChatLoading){
-                              AnimatedPreloader(modifier = Modifier.size(size = 60.dp), MaterialTheme.colorScheme.surface)
-                          }else{
-                              Icon(Icons.AutoMirrored.Outlined.Send, "Send")
-                          }
+                                // sned message to WS
+                                chatViewModel.sendMessageToWS(createChatReq, userName)
 
-                      } }
-              )
+                                //chatViewModel.getAllChatsByPair(createChatReq.pair_id, true)
+                                // Scroll to the bottom (newest message)
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    listState.scrollToItem(0)
+                                }
+                            },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.surface,
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+
+                        ) {
+                            if(chatsUIState.isCreateChatLoading){
+                                AnimatedPreloader(modifier = Modifier.size(size = 60.dp), MaterialTheme.colorScheme.surface)
+                            }else{
+                                Icon(Icons.AutoMirrored.Outlined.Send, "Send")
+                            }
+
+                        } }
+                )
 //              Button(
 //                  onClick = {
 //
@@ -304,8 +304,21 @@ fun SingleChatScreen(
 //                      )
 //                  }
 //              }
-          }
-      }
+            }
+
+//            Column(
+//                modifier = Modifier.fillMaxSize().weight(1f)
+//                    .verticalScroll(scrollState),
+//                horizontalAlignment = Alignment.CenterHorizontally,
+//                verticalArrangement = Arrangement.spacedBy(10.dp)
+//            ){
+//
+//            }
+
+
+
+        }
+
     }
 }
 

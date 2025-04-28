@@ -126,8 +126,8 @@ fun myFriendsPage(
             FriendsPageLoadingState()
         }else{
             LazyColumn (
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.padding(top = 15.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(top = 15.dp).fillMaxSize()
             ){
 
                 items(friends){ item->
@@ -179,7 +179,7 @@ fun FriendListItem(
 
     Card (
         modifier = Modifier
-            .fillMaxWidth().padding(top = 16.dp, bottom =16.dp, start = 16.dp, end = 16.dp )
+            .fillMaxWidth().padding(top = 1.dp, bottom =1.dp, start = 16.dp, end = 16.dp )
             .clickable(onClick = {
                 navController.navigate(NavScreen.SingleChatScreen.route+"/${profile.user_name}")
             })
