@@ -5,8 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.google.services)
-    kotlin("plugin.serialization") version "2.0.0"
-
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -156,34 +155,34 @@ dependencies {
     // firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.storage.ktx)
-    implementation ("com.google.firebase:firebase-messaging:24.1.0")
-    implementation ("com.google.firebase:firebase-analytics:22.2.0")
+    implementation (libs.firebase.messaging)
+    implementation (libs.firebase.analytics)
 
     // cloudinary
     implementation(libs.cloudinary.android)
     implementation(libs.androidx.work.runtime.ktx)
 
-    implementation("com.facebook.soloader:soloader:0.12.1")
+    implementation(libs.soloader)
 
     // kotlin serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.retrofit2.kotlinx.serialization.converter)
 
 
     // system ui controller
-    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.31.0-alpha")
+    implementation (libs.accompanist.systemuicontroller)
 
     // google font
-    implementation ("androidx.compose.ui:ui-text-google-fonts:1.7.8")
+    implementation (libs.androidx.ui.text.google.fonts)
 
     // splash screen
-    implementation ("androidx.core:core-splashscreen:1.0.1")
+    implementation (libs.androidx.core.splashscreen)
 
     // link detection
-    implementation("sh.calvin.autolinktext:autolinktext:2.0.1")
+    implementation(libs.autolinktext)
 
     // bouncy castle encryption
-    implementation("org.bouncycastle:bcprov-jdk15to18:1.78")
+    implementation(libs.bcprov.jdk15to18)
 
 }
 
