@@ -18,11 +18,13 @@ import com.vhennus.general.data.APIService
 import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.domain.SystemData
 import com.vhennus.general.utils.CLog
-import com.vhennus.trade.domain.response.GenericResp
+import com.vhennus.general.domain.GenericResp
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vhennus.feed.domain.Comment
 import com.vhennus.feed.domain.CreateCommentReq
+import com.vhennus.feed.domain.PostFeed
+import com.vhennus.feed.domain.PostWithComments
 import com.vhennus.general.utils.ImageUploadWorker
 import com.vhennus.profile.domain.UpdateProfileRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,10 +49,10 @@ class  FeedViewModel @Inject constructor(
     private val _newPost = MutableStateFlow(Post())
     val newPost = _newPost.asStateFlow()
 
-    private val _allPosts = MutableStateFlow<List<Post>>(emptyList())
+    private val _allPosts = MutableStateFlow<List<PostFeed>>(emptyList())
     val allPost = _allPosts.asStateFlow()
 
-    private val _allMyPosts = MutableStateFlow<List<Post>>(emptyList())
+    private val _allMyPosts = MutableStateFlow<List<PostFeed>>(emptyList())
     val allMyPost = _allMyPosts.asStateFlow()
 
     private val _feedUIState = MutableStateFlow(FeedUIState())
@@ -59,7 +61,7 @@ class  FeedViewModel @Inject constructor(
     private val _systemData = MutableStateFlow(SystemData())
     val systemData = _systemData.asStateFlow()
     
-    private val _singlePost = MutableStateFlow(Post())
+    private val _singlePost = MutableStateFlow(PostWithComments())
     val singlePost = _singlePost.asStateFlow()
 
     private val _comments = MutableStateFlow<List<Comment>>(emptyList())
@@ -69,6 +71,9 @@ class  FeedViewModel @Inject constructor(
 
     private val _imageURI = MutableStateFlow<Uri?>(null)
     val imageUri = _imageURI.asStateFlow()
+
+    private val _likedPosts = MutableStateFlow<List<String>>(emptyList())
+    val likedPosts = _likedPosts.asStateFlow()
 
 
     fun setImageURI(uri: Uri){
@@ -228,7 +233,8 @@ class  FeedViewModel @Inject constructor(
                         if (allPosts != null){
                             _allPosts.value = allPosts
                         }
-                        //CLog.debug("HOW TO", allPosts.toString())
+                       // CLog.debug("GET ALL POSTS REQ", resp.body().toString())
+                        //CLog.debug("GET ALL POSTS", allPosts.toString())
                         _feedUIState.update { it.copy(
                             isFeedLoading  = false,
                             isFeedLoadingError  = false,
@@ -467,7 +473,7 @@ class  FeedViewModel @Inject constructor(
                         if (allPosts != null){
                             _allMyPosts.value = allPosts
                         }
-                        CLog.debug("ALL MY POSTS ", allPosts.toString())
+                        //CLog.debug("ALL MY POSTS ", allPosts.toString())
                         _feedUIState.update { it.copy(
                             isGetAllMyPostsLoading  = false,
                             isGetAllMyPostsError  = false,

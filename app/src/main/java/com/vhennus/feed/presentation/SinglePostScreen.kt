@@ -97,7 +97,9 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
     val feedUIState = feedViewModel.feedUIState.collectAsState().value
     val context = LocalContext.current
     val pullToRefreshState = rememberPullToRefreshState()
+
     var isRefresh = remember { mutableStateOf(false) }
+
     LaunchedEffect(feedUIState.isCreateCommentError) {
         if (feedUIState.isCreateCommentError){
             Toast.makeText(context, feedUIState.createCommentErrorMessage, Toast.LENGTH_SHORT).show()
@@ -142,20 +144,6 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ){
 
-                    val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS 'UTC'", Locale.getDefault())
-
-
-                    var prettyPostDate = ""
-                    // Parse the string into a Date object
-                    try {
-                        val parsedDate = inputFormat.parse(post.value.created_at)
-                        val prettyTime = PrettyTime()
-                        prettyPostDate = prettyTime.format(parsedDate)
-                    } catch (e: ParseException) {
-                        CLog.error("PRETTY DATE ERROR", e.toString())
-                    }
-
-
                     // Format the parsed date using PrettyTime
 
                     // profile pic
@@ -172,7 +160,7 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
                     }
 
                     val painter = painterResource(id = randomImage)
-                    if(post.value.profile.image.isEmpty() || post.value.profile.image.isBlank()){
+                    if(post.value.post.profile_image.isEmpty() || post.value.post.profile_image.isBlank()){
 
                         Image(
                             painter = painter,
@@ -181,7 +169,7 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
                             modifier = Modifier.size(40.dp).clip(CircleShape)
                         )
                     }else{
-                        LoadImageWithPlaceholder(post.value.profile.image,
+                        LoadImageWithPlaceholder(post.value.post.profile_image,
                             modifier = Modifier.size(40.dp)
                                 .clip(CircleShape)
                         )
@@ -192,12 +180,12 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
                         horizontalAlignment = Alignment.Start,
                         verticalArrangement = Arrangement.SpaceEvenly
                     ){
-                        Text(text = post.value.user_name, style= MaterialTheme.typography.titleLarge)
-                        Text(text = prettyPostDate, style= MaterialTheme.typography.bodySmall)
-                        Text(text = post.value.text, style= MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
+                        Text(text = post.value.post.user_name, style= MaterialTheme.typography.titleLarge)
+                        Text(text = getPrettyDate(post.value.post.created_at), style= MaterialTheme.typography.bodySmall)
+                        Text(text = post.value.post.text, style= MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))
 
-                        if(post.value.image.isNotEmpty()){
-                            LoadImageWithPlaceholder(post.value.image,
+                        if(post.value.post.image.isNotEmpty()){
+                            LoadImageWithPlaceholder(post.value.post.image,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp, max = 300.dp)
                                     .clip(RoundedCornerShape(20.dp))
                             )
@@ -261,13 +249,8 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
                     }
                 )
             }
-
-
-
-
         }
     }
-
 }
 
 @Composable
@@ -315,7 +298,6 @@ fun comment(comment:Comment){
                 horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.SpaceEvenly
         ){
-
         Text(text = comment.user_name, style= MaterialTheme.typography.titleLarge)
         Text(text = prettyPostDate, style= MaterialTheme.typography.bodySmall)
         Text(text = comment.text, style= MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal))

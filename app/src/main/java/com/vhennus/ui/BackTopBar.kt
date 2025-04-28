@@ -17,7 +17,8 @@ import androidx.navigation.NavController
 @Composable
 fun BackTopBar(pageName:String, navController: NavController){
     CenterAlignedTopAppBar(
-        title = { Text(text = pageName, textAlign = TextAlign.Center) },
+        title = { Text(text = pageName, textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleLarge) },
         navigationIcon = {
             IconButton(onClick = {
                 navController.navigateUp()

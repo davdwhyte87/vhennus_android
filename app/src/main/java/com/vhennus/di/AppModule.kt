@@ -7,9 +7,12 @@ import dagger.hilt.InstallIn
 
 import android.content.Context
 import com.vhennus.BuildConfig
+import com.vhennus.feed.domain.LikedPostDao
+import com.vhennus.general.data.AppDatabase
 import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.data.WebSocketManager
-import com.vhennus.wallet.data.AppDatabase
+import com.vhennus.general.utils.SoundVibratorHelper
+
 import com.vhennus.wallet.data.WalletService
 import com.vhennus.wallet.domain.dao.WalletDAO
 import dagger.Provides
@@ -40,6 +43,13 @@ object AppModule {
         return appDatabase.walletDAO()
     }
 
+
+    @Provides
+    @Singleton
+    fun getLikedPostsDAO(appDatabase: AppDatabase): LikedPostDao{
+        return appDatabase.likedPostDAO()
+    }
+
     @Provides
     fun getWalletService():WalletService{
         return WalletService()
@@ -48,6 +58,11 @@ object AppModule {
     @Provides
     fun getUserToken(@ApplicationContext context: Context):GetUserToken{
         return GetUserToken(context)
+    }
+
+    @Provides
+    fun getSoundManager(@ApplicationContext context: Context):SoundVibratorHelper{
+        return SoundVibratorHelper(context)
     }
 
     @Provides

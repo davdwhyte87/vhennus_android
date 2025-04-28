@@ -17,8 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -27,16 +25,12 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldColors
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.traceEventEnd
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,8 +42,7 @@ import androidx.navigation.NavController
 import com.vhennus.R
 import com.vhennus.general.presentation.LoadImageWithPlaceholder
 import com.vhennus.profile.data.ProfileViewModel
-import com.vhennus.profile.domain.FriendRequest
-import com.vhennus.profile.domain.Profile
+import com.vhennus.profile.domain.MiniProfile
 import com.vhennus.profile.domain.ProfileUIState
 import com.vhennus.profile.domain.SendFriendRequest
 import com.vhennus.ui.AnimatedPreloader
@@ -156,7 +149,7 @@ fun SearchPage(
 
 @Composable
 fun ProfileSearchItem(
-    profile: Profile,
+    profile: MiniProfile,
     profileUIState: ProfileUIState,
     profileViewModel: ProfileViewModel
 ){
@@ -166,7 +159,7 @@ fun ProfileSearchItem(
 
         }).fillMaxWidth()
     ) {
-        if(profile.image.isEmpty() || profile.image.isBlank()){
+        if(profile.image?.isEmpty() == true || profile.image?.isBlank() == true){
             Image(
                 painter = painterResource(R.drawable.p1),
                 contentDescription = "",
@@ -174,7 +167,8 @@ fun ProfileSearchItem(
                 modifier = Modifier.size(60.dp).clip(CircleShape)
             )
         }else{
-            LoadImageWithPlaceholder(profile.image,
+            LoadImageWithPlaceholder(
+                profile.image.toString(),
                 modifier = Modifier.size(60.dp)
                     .clip(CircleShape)
             )
@@ -183,7 +177,7 @@ fun ProfileSearchItem(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
-            Text(profile.name, style = MaterialTheme.typography.titleLarge)
+            Text(profile.name.toString(), style = MaterialTheme.typography.titleLarge)
             Text("@${profile.user_name}", style = MaterialTheme.typography.bodyLarge)
             Row (
                 modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp),

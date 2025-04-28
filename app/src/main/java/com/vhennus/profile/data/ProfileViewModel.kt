@@ -1,5 +1,6 @@
 package com.vhennus.profile.data
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import androidx.work.workDataOf
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vhennus.Application
+import com.vhennus.chat.domain.Chat
 import com.vhennus.general.data.APIService
 import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.utils.CLog
@@ -21,7 +23,11 @@ import com.vhennus.profile.domain.SendFriendRequest
 import com.vhennus.profile.domain.UpdateProfileRequest
 import com.vhennus.profile.presentation.FriendRequestItem
 import com.vhennus.search.domain.SearchUIState
-import com.vhennus.trade.domain.response.GenericResp
+import com.vhennus.settings.domain.SettingsUIState
+import com.vhennus.general.domain.GenericResp
+import com.vhennus.profile.domain.FriendRequestWithProfile
+import com.vhennus.profile.domain.MiniProfile
+import com.vhennus.profile.domain.ProfileWithFriends
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +36,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 
@@ -43,20 +50,24 @@ class ProfileViewModel @Inject constructor(
     private val _profile = MutableStateFlow(Profile())
     val profile = _profile.asStateFlow()
 
+    private val _myProfile = MutableStateFlow(ProfileWithFriends())
+    val myProfile = _myProfile.asStateFlow()
 
 
     private val _profileUIState = MutableStateFlow(ProfileUIState())
     val profileUIState = _profileUIState.asStateFlow()
 
-    private val _myFriendRequests = MutableStateFlow<List<FriendRequest>>(emptyList())
+    private val _myFriendRequests = MutableStateFlow<List<FriendRequestWithProfile>>(emptyList())
     val myFriendRequests = _myFriendRequests.asStateFlow()
 
     private val _searchUIState = MutableStateFlow(SearchUIState())
     val searchUIState = _searchUIState.asStateFlow()
 
-    private val _profileSearchResults = MutableStateFlow<List<Profile>>(emptyList())
+    private val _profileSearchResults = MutableStateFlow<List<MiniProfile>>(emptyList())
     val profileSearchResults = _profileSearchResults.asStateFlow()
 
+    private val _settingsUIState = MutableStateFlow(SettingsUIState())
+    val settingsUIState = _settingsUIState.asStateFlow()
 
 
     private val _workStatus = MutableStateFlow<WorkInfo?>(null)
@@ -66,10 +77,8 @@ class ProfileViewModel @Inject constructor(
 
 
     fun uploadImage(imageUri: Uri) {
-
         val inputData = workDataOf("imageUri" to imageUri.toString(),
-            "publicID" to _profile.value.user_name
-        )
+            "publicID" to _myProfile.value.profile.user_name)
 
         // Create the work request
         val uploadWorkRequest = OneTimeWorkRequestBuilder<ImageUploadWorker>()
@@ -107,6 +116,7 @@ class ProfileViewModel @Inject constructor(
     fun resetUIState(){
         _profileUIState.value = ProfileUIState()
         _searchUIState.value = SearchUIState()
+        _settingsUIState.value = SettingsUIState()
     }
     fun resetModelData(){
         _profile.value = Profile()
@@ -185,6 +195,7 @@ class ProfileViewModel @Inject constructor(
                     val resp = apiService.getMyProfile(mapOf("Authorization" to token))
                     if (resp.code() == 200){
                         val data = resp.body()?.data
+
                         if(data !=null){
                             _profileUIState.update { it.copy(
                                 isGetProfileLoading = false,
@@ -192,7 +203,7 @@ class ProfileViewModel @Inject constructor(
                                 isGetProfileError = false,
                                 isGetProfileErrorMessage = ""
                             ) }
-                            _profile.value = data
+                            _myProfile.value = data
 
                             CLog.debug("GET PROFILE RESPONSE", data.toString())
                         }else{
@@ -232,6 +243,52 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun getNotificationToken(): String{
+        val mshared = application.getSharedPreferences("firebase", Context.MODE_PRIVATE)
+        val data = mshared.getString("token", "")
+        return data.toString()
+    }
+
+    fun updateNotificationToken(){
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                try {
+                    val notifyToken = getNotificationToken()
+
+                    val data = UpdateProfileRequest(
+                        null, null, null, notifyToken
+                    )
+                    CLog.debug("STORED FCM TOKEN", notifyToken)
+                    if(notifyToken == ""){
+                        return@withContext
+                    }
+                    val token = getUserToken.getUserToken()
+                    val resp = apiService.updateProfile(data, mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        CLog.debug("UPDATED TOKEN", "")
+                        val data = resp.body()?.data
+                        if(data !=null){
+
+                        }else{
+
+                        }
+
+                    }else{
+                        val respString = resp.errorBody()?.string()
+                        CLog.error("UPDATE FIREBASE TOKEN ERROR", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                    }
+
+                }catch (e:Exception){
+
+                    CLog.error("UPDATE FIREBASE TOKEN ERROR", e.toString() +" ")
+                }
+            }
+        }
+    }
+
     fun updateProfile(data:UpdateProfileRequest){
         if(data.image!=null){
             _profileUIState.update { it.copy(
@@ -252,31 +309,20 @@ class ProfileViewModel @Inject constructor(
                     val resp = apiService.updateProfile(data, mapOf("Authorization" to token))
                     if (resp.code() == 200){
                         val data = resp.body()?.data
-                        if(data !=null){
-                            _profileUIState.update { it.copy(
-                                isUpdateProfileLoading = false,
-                                isUpdateProfileSuccess = true,
-                                isUpdateProfileError = false,
-                                updateProfileErrorMessage = "",
-                                isUploadImageLoading = false
-                            ) }
-                            _profile.value = data
-                        }else{
-//                            _profileUIState.update { it.copy(
-//                                isGetProfileLoading = false,
-//                                isGetProfileSuccess = false,
-//                                isGetProfileError = true,
-//                                isGetProfileErrorMessage = "No profile available"
-//                            ) }
-
-                        }
+                        _profileUIState.update { it.copy(
+                            isUpdateProfileLoading = false,
+                            isUpdateProfileSuccess = true,
+                            isUpdateProfileError = false,
+                            updateProfileErrorMessage = "",
+                            isUploadImageLoading = false
+                        ) }
+                        getMyProfile()
 
                     }else{
                         val respString = resp.errorBody()?.string()
                         CLog.error("UPDATE PROFILE RESPONSE", respString +" ")
-                        val gson = Gson()
-                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
-                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                        val json =  Json { coerceInputValues = true }
+                        val errorResp = json.decodeFromString<GenericResp<String>>(respString.toString())
                         _profileUIState.update { it.copy(
                             isUpdateProfileLoading = false,
                             isUpdateProfileSuccess = false,
@@ -318,7 +364,7 @@ class ProfileViewModel @Inject constructor(
                                 isGetFriendRequestsError = false,
                                 getFrienRequestsErrorMessage = ""
                             ) }
-                            _myFriendRequests.value = data
+                            _myFriendRequests.value = data.distinctBy { it.id }
 
                             CLog.debug("GET FRIEND REUQEST RESPONSE", data.toString())
                         }else{
@@ -547,6 +593,49 @@ class ProfileViewModel @Inject constructor(
                         sendFriendRequestError = "Network Error"
                     ) }
                     CLog.error("SEND FRIEND REQUEST ", e.toString() +" ")
+                }
+            }
+        }
+    }
+
+    fun deleteAccount(){
+       _settingsUIState.update { it.copy(isDeleteAccountLoading = true) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                try {
+                    val token = getUserToken.getUserToken()
+                    val resp = apiService.deleteAccount( mapOf("Authorization" to token))
+                    if (resp.code() == 200){
+                        val data = resp.body()?.data
+                        _settingsUIState.update { it.copy(
+                            isDeleteAccountLoading = false,
+                            isDeleteAccountError = false,
+                            isDeleteAccountSuccess = true,
+                            deleteAccountErrorMessage = ""
+                        ) }
+
+                    }else{
+                        val respString = resp.errorBody()?.string()
+                        CLog.error("DELETE ACCOUNT ERROR", respString +" ")
+                        val gson = Gson()
+                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
+                        val errorResp: GenericResp<String> = gson.fromJson(respString ?:"" , genericType)
+                        _settingsUIState.update { it.copy(
+                            isDeleteAccountLoading = false,
+                            isDeleteAccountError = true,
+                            isDeleteAccountSuccess = false,
+                            deleteAccountErrorMessage = errorResp.message
+                        ) }
+                    }
+
+                }catch (e:Exception){
+                    _settingsUIState.update { it.copy(
+                        isDeleteAccountLoading = false,
+                        isDeleteAccountError = true,
+                        isDeleteAccountSuccess = false,
+                        deleteAccountErrorMessage = "Network error"
+                    ) }
+                    CLog.error("DELETE ACCOUNT ERROR", e.toString() +" ")
                 }
             }
         }

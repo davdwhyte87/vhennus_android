@@ -16,7 +16,7 @@ import com.vhennus.wallet.presentation.formatter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vhennus.general.data.APIService
-import com.vhennus.trade.domain.response.GenericResp
+import com.vhennus.general.domain.GenericResp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -414,7 +414,7 @@ class WalletViewModel @Inject constructor(
 
                         val sharedPreferences = application.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
                         val edit = sharedPreferences.edit()
-                        edit.putString("NGN", systemData.price).apply()
+                        edit.putString("NGN", systemData.price.toString()).apply()
                     }else{
                         val errData = resp.errorBody()?.string()
                         CLog.error("ERROR GETTING SYSTEM DATA", resp.code().toString()+"err data")

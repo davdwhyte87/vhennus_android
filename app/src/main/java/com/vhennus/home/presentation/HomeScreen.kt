@@ -16,6 +16,8 @@ import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,6 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.chat.data.ChatViewModel
@@ -76,12 +81,22 @@ fun HomeScreen(navController: NavController,
     val showUpdateModal = remember {
         mutableStateOf(false)
     }
+    val isUnreadMessage = chatViewModel.isUnreadMessage.collectAsState()
 
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     // effects
     DisposableEffect(true) {
         // get the app version
         feedViewModel.getSystemData()
+
+        val observer = LifecycleEventObserver{_,event->
+            if(event == Lifecycle.Event.ON_RESUME){
+                authViewModel.getUserName()
+                //chatViewModel.getAllMyChatPairs()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
 
         onDispose {
 
@@ -210,11 +225,24 @@ fun HomeScreen(navController: NavController,
                         }
                               },
                     icon = {
-                        Icon(
-                            imageVector = if (pagerState.currentPage == index){bottomNavItem.selectedIcon}else{bottomNavItem.unselectedIcon},
-                            contentDescription = bottomNavItem.title,
-                            tint = Purple
-                        )
+                        BadgedBox(badge = {
+                            when(index){
+                                0-> {}
+                                1-> {
+                                    if(isUnreadMessage.value){
+                                        Badge()
+                                    }
+                                }
+                            }
+
+                        }) {
+                            Icon(
+                                imageVector = if (pagerState.currentPage == index){bottomNavItem.selectedIcon}else{bottomNavItem.unselectedIcon},
+                                contentDescription = bottomNavItem.title,
+                                tint = Purple
+                            )
+                        }
+
                     }
                 )
             }

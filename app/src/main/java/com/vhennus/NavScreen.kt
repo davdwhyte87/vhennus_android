@@ -143,4 +143,9 @@ sealed class NavScreen(
         title = "Search Page"
     )
 
+    object SettingsPage:NavScreen(
+        route = "settings",
+        title = "Settings"
+    )
+
 }

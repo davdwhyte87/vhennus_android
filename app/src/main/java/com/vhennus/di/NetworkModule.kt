@@ -1,36 +1,82 @@
 package com.vhennus.di
 
+import android.util.Log
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+
 import com.vhennus.BuildConfig
 import com.vhennus.general.data.APIService
+import com.vhennus.general.domain.GenericResp
+import com.vhennus.general.domain.GenericRespAdapter
+import com.vhennus.general.domain.GenericRespAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+
+import okhttp3.Interceptor
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
+
 
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit {
+    @Named("customGson")
+    fun provideGson(): Gson {
+        Log.d("Gson", "✅ Registering GenericRespAdapterFactory...")
+        val gson = GsonBuilder()
+            .serializeNulls()
+            .setLenient()
+            .registerTypeAdapterFactory(GenericRespAdapterFactory())
+            .create()
+        return gson
+    }
 
 
+    @OptIn(ExperimentalSerializationApi::class)
+    @Provides
+    @Singleton
+    fun provideRetrofit(@Named("customGson") gson: Gson): Retrofit {
+
+        Log.d("Retrofit", "✅ Using custom Gson instance: $gson")
         val okHttpClient = OkHttpClient.Builder()
             .connectTimeout(120, TimeUnit.SECONDS)   // Set connection timeout
             .readTimeout(120, TimeUnit.SECONDS)      // Set read timeout
             .writeTimeout(120, TimeUnit.SECONDS)     // Set write timeout
+            .addInterceptor { chain: Interceptor.Chain ->
+                val request: Request = chain.request().newBuilder()
+                    .addHeader("Content-Type", "application/json")
+                    .build()
+                chain.proceed(request)
+            }
             .build()
+
+        val json = Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+            coerceInputValues = true
+        }
 
         return Retrofit.Builder()
             .baseUrl(BuildConfig.API_URL+"/")
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
     }
 
@@ -42,3 +88,4 @@ object NetworkModule {
 
 
 }
+

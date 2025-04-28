@@ -64,6 +64,7 @@ import com.vhennus.NavScreen
 import com.vhennus.R.*
 import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.feed.domain.Post
+import com.vhennus.feed.domain.PostFeed
 import com.vhennus.general.presentation.LoadImageWithPlaceholder
 import com.vhennus.general.utils.CLog
 import com.vhennus.ui.AnimatedPreloader
@@ -105,11 +106,13 @@ fun FeedScreen(
 
   val context = LocalContext.current
   val posts = feedViewModel.allPost.collectAsState()
+  val likedPosts = feedViewModel.likedPosts.collectAsState()
   val feedUIState = feedViewModel.feedUIState.collectAsState()
 
   val listState = rememberLazyListState()
   val coroutine = rememberCoroutineScope()
   val userName = feedViewModel.userName.collectAsState()
+
 
   LaunchedEffect(feedUIState.value.isScrollToFeedTop) {
     if (feedUIState.value.isScrollToFeedTop){
@@ -148,50 +151,55 @@ fun FeedScreen(
         modifier = Modifier.fillMaxSize(),
         state = listState
       ) {
-        items(posts.value.reversed()){post->
+        items(posts.value){post->
           com.vhennus.feed.presentation.post(post = remember{mutableStateOf(post)}, navHostController, userName.value, {feedViewModel.likePost(post.id)}, {
             navHostController.navigate(NavScreen.SinglePost.route+"/${post.id}")
           })
         }
       }
     }
-
   }
 }
 
+fun getPrettyDate(date: String): String{
+  val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS 'UTC'", Locale.getDefault())
+  if(date.isEmpty() || date.isBlank()){
+    return ""
+  }
 
+  var prettyPostDate = ""
+  // Parse the string into a Date object
+  try {
+    val parsedDate = inputFormat.parse(date)
+    val prettyTime = PrettyTime()
+    prettyPostDate = prettyTime.format(parsedDate)
+  } catch (e: ParseException) {
+    CLog.error("PRETTY DATE ERROR", e.toString())
+  }
+
+  return prettyPostDate
+}
 
 @Composable
 fun post(
-  post: MutableState<Post>,
+  post: MutableState<PostFeed>,
   navController: NavController,
   userName:String,
   onLike: ()->Unit,
-  onPostClick:()->Unit
+  onPostClick:()->Unit,
+  likedPosts: List<String> = emptyList<String>()
 ){
   Row (
     modifier = Modifier.fillMaxWidth(),
     horizontalArrangement = Arrangement.spacedBy(10.dp)
   ){
 
-    val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS 'UTC'", Locale.getDefault())
-    val likes = post.value.likes.toMutableList()
 
-    var prettyPostDate = ""
-    // Parse the string into a Date object
-    try {
-      val parsedDate = inputFormat.parse(post.value.created_at)
-      val prettyTime = PrettyTime()
-      prettyPostDate = prettyTime.format(parsedDate)
-    } catch (e: ParseException) {
-      CLog.error("PRETTY DATE ERROR", e.toString())
-    }
 
 
     // Format the parsed date using PrettyTime
 
     // profile pic
-
     val images =listOf(
       drawable.p1,
       drawable.p2,
@@ -201,7 +209,7 @@ fun post(
     )
     val randomImage = images[Random.nextInt(images.size)]
     val painter = painterResource(id = randomImage)
-    if(post.value.profile.image.isEmpty() || post.value.profile.image.isBlank()){
+    if(post.value.profile_image .isEmpty() || post.value.profile_image.isBlank()){
       Image(
         painter = painter,
         contentDescription = "",
@@ -209,7 +217,7 @@ fun post(
         modifier = Modifier.size(40.dp).clip(CircleShape)
       )
     }else{
-      LoadImageWithPlaceholder(post.value.profile.image,
+      LoadImageWithPlaceholder(post.value.profile_image,
         modifier = Modifier.size(40.dp)
           .clip(CircleShape)
       )
@@ -222,7 +230,7 @@ fun post(
       modifier = Modifier
     ){
       Text(text = post.value.user_name, style=MaterialTheme.typography.titleLarge)
-      Text(text = prettyPostDate, style=MaterialTheme.typography.bodySmall)
+      Text(text = getPrettyDate(post.value.created_at), style=MaterialTheme.typography.bodySmall)
       Text(text = post.value.text, style=MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal),
         modifier = Modifier.clickable(onClick = {
           onPostClick()
@@ -242,7 +250,8 @@ fun post(
       ) {
         IconButton(
           onClick = {
-            navController.navigate(NavScreen.CreateCommentScreen.route+"/"+post.value.id)
+            //navController.navigate(NavScreen.CreateCommentScreen.route+"/"+post.value.id)
+            navController.navigate(NavScreen.SinglePost.route+"/${post.value.id}")
           },
           colors = IconButtonDefaults.iconButtonColors(
             containerColor = MaterialTheme.colorScheme.surface,
@@ -255,25 +264,16 @@ fun post(
               contentDescription = "Comment",
               modifier = Modifier.size(18.dp)
             )
-            Text(if (post.value.comments?.count() == 0) "" else post.value.comments?.count()?.toString() ?: "",
+            Text(if (post.value.comment_count == 0) "" else post.value.comment_count.toString(),
               style=MaterialTheme.typography.bodySmall,
               modifier = Modifier.padding(start = 3.dp)
             )
           }
 
         }
+
         IconButton(onClick = {
           onLike()
-
-          if(post.value.likes.contains(userName)){
-            val npost =post.value.copy(likes = post.value.likes - userName)
-            post.value = npost
-            //post.value.likes.remove(userName)
-          }else{
-            val npost =post.value.copy(likes = post.value.likes + userName)
-            post.value = npost
-            //post.value.likes.add(userName)
-          }
         },
           colors = IconButtonDefaults.iconButtonColors(
             containerColor = MaterialTheme.colorScheme.surface,
@@ -282,16 +282,15 @@ fun post(
           modifier = Modifier.padding(0.dp)
         ) {
           Row {
-            Icon(imageVector =if(post.value.likes.contains(userName)) Icons.Sharp.Favorite else Icons.Sharp.FavoriteBorder,
+            Icon(imageVector =if(likedPosts.contains(post.value.id)) Icons.Sharp.Favorite else Icons.Sharp.FavoriteBorder,
               contentDescription = "Like",
               modifier = Modifier.size(18.dp)
             )
-            Text(text = if (post.value.likes.count() == 0)"" else post.value.likes.count().toString(),
+            Text(text = if (post.value.like_count == 0) "" else post.value.like_count.toString(),
               style=MaterialTheme.typography.bodySmall,
               modifier = Modifier.padding(start = 3.dp)
             )
           }
-
         }
 //        Button(onClick = {  },
 //          colors = ButtonDefaults.buttonColors(

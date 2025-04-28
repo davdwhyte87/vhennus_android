@@ -2,6 +2,8 @@ package com.vhennus.trade.domain
 
 import com.vhennus.trade.domain.requests.Currency
 import com.vhennus.trade.domain.requests.PaymentMethod
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 
 import java.math.BigDecimal
 
@@ -13,14 +15,16 @@ import java.math.BigDecimal
 //    val amount:BigDecimal
 //)
 
+
+@Serializable
 data class SellOrder(
     val id:String = "",
     val user_name:String = "",
     val buy_orders_id:List<String> = listOf(""),
     val buy_orders:List<BuyOrder> = listOf(BuyOrder()),
-    val amount: BigDecimal = BigDecimal("0.0"),
-    val min_amount:BigDecimal= BigDecimal("0.00"),
-    val max_amount:BigDecimal= BigDecimal("0.00"),
+    @Contextual val amount: BigDecimal = BigDecimal("0.0"),
+    @Contextual val min_amount:BigDecimal= BigDecimal("0.00"),
+    @Contextual val max_amount:BigDecimal= BigDecimal("0.00"),
     val is_closed:Boolean= false,
     val currency: Currency = Currency.NGN,
     val created_at:String = "",

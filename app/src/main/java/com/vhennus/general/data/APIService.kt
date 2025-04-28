@@ -3,6 +3,7 @@ package com.vhennus.general.data
 
 import com.vhennus.auth.domain.LoginReq
 import com.vhennus.auth.domain.SignupReq
+import com.vhennus.auth.domain.SignupResp
 import com.vhennus.chat.domain.Chat
 import com.vhennus.chat.domain.ChatPair
 import com.vhennus.chat.domain.CreateChatReq
@@ -10,6 +11,8 @@ import com.vhennus.feed.domain.Comment
 import com.vhennus.feed.domain.CreateCommentReq
 import com.vhennus.feed.domain.CreatePostReq
 import com.vhennus.feed.domain.Post
+import com.vhennus.feed.domain.PostFeed
+import com.vhennus.feed.domain.PostWithComments
 import com.vhennus.general.domain.SystemData
 import com.vhennus.profile.domain.FriendRequest
 import com.vhennus.profile.domain.Profile
@@ -23,11 +26,15 @@ import com.vhennus.trade.domain.requests.CreateBuyOrderReq
 import com.vhennus.trade.domain.requests.CreateOrderMessageReq
 import com.vhennus.trade.domain.requests.CreatePaymentMethod
 import com.vhennus.trade.domain.requests.CreateSellOrderReq
-import com.vhennus.trade.domain.response.GenericResp
-import com.vhennus.trade.domain.response.MyBuyOrdersResp
+import com.vhennus.general.domain.GenericResp
+//import com.vhennus.general.domain.LoginResp
+import com.vhennus.general.domain.MyBuyOrdersResp
 import com.vhennus.trade.domain.response.MySellOrdersResponse
-import com.vhennus.trade.domain.response.SingleBuyOrdersResp
-import com.vhennus.trade.domain.response.SingleSellOrderResp
+import com.vhennus.general.domain.SingleBuyOrdersResp
+import com.vhennus.general.domain.SingleSellOrderResp
+import com.vhennus.profile.domain.FriendRequestWithProfile
+import com.vhennus.profile.domain.MiniProfile
+import com.vhennus.profile.domain.ProfileWithFriends
 import com.vhennus.trivia.domain.TriviaGame
 import com.vhennus.trivia.domain.TriviaGameReq
 import retrofit2.Response
@@ -52,6 +59,7 @@ interface APIService {
 
     @GET("api/v1/auth/buy_order/single/{id}")
     suspend fun getSingleBuyOrder(@Path("id") id:String, @HeaderMap header:Map<String,String>):Response<SingleBuyOrdersResp>
+
     @GET("api/v1/auth/buy_order/my_orders")
     suspend fun getMyBuyOrders(@HeaderMap header:Map<String,String>):Response<MyBuyOrdersResp>
 
@@ -112,14 +120,14 @@ interface APIService {
     suspend fun createPost(@Body data:CreatePostReq, @HeaderMap header:Map<String,String> ):Response<GenericResp<Post>>
 
     @GET("api/v1/auth/post/all")
-    suspend fun getAllPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<Post>>>
+    suspend fun getAllPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<PostFeed>>>
 
     @GET("api/v1/auth/post/allmy")
-    suspend fun getAllMyPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<Post>>>
+    suspend fun getAllMyPosts(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<PostFeed>>>
 
 
     @GET("api/v1/auth/post/single/{id}")
-    suspend fun getSinglePost(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<Post>>
+    suspend fun getSinglePost(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<PostWithComments>>
 
 
     @POST("api/v1/auth/post/{id}/comment/create")
@@ -130,7 +138,7 @@ interface APIService {
     suspend fun likePost(@Path("id") id:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<Post>>
     // system data
     @GET("get_system_data")
-    suspend fun getSystemData():Response<GenericResp<SystemData>>
+    suspend fun getSystemData():Response< GenericResp<SystemData>>
 
 
     // trivia
@@ -154,19 +162,19 @@ interface APIService {
     @GET("api/v1/auth/chat/get_my_chat_pairs")
     suspend fun getAllChatPairs( @HeaderMap header:Map<String,String> ):Response<GenericResp<List<ChatPair>>>
 
-
-    // profile
-    @GET("api/v1/auth/profile/get")
-    suspend fun getMyProfile( @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
-
-    @GET("api/v1/auth/profile/get/{username}")
-    suspend fun getUserProfile(@Path("username") username:String,@HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
-
     @GET("api/v1/auth/chat/find_chat_pair/{username}")
     suspend fun findChatPair(@Path("username") username:String,@HeaderMap header:Map<String,String> ):Response<GenericResp<ChatPair>>
 
     @GET("api/v1/auth/chat/get_my_chat_pairs")
     suspend fun getMyChatPairs(@HeaderMap header:Map<String,String> ):Response<GenericResp<List<ChatPair>>>
+
+
+    // profile
+    @GET("api/v1/auth/profile/get")
+    suspend fun getMyProfile( @HeaderMap header:Map<String,String> ):Response<GenericResp<ProfileWithFriends>>
+
+    @GET("api/v1/auth/profile/get/{username}")
+    suspend fun getUserProfile(@Path("username") username:String,@HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
 
     @POST("api/v1/auth/profile/update")
     suspend fun updateProfile(@Body data:UpdateProfileRequest, @HeaderMap header:Map<String,String> ):Response<GenericResp<Profile>>
@@ -174,7 +182,7 @@ interface APIService {
 
     //Friend request
     @GET("api/v1/auth/user/friend_requests")
-    suspend fun getMyFriendRequests( @HeaderMap header:Map<String,String> ):Response<GenericResp<List<FriendRequest>>>
+    suspend fun getMyFriendRequests( @HeaderMap header:Map<String,String> ):Response<GenericResp<List<FriendRequestWithProfile>>>
 
     @GET("api/v1/auth/user/friend_request/accept/{id}")
     suspend fun acceptFriendRequest(@Path("id") id:String, @HeaderMap header:Map<String,String>):Response<GenericResp<String>>
@@ -187,7 +195,11 @@ interface APIService {
 
     // search
     @GET("api/v1/auth/profile/search/{data}")
-    suspend fun searchProfile(@Path("data") data:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<List<Profile>>>
+    suspend fun searchProfile(@Path("data") data:String, @HeaderMap header:Map<String,String> ):Response<GenericResp<List<MiniProfile>>>
+
+    // delete account
+    @GET("api/v1/auth/user/delete")
+    suspend fun deleteAccount( @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
 
 
 }

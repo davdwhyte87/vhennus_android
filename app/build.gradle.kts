@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.google.services)
+    kotlin("plugin.serialization") version "2.0.0"
+
 }
 
 android {
@@ -40,7 +42,7 @@ android {
         applicationId = "com.vhennus"
         minSdk = 28
         targetSdk = 34
-        versionCode = 1
+        versionCode = 9
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -57,10 +59,18 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
+//           isShrinkResources = true
+//            isDebuggable =true
+//            signingConfig = signingConfigs.getByName("debug")
         }
 
         debug {
-
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
@@ -82,6 +92,7 @@ android {
         }
     }
 }
+
 
 dependencies {
     // Hilt
@@ -135,10 +146,18 @@ dependencies {
     // firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.storage.ktx)
+    implementation ("com.google.firebase:firebase-messaging:24.1.0")
+    implementation ("com.google.firebase:firebase-analytics:22.2.0")
 
     // cloudinary
     implementation(libs.cloudinary.android)
     implementation(libs.androidx.work.runtime.ktx)
+
+    implementation("com.facebook.soloader:soloader:0.12.1")
+
+    // kotlin serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
 
 
 }

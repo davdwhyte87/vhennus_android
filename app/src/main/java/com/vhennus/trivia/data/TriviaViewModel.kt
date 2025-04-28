@@ -11,7 +11,7 @@ import com.google.gson.reflect.TypeToken
 import com.vhennus.general.data.APIService
 import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.utils.CLog
-import com.vhennus.trade.domain.response.GenericResp
+import com.vhennus.general.domain.GenericResp
 import com.vhennus.trivia.domain.TriviaGame
 import com.vhennus.trivia.domain.TriviaGameReq
 import com.vhennus.trivia.domain.TriviaUIState

@@ -34,6 +34,7 @@ import com.vhennus.R
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.auth.domain.SignupReq
 import com.vhennus.auth.domain.USER_TYPE
+import com.vhennus.general.presentation.PasswordTextField
 import com.vhennus.ui.AnimatedPreloader
 
 
@@ -99,27 +100,19 @@ fun signUpScreen(
                 .fillMaxWidth()
                 .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
         )
-        OutlinedTextField(value = password.value,
-            onValueChange = {
-                password.value = it
-            },
-            shape = RoundedCornerShape(20.dp),
-            placeholder = { Text(text = "Password") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
+
+        PasswordTextField(
+            password = password.value,
+            onPasswordChange = { password.value = it }
         )
 
-        OutlinedTextField(value = password2.value,
-            onValueChange = {
-                password2.value = it
-            },
-            shape = RoundedCornerShape(20.dp),
-            placeholder = { Text(text = "Confirm Password") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
+
+
+        PasswordTextField(
+            password = password2.value,
+            onPasswordChange = { password2.value = it }
         )
+
 
 
         Button(onClick = {
@@ -128,7 +121,7 @@ fun signUpScreen(
             }
             val signupReq = SignupReq(
                 user_name =userName.value,
-                password=password.value,
+                password= password.value,
                 user_type = USER_TYPE.User
             )
             authViewModel.signup(signupReq)

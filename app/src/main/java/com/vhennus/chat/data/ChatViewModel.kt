@@ -1,5 +1,6 @@
 package com.vhennus.chat.data
 
+
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,7 +16,8 @@ import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.data.WebSocketManager
 import com.vhennus.general.utils.CLog
 import com.vhennus.profile.domain.Profile
-import com.vhennus.trade.domain.response.GenericResp
+import com.vhennus.general.domain.GenericResp
+import com.vhennus.general.utils.SoundVibratorHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 
@@ -31,7 +34,8 @@ class ChatViewModel @Inject constructor(
    private val apiService: APIService,
     private val getUserToken: GetUserToken,
     private val webSocketManager: WebSocketManager,
-    private val application: android.app.Application
+    private val application: android.app.Application,
+    private val getSoundVibratorHelper: SoundVibratorHelper
 ):ViewModel() {
 
     private val _chatPairs = MutableStateFlow<List<ChatPair>>(emptyList())
@@ -55,6 +59,8 @@ class ChatViewModel @Inject constructor(
     private val _singleChatReceiverProfile = MutableStateFlow(Profile())
     val singleChatReceiverProfile = _singleChatReceiverProfile.asStateFlow()
 
+    private val _isUnreadMessage = MutableStateFlow(false)
+    val isUnreadMessage = _isUnreadMessage.asStateFlow()
 
 
     fun setSingleChatReceiverProfile(profile:Profile){
@@ -65,10 +71,15 @@ class ChatViewModel @Inject constructor(
         _singleChatReceiverProfile.value = Profile()
         _chats.value = emptyList()
         _singleChatPair.value = ChatPair()
+
     }
 
     fun resetChatUIState(){
         _chatsUIState.value = ChatUIState()
+    }
+
+    fun updateUnreadMessageFlag(data: Boolean){
+        _isUnreadMessage.value = data
     }
 
 
@@ -129,7 +140,29 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    fun checkForUnreadMessages(){
+        // determine unread messages and save in state
+        var isNMessage  = false
+        for(chatPiar in _allChatPairs.value){
+            val lastMessage = getLastMessage(chatPiar.id)
+            if(lastMessage != null){
+                if(chatPiar.last_message != lastMessage){
+                    isNMessage = true
 
+                }
+            }else{
+                // this is most likely a new message from a new chat pair
+                isNMessage = true
+            }
+        }
+
+        if(isNMessage){
+            _isUnreadMessage.value = true
+
+        }else{
+            _isUnreadMessage.value = false
+        }
+    }
     fun getAllMyChatPairs(){
         _chatsUIState.update { it.copy(isGetAllChatsLoading = true) }
         viewModelScope.launch {
@@ -150,6 +183,11 @@ class ChatViewModel @Inject constructor(
                             isGetAllChatsError = false,
                             isGetAllChatsErrorMessage = ""
                         ) }
+
+                            // check for unread messages
+                        checkForUnreadMessages()
+
+
 
                     }else{
                         val respString = resp.errorBody()?.string()
@@ -202,7 +240,7 @@ class ChatViewModel @Inject constructor(
                         saveLastMessage(lastMessage.pair_id, lastMessage.message)
 
 
-                        CLog.debug("GET_CHATS_BY_PAIR_RESP", lastMessage.toString())
+                        //CLog.debug("GET_CHATS_BY_PAIR_RESP", lastMessage.toString())
                         _chatsUIState.update { it.copy(
                            isGetChatsLoading = false,
                             isGetChatsSuccess = true,
@@ -362,10 +400,21 @@ class ChatViewModel @Inject constructor(
         webSocketManager.connect(
             onMessageReceived = { text->
                 // convert text to chat model
-                val message = Gson().fromJson(text, Chat::class.java)
+                val json =  Json { coerceInputValues = true }
+                val message = json.decodeFromString<Chat>(text)
                 // save last message locally
                 //saveLastMessage(message.pair_id, message.message)
                 addMessageWS(message)
+                // check if the current chat is open
+                if(_singleChatPair.value.id == message.pair_id){
+                    // play in chat sound
+                    getSoundVibratorHelper.playLowBel()
+                }else{
+                    //play vibrate sound. this means user is not in active chat with the pair
+                    // notify the user with sound
+                    val soundHelper = getSoundVibratorHelper
+                    soundHelper.playSoundAndVibrate()
+                }
                 CLog.debug("WS MESSAGE", message.toString()) },
             onFailure = {error ->
                 CLog.debug("WS MESSAGE ERROR", error.toString())
@@ -373,10 +422,24 @@ class ChatViewModel @Inject constructor(
         )
 
     }
+
+    fun disconnectWS(){
+        webSocketManager.disconnect()
+    }
     fun sendMessageToWS(createChatReq: CreateChatReq, userName:String){
+        // check if websocket manager is connected if not connect
+        if(!webSocketManager.isConnected()){
+            connectToChatWS()
+        }
+
+        CLog.debug("WS SEND MESSAGE", "starting send")
         val gson = Gson()
-        val text = gson.toJson(createChatReq)
+        val text = Json.encodeToString(CreateChatReq.serializer(), createChatReq)
+        CLog.debug("WS SEND MESSAGE", "text ... ${text}")
+
+
         if(!webSocketManager.sendMessage(text)){
+            CLog.debug("WS SEND MESSAGE", "error sending ")
             _chatsUIState.update { it.copy(
                 isCreateChatLoading = false,
                 isCreateChatError = true,
@@ -439,6 +502,7 @@ class ChatViewModel @Inject constructor(
                 CLog.debug("NEW CHAT PAIR", chatPair.toString())
 
             }
+
         }
         _allChatPairs.value = cpairs
 
@@ -448,6 +512,11 @@ class ChatViewModel @Inject constructor(
 
             getAllMyChatPairs()
         }
+
+        // check for unread messges
+        checkForUnreadMessages()
+
+
     }
 
     // save last message to shared preference
