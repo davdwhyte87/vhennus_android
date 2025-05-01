@@ -23,6 +23,13 @@ data class GetResetPasswordCodeReq(
     val user_name:String,
 )
 
+@Serializable
+data class ChangePasswordReq(
+    val user_name:String,
+    val code: String,
+    val password: String
+)
+
 
 
 @Serializable

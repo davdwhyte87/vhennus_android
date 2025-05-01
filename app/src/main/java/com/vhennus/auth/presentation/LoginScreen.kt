@@ -67,7 +67,7 @@ fun loginScreen(
     }
 
 
-    LaunchedEffect(authUIState.value.isLoginSuccess, tempEmail ) {
+    LaunchedEffect(loginResp ) {
         CLog.debug("TEMP EMAIL", tempEmail.value)
         if(authUIState.value.isLoginSuccess){
             Toast.makeText(context, "Success!", Toast.LENGTH_SHORT).show()

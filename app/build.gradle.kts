@@ -43,7 +43,7 @@ android {
     }
     defaultConfig {
         applicationId = "com.vhennus"
-        minSdk = 28
+        minSdk = 27
         targetSdk = 34
         versionCode = 10
         versionName = "1.0"

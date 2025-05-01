@@ -116,7 +116,7 @@ fun AppNav(
             ForgotPasswordScreen(navController, authViewModel)
         }
         composable(route= NavScreen.ResetPasswordScreen.route){
-            ResetPasswordScreen()
+            ResetPasswordScreen(authViewModel, navController)
         }
 
         composable(route=NavScreen.FriendRequestPage.route){

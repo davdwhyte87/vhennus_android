@@ -537,6 +537,7 @@ class  FeedViewModel @Inject constructor(
                         getAllOtherUserPostsErrorMessage = "Unauthorized"
                     ) }
                 }
+
                 try {
                     val resp = apiService.getAllUserPosts(userName,mapOf("Authorization" to token))
                     if (resp.isSuccessful){

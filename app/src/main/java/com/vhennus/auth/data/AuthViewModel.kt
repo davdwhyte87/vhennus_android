@@ -14,6 +14,7 @@ import com.vhennus.general.data.APIService
 import com.vhennus.general.domain.GenericResp
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vhennus.auth.domain.ChangePasswordReq
 import com.vhennus.auth.domain.ConfirmAccountReq
 import com.vhennus.auth.domain.GetResetPasswordCodeReq
 import com.vhennus.auth.domain.LoginResp
@@ -26,13 +27,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 
 @HiltViewModel
 class AuthViewModel  @Inject constructor(
     private val apiService: APIService,
-    private val application: Application
+    private val application: Application,
+    private val jsonService: Json
 ) : ViewModel() {
 
     private val _userToken = MutableStateFlow("")
@@ -53,6 +57,13 @@ class AuthViewModel  @Inject constructor(
     private val _tempLoginEmailConfirmed = MutableStateFlow(false)
     val tempLoginEmailConfirmed = _tempLoginEmailConfirmed.asStateFlow()
 
+    private val _tempUserName = MutableStateFlow("")
+    val tempUserName = _tempUserName.asStateFlow()
+
+
+    fun resetUI(){
+        _authUIState.value = AuthUIState()
+    }
     fun signup(data: SignupReq){
         // start loading button
         _authUIState.update { it.copy(isSignupButtonLoading = true) }
@@ -264,8 +275,6 @@ class AuthViewModel  @Inject constructor(
                             }
                         }
 
-
-
                     }else{
                         Log.d("LOGIN ERROR !", resp.errorBody().toString())
                         val gson = Gson()
@@ -302,15 +311,87 @@ class AuthViewModel  @Inject constructor(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 // send data to api
-                var resp = apiService.getResetPasswordCode(data)
-                if 
-                try {
-                }catch (e: Exception){
 
+                try {
+                    var resp = apiService.getResetPasswordCode(data)
+                    if (resp.isSuccessful){
+                        _tempUserName.value = data.user_name
+
+                        _authUIState.update { it.copy(
+                            isSendResetPasswordCodeLoading = false,
+                            isSendResetPasswordCodeError = false,
+                            isSendResetPasswordCodeSuccess = true,
+                            sendResetPasswordCodeErrorMessage = ""
+                        ) }
+                    }else{
+                        val errorBodyString = resp.errorBody()?.string().toString()
+                        CLog.error("ERROR SENDING RESET PASS CODE", errorBodyString)
+                        val errorResp = jsonService.decodeFromString(GenericResp.serializer(String.serializer()), errorBodyString)
+                        _authUIState.update { it.copy(
+                            isSendResetPasswordCodeLoading = false,
+                            isSendResetPasswordCodeError = true,
+                            isSendResetPasswordCodeSuccess = false,
+                            sendResetPasswordCodeErrorMessage = errorResp.message
+                        ) }
+
+                    }
+                }catch (e: Exception){
+                    _authUIState.update { it.copy(
+                        isSendResetPasswordCodeLoading = false,
+                        isSendResetPasswordCodeError = true,
+                        isSendResetPasswordCodeSuccess = false,
+                        sendResetPasswordCodeErrorMessage = "Error sending code"
+                    ) }
+                    CLog.error("ERROR SENDING RESET PASS CODE", e.toString())
                 }
             }
         }
     }
+
+    fun changePassword(data: ChangePasswordReq) {
+
+        _authUIState.update { it.copy(isChangePasswordLoading = true) }
+
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+
+                try {
+                    // send data to api
+                    var resp = apiService.changePassword(data)
+                    if (resp.isSuccessful){
+//                    _tempUserName.value = data.user_name
+
+                        _authUIState.update { it.copy(
+                            isChangePasswordLoading = false,
+                            isChangePasswordError = false,
+                            isChangePasswordSuccess = true,
+                            changePasswordErrorMessage = ""
+                        ) }
+                    }else{
+                        val errorBodyString = resp.errorBody()?.string().toString()
+                        CLog.error("ERROR SENDING RESET PASS CODE", errorBodyString)
+                        val errorResp = jsonService.decodeFromString(GenericResp.serializer(String.serializer()), errorBodyString)
+                        _authUIState.update { it.copy(
+                            isChangePasswordLoading = false,
+                            isChangePasswordError = true,
+                            isChangePasswordSuccess = false,
+                            changePasswordErrorMessage = errorResp.message
+                        ) }
+
+                    }
+                }catch (e: Exception){
+                    _authUIState.update { it.copy(
+                        isChangePasswordLoading = false,
+                        isChangePasswordError = true,
+                        isChangePasswordSuccess = false,
+                        changePasswordErrorMessage = "Error changing password"
+                    ) }
+                    CLog.error("ERROR SENDING RESET PASS CODE", e.toString())
+                }
+            }
+        }
+    }
+
 
     fun isLoggedIn():Boolean{
         if(getUserToken().isBlank()){
