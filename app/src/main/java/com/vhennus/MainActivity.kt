@@ -31,6 +31,7 @@ import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.chat.presentation.SingleChatScreen
 import com.vhennus.feed.data.FeedViewModel
+import com.vhennus.general.data.GeneralViewModel
 import com.vhennus.general.utils.CLog
 import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.trade.data.OrderViewModel
@@ -110,6 +111,7 @@ class  MainActivity  : ComponentActivity() {
             val triviaViewModel: TriviaViewModel = hiltViewModel()
             val chatViewModel: ChatViewModel = hiltViewModel()
             val profileViewModel: ProfileViewModel = hiltViewModel()
+            val generalViewModel: GeneralViewModel = hiltViewModel()
             val context = LocalContext.current
 //            LaunchedEffect(Unit) {
 //                (context as? Activity)?.intent?.data?.let { uri ->
@@ -136,7 +138,8 @@ class  MainActivity  : ComponentActivity() {
                         feedViewModel,
                         triviaViewModel,
                         chatViewModel,
-                        profileViewModel
+                        profileViewModel,
+                        generalViewModel
                     )
 
                 }

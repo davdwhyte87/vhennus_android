@@ -67,6 +67,7 @@ import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.chat.presentation.AllChatsScreen
 import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.feed.presentation.FeedScreen
+import com.vhennus.general.data.GeneralViewModel
 import com.vhennus.general.presentation.LoadImageWithPlaceholder
 import com.vhennus.general.utils.CLog
 import com.vhennus.home.presentation.components.BottomNavItem
@@ -88,9 +89,10 @@ fun HomeScreen(navController: NavController,
                feedViewModel: FeedViewModel,
                chatViewModel: ChatViewModel,
                authViewModel: AuthViewModel,
-               profileViewModel: ProfileViewModel
+               profileViewModel: ProfileViewModel,
+               generalViewModel: GeneralViewModel
 ){
-    val systemData = feedViewModel.systemData.collectAsState()
+    val systemData = generalViewModel.systemData.collectAsState()
 
 
     val context = LocalContext.current
@@ -109,7 +111,7 @@ fun HomeScreen(navController: NavController,
     // effects
     DisposableEffect(true) {
         // get the app version
-        feedViewModel.getSystemData()
+        generalViewModel.getSystemData()
 
         val observer = LifecycleEventObserver{_,event->
             if(event == Lifecycle.Event.ON_RESUME){

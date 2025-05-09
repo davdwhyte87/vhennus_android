@@ -2,6 +2,7 @@ package com.vhennus.wallet.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -31,15 +32,17 @@ fun WalletMenuItem(name: String, icon: ImageVector, onClick:()-> Unit){
             contentColor = MaterialTheme.colorScheme.surface,
             containerColor = MaterialTheme.colorScheme.primary,
         ),
+        contentPadding = PaddingValues(10.dp),
         shape = RoundedCornerShape(10.dp),
-        modifier = Modifier.sizeIn(minWidth = 74.dp, minHeight = 56.dp)
+        modifier = Modifier.sizeIn(maxWidth = 74.dp, maxHeight = 56.dp)
     ) {
         Column(
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(icon, name, Modifier.size(25.dp))
-            Text(name, style = MaterialTheme.typography.bodyMedium,
+            Icon(icon, name, Modifier.size(18.dp))
+            Text(name, style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.surface )
         }
 

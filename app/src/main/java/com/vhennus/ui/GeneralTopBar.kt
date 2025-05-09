@@ -23,7 +23,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.vhennus.ui.theme.Purple
 import com.vhennus.ui.theme.Surf
 import com.vhennus.ui.theme.White
-
+import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,8 +48,10 @@ fun GeneralTopBar(){
 @Composable
 fun ChatListTopBar(){
     val systemUiController = rememberSystemUiController()
-    SideEffect {
-        systemUiController.setStatusBarColor(Purple)
+    val statusBarColor = Purple
+
+    LaunchedEffect(statusBarColor) {
+        systemUiController.setStatusBarColor(statusBarColor)
     }
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(

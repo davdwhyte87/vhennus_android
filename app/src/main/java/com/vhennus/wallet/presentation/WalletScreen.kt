@@ -4,6 +4,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,13 +18,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCard
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
@@ -39,6 +43,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.calculatePosture
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +61,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.vhennus.NavScreen
+import com.vhennus.general.data.GeneralViewModel
 import com.vhennus.general.presentation.AppScaffold
 import com.vhennus.general.presentation.CustomSnackbarVisuals
 import com.vhennus.general.presentation.SnackbarType
@@ -77,31 +83,14 @@ import java.math.BigDecimal
 fun WalletScreen(
     navController: NavController,
     walletViewModel: WalletViewModel,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel,
+    generalViewModel: GeneralViewModel
 ){
 
     val lifecycleOwner = LocalLifecycleOwner.current
     val profile = profileViewModel.myProfile.collectAsState().value
     val profileUIState  = profileViewModel.profileUIState.collectAsState().value
-    // clear model data
-    DisposableEffect(true) {
-
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                profileViewModel.getMyProfile()
-                walletViewModel.getExchangeRate()
-            }
-        }
-
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        onDispose {
-            //walletViewModel.clearModelData()
-        }
-    }
-
-
-
+    val systemData = generalViewModel.systemData.collectAsState().value
 
     var expanded = remember { mutableStateOf(false) }
     val wallets = walletViewModel.allWallets.collectAsState().value
@@ -111,8 +100,37 @@ fun WalletScreen(
     var totalAssetString = remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val currency = walletViewModel.selectedCurrency.collectAsState().value
+    val totalAssetConvString = remember { mutableStateOf("") }
+    val isbh = walletViewModel.isBalanceHidden.collectAsState().value
+    val isBalanceHidden = remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+    LaunchedEffect(isbh) {
+        if(isbh == "0"){
+            isBalanceHidden.value = false
+        }
+        if(isbh == "1"){
+            isBalanceHidden.value = true
+        }
+    }
+    // clear model data
+    DisposableEffect(true) {
 
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                profileViewModel.getMyProfile()
+                walletViewModel.getExchangeRate()
+                walletViewModel.getSelectedCurrency()
+                generalViewModel.getSystemData()
+            }
+        }
 
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            //walletViewModel.clearModelData()
+        }
+    }
 
     LaunchedEffect(profileUIState.isGetProfileSuccess) {
         if (profile.profile.wallets.isNotBlank()&&profile.profile.wallets.isNotEmpty()){
@@ -129,6 +147,19 @@ fun WalletScreen(
             ))
         }
     }
+
+
+    fun calculateConvertedBalance(){
+        when (currency){
+            "NGN"-> {
+                totalAssetConvString.value= formatBigDecimalWithCommas((totalAsset.value*systemData.price)*systemData.ngn)
+            }
+            "USD" -> {
+                totalAssetConvString.value= formatBigDecimalWithCommas(totalAsset.value*systemData.price)
+            }
+        }
+    }
+
     LaunchedEffect(wallets) {
         wallets.forEach { it->
             CLog.debug("ALL WALLETS TOTAL CALC", it.address+ it.balance.toString())
@@ -138,14 +169,25 @@ fun WalletScreen(
         val tstring =formatBigDecimalWithCommas(totalAsset.value)
         totalAssetString.value = tstring
 
+        calculateConvertedBalance()
     }
 
+
+
+    LaunchedEffect(currency) {
+        CLog.debug("SYSTEM", currency)
+        val validCurrencies = listOf<String>("NGN", "USD")
+        calculateConvertedBalance()
+        CLog.debug("SYSTEM", totalAssetConvString.value)
+    }
 
     AppScaffold(
         topBar ={ HomeTopBar("Wallets", navController)} ,
         snackbarHostState=snackbarHostState
     ) {
+
         Column(
+            modifier = Modifier.verticalScroll(scrollState)
         ) {
 
             Column(
@@ -157,7 +199,7 @@ fun WalletScreen(
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Box {
                         IconButton(onClick = {expanded.value = true},
@@ -177,6 +219,7 @@ fun WalletScreen(
                                 onClick = {
                                     // Handle click
                                     expanded.value = false
+                                    walletViewModel.saveSelectedCurrency("NGN")
                                 }
                             )
                             DropdownMenuItem(
@@ -184,21 +227,38 @@ fun WalletScreen(
                                 onClick = {
                                     // Handle click
                                     expanded.value = false
+                                    walletViewModel.saveSelectedCurrency("USD")
                                 }
                             )
                         }
                     }
 
-                    Text("USD", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
-                    Text("13,000.00", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
-                    IconButton(onClick = {},
+                    Text("${currency}  ", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
+                    Text(if (isBalanceHidden.value){"****"}else{  totalAssetConvString.value}, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
+                    IconButton(onClick = {
+                        if (isBalanceHidden.value){
+                            isBalanceHidden.value = false
+                            walletViewModel.saveIsBalanceHidden("0")
+                        }else{
+                            isBalanceHidden.value = true
+                            walletViewModel.saveIsBalanceHidden("1")
+                        }
+                    },
                         colors = IconButtonDefaults.iconButtonColors(
                             contentColor = MaterialTheme.colorScheme.surface
                         )
                     ) {
-                        Icon(Icons.Default.VisibilityOff, "Visibility",
-                            modifier = Modifier.size(25.dp)
-                        )
+                        if(isBalanceHidden.value){
+                            Icon(Icons.Default.VisibilityOff, "Visibility",
+                                modifier = Modifier.size(25.dp)
+                            )
+                        }else{
+                            Icon(Icons.Default.Visibility, "Visibility",
+                                modifier = Modifier.size(25.dp)
+                            )
+
+                        }
+
                     }
                 }
 
@@ -215,7 +275,7 @@ fun WalletScreen(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
                 ){
-                    Text(totalAssetString.value, style = MaterialTheme.typography.headlineMedium,
+                    Text("${if (isBalanceHidden.value){"****"}else{ totalAssetString.value}} VEC" , style = MaterialTheme.typography.titleLarge,
                         color =MaterialTheme.colorScheme.surface )
                 }
             }
@@ -240,12 +300,16 @@ fun WalletScreen(
             ) {
 
                 Text("Wallet List", style = MaterialTheme.typography.titleMedium)
-                LazyColumn {
-                    items(wallets){wallet->
-                        WalletListItem(wallet) {
-                            navController.navigate(NavScreen.SingleWalletScreen.route+"/${wallet.address}")
-                        }
-                    }
+                wallets.forEach{ wallet ->
+                    WalletListItem(
+                        wallet,
+                        currency,
+                        systemData.price,
+                        systemData.ngn,
+                        isBalanceHidden.value,
+                        onclick = { navController.navigate(NavScreen.SingleWalletScreen.route+"/${wallet.address}")}
+                    )
+
                 }
             }
         }

@@ -27,6 +27,7 @@ import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.feed.presentation.createCommentScreen
 import com.vhennus.feed.presentation.createPostScreen
 import com.vhennus.feed.presentation.singlePostScreen
+import com.vhennus.general.data.GeneralViewModel
 import com.vhennus.home.presentation.HomeScreen
 import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.profile.domain.Profile
@@ -64,7 +65,8 @@ fun AppNav(
     feedViewModel: FeedViewModel,
     triviaViewModel: TriviaViewModel,
     chatViewModel: ChatViewModel,
-    profileViewModel:ProfileViewModel
+    profileViewModel:ProfileViewModel,
+    generalViewModel: GeneralViewModel
 ){
 
     NavHost(navController = navController, startDestination = NavScreen.HomeScreen.route) {
@@ -72,12 +74,12 @@ fun AppNav(
 //            HomeScreen(navController)
 //        }
         composable(route=NavScreen.WalletScreen.route){
-            WalletScreen(navController, walletViewModel, profileViewModel)
+            WalletScreen(navController, walletViewModel, profileViewModel, generalViewModel)
         }
         composable(route=NavScreen.SingleWalletScreen.route+"/{address}"){navBackStack->
             val address = navBackStack.arguments?.getString("address")
             if (address != null){
-                SingleWalletScreen(address, navController, walletViewModel)
+                SingleWalletScreen(address, navController, walletViewModel, generalViewModel)
             }
         }
         composable(route=NavScreen.TransferScreen.route+"/{address}"){ navBackStack->
@@ -258,7 +260,14 @@ fun AppNav(
             NavScreen.HomeScreen.route,
             authViewModel
         ) {
-            HomeScreen(navController, feedViewModel, chatViewModel, authViewModel, profileViewModel)
+            HomeScreen(
+                navController,
+                feedViewModel,
+                chatViewModel,
+                authViewModel,
+                profileViewModel,
+                generalViewModel
+                )
         }
 
     }

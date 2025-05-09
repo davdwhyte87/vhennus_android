@@ -65,8 +65,7 @@ class  FeedViewModel @Inject constructor(
     private val _feedUIState = MutableStateFlow(FeedUIState())
     val feedUIState= _feedUIState.asStateFlow()
 
-    private val _systemData = MutableStateFlow(SystemData())
-    val systemData = _systemData.asStateFlow()
+
     
     private val _singlePost = MutableStateFlow(PostWithComments())
     val singlePost = _singlePost.asStateFlow()
@@ -99,37 +98,7 @@ class  FeedViewModel @Inject constructor(
         _userName.value = mshared.getString("user_name","").toString()
     }
 
-    fun getSystemData(){
-        viewModelScope.launch {
-            withContext(Dispatchers.IO){
-                try{
 
-                    val resp = apiService.getSystemData()
-                    if (resp.isSuccessful){
-                        val systemData = resp.body()?.data
-                        if (systemData == null){
-                            CLog.error("ERROR GETTING SYSTEM DATA", " Did not get any data")
-                            return@withContext
-                        }
-                        _systemData.value = systemData
-                        _feedUIState.update { it.copy(isGetSystemDataSuccess = true) }
-
-                    }else{
-                        val errData = resp.errorBody()?.string()
-                        CLog.error("ERROR GETTING SYSTEM DATA", resp.code().toString()+"err data")
-                        val gson = Gson()
-                        val genericType = object : TypeToken<GenericResp<String>>() {}.type
-                        val errorResp: GenericResp<String> = gson.fromJson(errData, genericType)
-                        CLog.error("ERROR GETTING SYSTEM DATA", errorResp.message)
-
-                    }
-                }catch (e:Exception){
-                    CLog.error("ERROR GETTING SYSTEM DATA", e.toString())
-                }
-
-            }
-        }
-    }
 
     fun success(){
         _feedUIState.update { it.copy(isCreatePostSuccess = true) }

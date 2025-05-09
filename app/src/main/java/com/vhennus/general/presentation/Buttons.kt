@@ -3,9 +3,11 @@ package com.vhennus.general.presentation
 import android.graphics.drawable.Icon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -39,17 +41,22 @@ fun AppButtonLarge(
             contentColor = MaterialTheme.colorScheme.surface
         ),
         shape = RoundedCornerShape(30.dp),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+
     ) {
         if(isLoading){
             AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.surface)
         }else {
             Row (
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                if (isIcon && icon != null) Icon(icon, "") else null
-                Text(text = text, modifier.padding(top = 10.dp, bottom = 10.dp, start = 20.dp),
+                if (isIcon == true && icon != null){
+                    Icon(icon, "")
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(text = text, modifier.padding(vertical = 10.dp),
                     style = MaterialTheme.typography.titleMedium
                 )
             }

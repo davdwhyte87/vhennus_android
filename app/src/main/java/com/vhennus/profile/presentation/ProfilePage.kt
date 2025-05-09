@@ -666,7 +666,8 @@ fun profilePage(
                                     onPostClick = {
                                         navController.navigate(NavScreen.SinglePost.route+"/${post.id}")
                                     },
-                                    likedPosts = likedPosts.value
+                                    likedPosts = likedPosts.value,
+                                    isSingleScreen = false
                                 )
                             }
                         }
