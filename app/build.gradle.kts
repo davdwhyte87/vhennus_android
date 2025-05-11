@@ -34,7 +34,7 @@ android {
             applicationIdSuffix = ".dev"
             //buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
             //buildConfigField("String", "API_URL", "\"http://10.0.2.2:8000\"")
-            buildConfigField("String", "API_URL", "\"https://bend.vhennus.com:8000\"")
+            buildConfigField("String", "API_URL", "\"https://testbend.vhennus.com\"")
             //buildConfigField("String", "API_URL", "\"http://172.20.10.2:8000\"")
             //buildConfigField("String", "API_URL", "\"http://0.0.0.0:8000\"")
             buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.221.87:3000\"")

@@ -72,7 +72,7 @@ class AuthViewModel  @Inject constructor(
                 // send data to api
                 try {
                     val resp = apiService.create_account(data)
-                    Log.d("SIGNUP RESP", resp.body().toString())
+                    CLog.debug("SIGNUP RESP", resp.body().toString())
                     if (resp.code() == 200){
                         _authUIState.update { it.copy(
                             isSignupButtonLoading = false,
@@ -93,7 +93,7 @@ class AuthViewModel  @Inject constructor(
                             signupErrorMessage = errorResp.message
                         ) }
 
-                        Log.d("SIGNUP ERROR ", errorResp.message + " "+ errorResp.server_message)
+                        CLog.error("SIGNUP ERROR ", errorResp.message + " "+ errorResp.server_message)
                     }
                 }catch (e:Exception){
                     _authUIState.update { it.copy(
@@ -102,7 +102,7 @@ class AuthViewModel  @Inject constructor(
                         isSignupError = true,
                         signupErrorMessage = "Network Error"
                     ) }
-                    Log.d("SIGNUP ERROR", e.toString())
+                    CLog.error("SIGNUP ERROR", e.toString())
                 }
 
                 _authUIState.update { it.copy(isSignupButtonLoading = true) }
@@ -246,7 +246,7 @@ class AuthViewModel  @Inject constructor(
         Log.d("LOGIN ****", "Starting " )
         // start loading button
         _authUIState.update { it.copy(isLoginButtonLoading = true) }
-        Log.d("LOGIN ****", "loading " )
+        CLog.debug("LOGIN ****", "loading " )
         viewModelScope.launch {
             withContext(Dispatchers.IO){
                 // send data to api
@@ -276,7 +276,7 @@ class AuthViewModel  @Inject constructor(
                         }
 
                     }else{
-                        Log.d("LOGIN ERROR !", resp.errorBody().toString())
+                        CLog.debug("LOGIN ERROR !", resp.errorBody().toString())
                         val gson = Gson()
                         val genericType = object : TypeToken<GenericResp<String>>() {}.type
                         val errorResp: GenericResp<String> = gson.fromJson(resp.errorBody()?.string() , genericType)
@@ -287,7 +287,7 @@ class AuthViewModel  @Inject constructor(
                             loginErrorMessage = errorResp.message
                         ) }
 
-                        Log.d("LOGIN ERROR ", errorResp.message + " "+ errorResp.server_message)
+                        CLog.error("LOGIN ERROR ", errorResp.message + " "+ errorResp.server_message)
                     }
                 }catch (e:Exception){
                     _authUIState.update { it.copy(
@@ -296,7 +296,7 @@ class AuthViewModel  @Inject constructor(
                         isLoginError = true,
                         loginErrorMessage = "Network Error"
                     ) }
-                    Log.d("LOGIN ERROR", e.toString())
+                    CLog.error("LOGIN ERROR", e.toString())
                 }
 
                 _authUIState.update { it.copy(isLoginButtonLoading = false) }
