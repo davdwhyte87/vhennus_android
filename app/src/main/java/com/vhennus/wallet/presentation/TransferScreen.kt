@@ -47,8 +47,10 @@ import com.vhennus.general.presentation.InputField
 import com.vhennus.general.presentation.InputFieldWithLabel
 import com.vhennus.general.presentation.SnackbarType
 import com.vhennus.general.presentation.showCustomToast
+import com.vhennus.general.utils.CLog
 import com.vhennus.general.utils.KeyGenerator
 import com.vhennus.general.utils.formatBigDecimalWithCommas
+import com.vhennus.general.utils.getTxId
 import com.vhennus.general.utils.signTransaction
 import com.vhennus.ui.AnimatedPreloader
 import com.vhennus.ui.BackTopBar
@@ -148,9 +150,8 @@ fun TransferScreen(
                 InputField(
                     amount,
                     "Amount",
-                    bottomView = {
+                    isNumeric = true,
 
-                    }
                 )
                 Text("${formatBigDecimalWithCommas(textToBigDecimal(amount.value))} VEC",
                     style = MaterialTheme.typography.titleSmall
@@ -158,9 +159,6 @@ fun TransferScreen(
                 InputField(
                     seed,
                     "Seed phrase",
-                    bottomView = {
-
-                    }
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -190,14 +188,18 @@ fun TransferScreen(
                     return@AppButtonLarge
                 }
                 val (priv, pub) =KeyGenerator.generateKeysFromSeed(seed.value)
-                val signature = signTransaction(walletAddress, address.value, amount.value,
-                    singleWallet.nonce.toString(),priv)
+                val timestampSeconds = System.currentTimeMillis() / 1000
+                val amount_str = textToBigDecimal(amount.value).toString()
+                val id = getTxId(walletAddress, address.value,amount_str, timestampSeconds)
+                val signature = signTransaction(walletAddress, address.value,amount_str,
+                    timestampSeconds,id,priv)
                 val req = TransferReq(
                     sender = walletAddress,
                     receiver = address.value,
-                    amount = amount.value,
-                    nonce = singleWallet.nonce.toString(),
-                    signature
+                    amount = amount_str,
+                    id = id,
+                    timestamp = timestampSeconds,
+                    signature = signature
                 )
                 walletViewModel.transfer(req)
             }
@@ -220,12 +222,12 @@ fun validateTransferInput(amount: String, address:String, snackbarHostState: Sna
     }
 
      try {
-        BigInteger(amount)
+         BigDecimal(amount)
 
     } catch (e: NumberFormatException) {
          scope.launch{
              snackbarHostState.showSnackbar(visuals = CustomSnackbarVisuals(
-                 message = "Invalid amount",
+                 message = "Invalid amount m",
                  type = SnackbarType.ERROR
              ))
          }
@@ -236,6 +238,7 @@ fun validateTransferInput(amount: String, address:String, snackbarHostState: Sna
 }
 
 fun textToBigDecimal(number: String): BigDecimal{
+    CLog.debug("NUMERIC AMOUNT", number)
     try {
        return  BigDecimal(number)
     }catch (e: Exception){

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -16,6 +17,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.vhennus.ui.theme.Gray2
 
@@ -61,14 +63,15 @@ fun InputField(
     placeHolderText: String,
     isLeadIcon: Boolean=false,
     isTrailingIcon: Boolean = false,
+    isNumeric: Boolean = false,
     trailingIcon: @Composable ()->Unit = {},
     leadingIcon: @Composable ()->Unit = { },
-    bottomView: @Composable ()->Unit = {},
 
     ){
     Column (
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ){
+        val keyboardType = if (isNumeric) KeyboardType.Number else KeyboardType.Text
 
         OutlinedTextField(
             value = data.value,
@@ -87,8 +90,10 @@ fun InputField(
             placeholder = {Text(placeHolderText,
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.alpha(0.6f)
-            )}
+            )},
+            keyboardOptions = KeyboardOptions(
+                keyboardType = keyboardType
+            ),
         )
-        bottomView
     }
 }

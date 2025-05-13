@@ -47,6 +47,7 @@ import com.vhennus.general.presentation.SnackbarType
 import com.vhennus.general.utils.CLog
 import com.vhennus.general.utils.KeyGenerator
 import com.vhennus.general.utils.signMessage
+import com.vhennus.general.utils.signMessage2
 import com.vhennus.ui.AnimatedPreloader
 import com.vhennus.ui.BackTopBar
 import com.vhennus.ui.GeneralScaffold
@@ -90,6 +91,13 @@ fun AddWalletScreen(
                 message = "Wallet added!",
                 type = SnackbarType.SUCCESS
             ))
+            walletViewModel.resetUI()
+        }
+    }
+
+        DisposableEffect(true) {
+
+        onDispose {
             walletViewModel.resetUI()
         }
     }
@@ -138,7 +146,7 @@ fun AddWalletScreen(
                 // sign message
                 val (priv, pub) = KeyGenerator.generateKeysFromSeed(seedPhrase.value)
                 val message  = "hello benny".toString()
-                val signature = signMessage(message, priv)
+                val signature = signMessage2(message, priv)
                 CLog.debug("ADD WALLET SINGATURE", signature)
                 CLog.debug("PUB KEY ADD WALLET", pub)
 

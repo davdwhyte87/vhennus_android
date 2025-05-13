@@ -67,7 +67,7 @@ object AppModule {
 
     @Provides
     @Named("webSocketUrl")
-    fun provideWebSocketUrl(): String = BuildConfig.API_URL+"/api/v1/auth/chat/ws"
+    fun provideWebSocketUrl(): String = BuildConfig.WEB_SOCKET_API_URL+"/api/v1/auth/chat/ws"
 
     @Provides
     @Singleton

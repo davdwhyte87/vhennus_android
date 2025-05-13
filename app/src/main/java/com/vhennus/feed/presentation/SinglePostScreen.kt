@@ -176,11 +176,10 @@ fun singlePostScreen(id:String, feedViewModel: FeedViewModel, navController: Nav
                     feedViewModel.getLikedPost()
                 },
                 onPostClick = {
-                    navController.navigate(NavScreen.SinglePost.route+"/${post.value.post.id}"){
-                        popUpTo(NavScreen.SinglePost.route+"/${post.value.post.id}"){inclusive=true}
-                    }
+
                 },
-                likedPosts = likedPosts.value
+                likedPosts = likedPosts.value,
+                isSingleScreen = true
             )
 
             Row (

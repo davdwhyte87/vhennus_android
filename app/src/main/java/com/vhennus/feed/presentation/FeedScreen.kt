@@ -195,7 +195,8 @@ fun FeedScreen(
               CLog.debug("POST CLICKED", "YES")
               navHostController.navigate(NavScreen.SinglePost.route+"/${post.id}")
             },
-            likedPosts = likedPosts.value
+            likedPosts = likedPosts.value,
+            isSingleScreen = false
           )
 //          com.vhennus.feed.presentation.post(post = remember{mutableStateOf(post)}, navHostController, userName.value, {feedViewModel.likePost(post.id)}, {
 //            navHostController.navigate(NavScreen.SinglePost.route+"/${post.id}")
@@ -396,6 +397,7 @@ fun SinglePost(
   onLike: ()->Unit,
   onPostClick:()->Unit,
   likedPosts: List<String>,
+  isSingleScreen: Boolean
 ){
 
   Column {
@@ -450,9 +452,16 @@ fun SinglePost(
       })
     ) {
      // clickable text
-      val text = truncateTextToWords(post.text, 100)
+
       //ClickableTextWithLinks(text)
-      Text(text=AnnotatedString.rememberAutoLinkText(text))
+      if (isSingleScreen){
+        val text = post.text
+        Text(text=AnnotatedString.rememberAutoLinkText(text))
+      }else{
+        val text = truncateTextToWords(post.text, 100)
+        Text(text=AnnotatedString.rememberAutoLinkText(text))
+      }
+
      //TruncatedText(post.text)
     }
 

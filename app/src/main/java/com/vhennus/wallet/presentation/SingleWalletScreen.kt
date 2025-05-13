@@ -20,7 +20,9 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.outlined.Send
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
@@ -72,10 +75,12 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.vhennus.NavScreen
+import com.vhennus.general.data.GeneralViewModel
 import com.vhennus.general.presentation.AppScaffold
 import com.vhennus.general.presentation.CustomSnackbarVisuals
 import com.vhennus.general.presentation.SnackbarType
 import com.vhennus.general.utils.CLog
+import com.vhennus.general.utils.copyToClipboard
 import com.vhennus.general.utils.formatBigDecimalWithCommas
 import com.vhennus.profile.data.ProfileViewModel
 import com.vhennus.ui.AnimatedPreloader
@@ -88,34 +93,23 @@ import com.vhennus.ui.theme.White
 import com.vhennus.wallet.data.WalletViewModel
 import com.vhennus.wallet.domain.GetWalletReq
 import com.vhennus.wallet.domain.GetWalletTransactionsReq
+import com.vhennus.wallet.domain.TBlock
 import com.vhennus.wallet.domain.Transaction
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
 @Composable
 fun SingleWalletScreen(
     address: String,
     navController: NavController,
-    walletViewModel: WalletViewModel
+    walletViewModel: WalletViewModel,
+    generalViewModel: GeneralViewModel
 ){
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // clear model data
-    DisposableEffect(true) {
 
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                walletViewModel.getWalletFromBlockchain(GetWalletReq(address))
-                walletViewModel.getWalletTransactionsFromBlockchain(GetWalletTransactionsReq(address))
-            }
-        }
-
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        onDispose {
-            //walletViewModel.clearModelData()
-        }
-    }
 
 
 
@@ -129,18 +123,72 @@ fun SingleWalletScreen(
     var totalAssetString = remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val currency = walletViewModel.selectedCurrency.collectAsState().value
+    val totalAssetConvString = remember { mutableStateOf("") }
+    val isbh = walletViewModel.isBalanceHidden.collectAsState().value
+    val isBalanceHidden = remember { mutableStateOf(false) }
+    val systemData = generalViewModel.systemData.collectAsState().value
+    val scrollState = rememberScrollState()
 
 
+    DisposableEffect(true) {
 
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                walletViewModel.getWalletFromBlockchain(GetWalletReq(address))
+                walletViewModel.getWalletTransactionsFromBlockchain(GetWalletTransactionsReq(address))
+                //walletViewModel.getExchangeRate()
+                walletViewModel.getSelectedCurrency()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            //walletViewModel.clearModelData()
+        }
+    }
+    LaunchedEffect(isbh) {
+        if(isbh == "0"){
+            isBalanceHidden.value = false
+        }
+        if(isbh == "1"){
+            isBalanceHidden.value = true
+        }
+    }
 
     LaunchedEffect(walletUIState.isGetAllWalletsError) {
         if (walletUIState.isGetAllWalletsError){
             //context.showCustomErrorToast(walletUIState.getAllWalletsErrorMessage)
-            snackbarHostState.showSnackbar(visuals = CustomSnackbarVisuals(
-                message = walletUIState.getAllWalletsErrorMessage,
-                type = SnackbarType.ERROR
-            ))
+            scope.launch{
+                snackbarHostState.showSnackbar(visuals = CustomSnackbarVisuals(
+                    message = walletUIState.getAllWalletsErrorMessage,
+                    type = SnackbarType.ERROR
+                ))
+            }
+
         }
+    }
+
+    fun calculateConvertedBalance(){
+        when (currency){
+            "NGN"-> {
+                totalAssetConvString.value= formatBigDecimalWithCommas((singleWallet.balance*systemData.price)*systemData.ngn)
+            }
+            "USD" -> {
+                totalAssetConvString.value= formatBigDecimalWithCommas(singleWallet.balance*systemData.price)
+            }
+        }
+
+    }
+    LaunchedEffect(singleWallet) {
+        calculateConvertedBalance()
+    }
+    LaunchedEffect(currency) {
+        CLog.debug("SYSTEM", currency)
+        val validCurrencies = listOf<String>("NGN", "USD")
+        calculateConvertedBalance()
+        CLog.debug("SYSTEM", systemData.price.toString())
     }
 
 
@@ -150,6 +198,7 @@ fun SingleWalletScreen(
         snackbarHostState=snackbarHostState
     ) {
         Column(
+            modifier = Modifier.verticalScroll(scrollState)
         ) {
 
             Column(
@@ -161,7 +210,7 @@ fun SingleWalletScreen(
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Box {
                         IconButton(onClick = {expanded.value = true},
@@ -181,6 +230,7 @@ fun SingleWalletScreen(
                                 onClick = {
                                     // Handle click
                                     expanded.value = false
+                                    walletViewModel.saveSelectedCurrency("NGN")
                                 }
                             )
                             DropdownMenuItem(
@@ -188,21 +238,36 @@ fun SingleWalletScreen(
                                 onClick = {
                                     // Handle click
                                     expanded.value = false
+                                    walletViewModel.saveSelectedCurrency("USD")
                                 }
                             )
                         }
                     }
-
-                    Text("USD", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
-                    Text("13,000.00", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
-                    IconButton(onClick = {},
+                    Text("${currency}  ", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
+                    Text(if (isBalanceHidden.value){"****"}else{ totalAssetConvString.value}, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.surface)
+                    IconButton(onClick = {
+                        if (isBalanceHidden.value){
+                            isBalanceHidden.value = false
+                            walletViewModel.saveIsBalanceHidden("0")
+                        }else{
+                            isBalanceHidden.value = true
+                            walletViewModel.saveIsBalanceHidden("1")
+                        }
+                    },
                         colors = IconButtonDefaults.iconButtonColors(
                             contentColor = MaterialTheme.colorScheme.surface
                         )
                     ) {
-                        Icon(Icons.Default.VisibilityOff, "Visibility",
-                            modifier = Modifier.size(25.dp)
-                        )
+                        if(isBalanceHidden.value){
+                            Icon(Icons.Default.VisibilityOff, "Visibility",
+                                modifier = Modifier.size(25.dp)
+                            )
+                        }else{
+                            Icon(Icons.Default.Visibility, "Visibility",
+                                modifier = Modifier.size(25.dp)
+                            )
+
+                        }
                     }
                 }
 
@@ -219,7 +284,7 @@ fun SingleWalletScreen(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
                 ){
-                    Text("${formatBigDecimalWithCommas(singleWallet.balance)} VEC", style = MaterialTheme.typography.headlineMedium,
+                    Text(if (isBalanceHidden.value){"****"}else{ "${formatBigDecimalWithCommas(singleWallet.balance)} VEC"}, style = MaterialTheme.typography.titleLarge,
                         color =MaterialTheme.colorScheme.surface )
                 }
             }
@@ -231,6 +296,13 @@ fun SingleWalletScreen(
             ) {
                 WalletMenuItem("Copy", Icons.Outlined.CopyAll){
                     //navController.navigate(NavScreen.AddWalletScreen.route)
+                    copyToClipboard(context, "wallet address", singleWallet.address)
+                    scope.launch{
+                        snackbarHostState.showSnackbar(visuals = CustomSnackbarVisuals(
+                            message = "Address copied!",
+                            type = SnackbarType.SUCCESS
+                        ))
+                    }
                 }
                 Spacer(modifier = Modifier.width(74.dp))
                 WalletMenuItem("Send", Icons.AutoMirrored.Outlined.Send){
@@ -244,13 +316,12 @@ fun SingleWalletScreen(
             ) {
 
                 Text("Wallet Activities", style = MaterialTheme.typography.titleMedium)
-                LazyColumn {
-                    items(transactions){trans->
-                        TransactionListItem2(address,trans) {
+                singleWallet.chain.forEach {trans->
+                    TransactionListItem2(address,trans) {
 
-                        }
                     }
                 }
+
             }
         }
     }
@@ -264,7 +335,7 @@ data class WalletMenu(
 
 
 @Composable
-fun TransactionListItem2(address:String, transaction: Transaction, onclick:()->Unit){
+fun TransactionListItem2(address:String, transaction: TBlock, onclick:()->Unit){
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.padding(top = 16.dp)

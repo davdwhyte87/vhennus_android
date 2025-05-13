@@ -19,31 +19,26 @@ android {
             dimension = "environment"
             // Additional configurations for this flavor
 
-//            buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
-
-            //buildConfigField("String", "API_URL", "\"http://0.0.0.0:8000\"")
-            buildConfigField("String", "API_URL", "\"https://bend.vhennus.com:7000\"")
-            buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.221.87:3000\"")
+            buildConfigField("String", "API_URL", "\"https://bend.vhennus.com\"")
+            buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.221.87:9990\"")
+            buildConfigField("String", "WEB_SOCKET_API_URL", "\"wss://bend.vhennus.com\"")
         }
         create("dev") {
             dimension = "environment"
             // Additional configurations for this flavor
             applicationIdSuffix = ".dev"
-            //buildConfigField("String", "API_URL", "\"http://155.138.224.183:8000\"")
-            //buildConfigField("String", "API_URL", "\"http://10.0.2.2:8000\"")
-            buildConfigField("String", "API_URL", "\"https://bend.vhennus.com:8000\"")
-            //buildConfigField("String", "API_URL", "\"http://172.20.10.2:8000\"")
-            //buildConfigField("String", "API_URL", "\"http://0.0.0.0:8000\"")
+            buildConfigField("String", "API_URL", "\"https://testbend.vhennus.com\"")
             buildConfigField("String", "BLOCKCHAIN_URL", "\"155.138.221.87:3000\"")
+            buildConfigField("String", "WEB_SOCKET_API_URL", "\"wss://testbend.vhennus.com\"")
 
         }
     }
     defaultConfig {
         applicationId = "com.vhennus"
-        minSdk = 28
+        minSdk = 27
         targetSdk = 34
-        versionCode = 10
-        versionName = "1.0"
+        versionCode = 11
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -75,7 +70,7 @@ android {
         }
 
         debug {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -183,6 +178,10 @@ dependencies {
 
     // bouncy castle encryption
     implementation(libs.bcprov.jdk15to18)
+
+    // dns
+    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.12.0")
+    //implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
 
 }
 

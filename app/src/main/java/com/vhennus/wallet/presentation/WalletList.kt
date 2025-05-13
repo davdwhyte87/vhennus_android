@@ -24,13 +24,20 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.vhennus.NavScreen
+import com.vhennus.general.utils.CLog
+import com.vhennus.general.utils.formatBigDecimalWithCommas
 import com.vhennus.ui.theme.Green
 import com.vhennus.ui.theme.Red
+import com.vhennus.wallet.data.WalletViewModel
 import com.vhennus.wallet.domain.Account
 import com.vhennus.wallet.domain.Transaction
 import com.vhennus.wallet.domain.Wallet
@@ -100,7 +107,28 @@ fun getExchangeValue(application: Context, amount:BigDecimal):BigDecimal{
 
 
 @Composable
-fun WalletListItem(wallet: Account, onclick:()->Unit){
+fun WalletListItem(
+    wallet: Account,
+    currency:String,
+    usdPrice: BigDecimal,
+    ngnPrice: BigDecimal,
+    isBalanceHidden: Boolean,
+    onclick:()->Unit,
+
+){
+    val balanceString = remember { mutableStateOf("") }
+
+    LaunchedEffect(currency) {
+        when (currency){
+            "NGN"-> {
+                balanceString.value= formatBigDecimalWithCommas((wallet.balance*usdPrice)*ngnPrice)
+            }
+            "USD" -> {
+                balanceString.value= formatBigDecimalWithCommas(wallet.balance*usdPrice)
+            }
+        }
+    }
+
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.padding(top = 16.dp).clickable(onClick = {
@@ -123,17 +151,13 @@ fun WalletListItem(wallet: Account, onclick:()->Unit){
                 modifier = Modifier.weight(1f)
             ) {
                 Text(wallet.address, style = MaterialTheme.typography.titleSmall)
-                Text(wallet.balance.toString() + " VEC", style = MaterialTheme.typography.bodySmall)
+                Text(if (isBalanceHidden){"****"}else{ formatBigDecimalWithCommas(wallet.balance) + " VEC"}, style = MaterialTheme.typography.bodySmall)
             }
             Column(
                 modifier = Modifier
             ) {
-                Text(wallet.balance.toString()+" USD", style = MaterialTheme.typography.titleSmall)
-
+                Text(if (isBalanceHidden){"****"}else{ balanceString.value+currency}, style = MaterialTheme.typography.titleSmall)
             }
-
-
-
 
         }
 

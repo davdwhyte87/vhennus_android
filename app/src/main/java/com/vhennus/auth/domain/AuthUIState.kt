@@ -27,6 +27,10 @@ data class AuthUIState(
     val resendCodeError: Boolean = false,
     val resendCodeErrorMessage:String = "",
 
+    val isChangePasswordLoading: Boolean = false,
+    val isChangePasswordSuccess: Boolean = false,
+    val isChangePasswordError : Boolean = false,
+    val changePasswordErrorMessage:String = ""
 
 
 

@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.sharp.AddCard
@@ -149,7 +151,7 @@ fun NewWalletScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val walletUIState = walletViewModel.walletUIState.collectAsState().value
-
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(walletUIState.createWalletSuccess) {
         if (walletUIState.createWalletSuccess){
@@ -157,6 +159,14 @@ fun NewWalletScreen(
                 message = "Wallet Created",
                 type = SnackbarType.SUCCESS
             ))
+            walletViewModel.resetUIState()
+        }
+    }
+
+    DisposableEffect(true) {
+
+
+        onDispose {
             walletViewModel.resetUIState()
         }
     }
@@ -178,7 +188,7 @@ fun NewWalletScreen(
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(24.dp).fillMaxSize(),
+            modifier = Modifier.padding(24.dp).fillMaxSize().verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
 
@@ -244,7 +254,7 @@ fun NewWalletScreen(
                 )
             }
 
-            AppButtonLarge(text = "Continue",
+            AppButtonLarge(text = "Create Wallet",
                 isLoading = walletUIState.isCreateWalletButtonLoading,
 
                 ) {

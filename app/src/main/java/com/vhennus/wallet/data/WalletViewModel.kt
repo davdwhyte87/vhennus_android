@@ -20,12 +20,14 @@ import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.domain.GenericResp
 import com.vhennus.general.utils.KeyGenerator
 import com.vhennus.general.utils.signMessage
+import com.vhennus.general.utils.signMessage2
 import com.vhennus.wallet.domain.Account
 
 import com.vhennus.wallet.domain.AddWalletReq
 import com.vhennus.wallet.domain.BlockchainRequest
 import com.vhennus.wallet.domain.BlockchainResp
 import com.vhennus.wallet.domain.GetWalletTransactionsReq
+import com.vhennus.wallet.domain.MicroAccount
 import com.vhennus.wallet.domain.Transaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -75,6 +77,12 @@ class WalletViewModel @Inject constructor(
     val _walletUIState = MutableStateFlow(defaultUIState)
     val walletUIState = _walletUIState.asStateFlow()
 
+    private val _selectedCurrency = MutableStateFlow("NGN")
+    val selectedCurrency = _selectedCurrency.asStateFlow()
+
+    private val _isBalanceHidden = MutableStateFlow("0")
+    val isBalanceHidden = _isBalanceHidden.asStateFlow()
+
 
 
     fun clearModelData(){
@@ -92,6 +100,33 @@ class WalletViewModel @Inject constructor(
 
     fun updateSingleWallet(wallet:Wallet){
         _singleWallet.value = wallet
+    }
+
+
+    fun getSelectedCurrency(){
+        val sharedPreferences = application.getSharedPreferences("app", Context.MODE_PRIVATE)
+        val value = sharedPreferences.getString("currency", null)
+        _selectedCurrency.value = value?: "NGN"
+    }
+
+    fun getIsBalanceHidden(){
+        val sharedPreferences = application.getSharedPreferences("app", Context.MODE_PRIVATE)
+        val value = sharedPreferences.getString("is_balance_hidden", null)
+        _isBalanceHidden.value = value?: "0"
+    }
+
+    fun saveSelectedCurrency(cur: String){
+        val sharedPreferences = application.getSharedPreferences("app", Context.MODE_PRIVATE)
+        sharedPreferences.edit().putString("currency", cur).apply()
+
+        getSelectedCurrency()
+    }
+
+    fun saveIsBalanceHidden(data: String){
+        val sharedPreferences = application.getSharedPreferences("app", Context.MODE_PRIVATE)
+        sharedPreferences.edit().putString("is_balance_hidden", data).apply()
+
+        getIsBalanceHidden()
     }
     fun createWallet(createWalletRequest:CreateWalletReq, priv:String){
         _walletUIState.update { it.copy(
@@ -120,7 +155,7 @@ class WalletViewModel @Inject constructor(
                         ) }
 
                         val smessage = "north pole"
-                        val sig =signMessage(smessage,priv)
+                        val sig = signMessage2(smessage,priv)
                         val addReq = AddWalletReq(
                             address = createWalletRequest.address,
                             message = smessage,
@@ -457,6 +492,7 @@ class WalletViewModel @Inject constructor(
                 // get wallet from blockchain api
                 val accounts = mutableListOf<Account>()
                 walletAddresses.forEach{it->
+                    CLog.debug("WL", it)
                     val req = BlockchainRequest<GetWalletReq>(
                         action = "get_account",
                         data = GetWalletReq(address = it)
@@ -480,13 +516,13 @@ class WalletViewModel @Inject constructor(
                                 getAllWalletsErrorMessage = ""
                             ) }
                         }else{
-                            CLog.error("GET ALL WALLETS", respData.message)
-                            _walletUIState.update { it.copy(
-                                isGetAllWalletsLoading = false,
-                                isGetAllWalletsSuccess = false,
-                                isGetAllWalletsError = true,
-                                getAllWalletsErrorMessage = respData.message
-                            ) }
+//                            CLog.error("GET ALL WALLETS", respData.message)
+//                            _walletUIState.update { it.copy(
+//                                isGetAllWalletsLoading = false,
+//                                isGetAllWalletsSuccess = false,
+//                                isGetAllWalletsError = true,
+//                                getAllWalletsErrorMessage = respData.message
+//                            ) }
                         }
 
                     }catch (e: Exception){

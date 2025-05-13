@@ -19,14 +19,18 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.dnsoverhttps.DnsOverHttps
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.math.BigDecimal
+import java.net.InetAddress
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
@@ -56,9 +60,19 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(@Named("customGson") gson: Gson): Retrofit {
+        val dohUrl = "https://dns.google/dns-query".toHttpUrl()
+        val googleDoH = DnsOverHttps.Builder()
+            .client(OkHttpClient())       // reuse if you have a shared client
+            .url(dohUrl)                  // now using the extension-parsed URL
+            .bootstrapDnsHosts(           // optional, to bypass system DNS
+                InetAddress.getByName("8.8.8.8"),
+                InetAddress.getByName("8.8.4.4")
+            )
+            .build()
 
         Log.d("Retrofit", "✅ Using custom Gson instance: $gson")
         val okHttpClient = OkHttpClient.Builder()
+            .dns(googleDoH)
             .connectTimeout(120, TimeUnit.SECONDS)   // Set connection timeout
             .readTimeout(120, TimeUnit.SECONDS)      // Set read timeout
             .writeTimeout(120, TimeUnit.SECONDS)     // Set write timeout
