@@ -447,7 +447,7 @@ class ChatViewModel @Inject constructor(
 
 
         if(!webSocketManager.sendMessage(text)){
-            CLog.debug("WS SEND MESSAGE", "error sending ")
+            CLog.error("WS SEND MESSAGE", "error sending ")
             _chatsUIState.update { it.copy(
                 isCreateChatLoading = false,
                 isCreateChatError = true,
@@ -460,7 +460,6 @@ class ChatViewModel @Inject constructor(
         }
 
         // get new chat
-
         val temp = _chats.value.toMutableList()
         temp.add(
             Chat(

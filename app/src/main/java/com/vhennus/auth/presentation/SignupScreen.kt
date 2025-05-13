@@ -181,10 +181,10 @@ fun signUpScreen(
 
 fun validateInput(userName:String, password:String, password2:String, context: Context, email: String):Boolean{
     val isAllLowerCase = userName.all { it.isLowerCase() }
-//    if (!isAllLowerCase){
-//        Toast.makeText(context, "username should be all lowercase", Toast.LENGTH_SHORT).show()
-//        return false
-//    }
+    if (!isAllLowerCase){
+        Toast.makeText(context, "username should be all lowercase", Toast.LENGTH_SHORT).show()
+        return false
+    }
     val hasSpace = userName.any { it.isWhitespace() }
     if (hasSpace){
         Toast.makeText(context, "username should have no spaces", Toast.LENGTH_SHORT).show()
