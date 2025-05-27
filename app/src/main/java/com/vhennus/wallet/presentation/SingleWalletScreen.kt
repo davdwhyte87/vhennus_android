@@ -136,7 +136,7 @@ fun SingleWalletScreen(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 walletViewModel.getWalletFromBlockchain(GetWalletReq(address))
-                walletViewModel.getWalletTransactionsFromBlockchain(GetWalletTransactionsReq(address))
+                //walletViewModel.getWalletTransactionsFromBlockchain(GetWalletTransactionsReq(address))
                 //walletViewModel.getExchangeRate()
                 walletViewModel.getSelectedCurrency()
             }
@@ -179,7 +179,6 @@ fun SingleWalletScreen(
                 totalAssetConvString.value= formatBigDecimalWithCommas(singleWallet.balance*systemData.price)
             }
         }
-
     }
     LaunchedEffect(singleWallet) {
         calculateConvertedBalance()
@@ -316,12 +315,11 @@ fun SingleWalletScreen(
             ) {
 
                 Text("Wallet Activities", style = MaterialTheme.typography.titleMedium)
-                singleWallet.chain.forEach {trans->
+                singleWallet.chain.reversed().forEach {trans->
                     TransactionListItem2(address,trans) {
 
                     }
                 }
-
             }
         }
     }

@@ -30,12 +30,27 @@ private val application: Application,
 ): ViewModel() {
     private val _systemData = MutableStateFlow(SystemData())
     val systemData = _systemData.asStateFlow()
-
+    private val _isGetSystemDataSuccess = MutableStateFlow(false)
+    val isGetSystemDataSuccess = _isGetSystemDataSuccess.asStateFlow()
 
     fun savePrice(p: String){
         val sharedPreferences = application.getSharedPreferences("app", Context.MODE_PRIVATE)
         sharedPreferences.edit().putString("ngn_price", p).apply()
     }
+
+    fun saveRefAmount(p: String){
+        val sharedPreferences = application.getSharedPreferences("app", Context.MODE_PRIVATE)
+        sharedPreferences.edit().putString("ref_amount", p).apply()
+    }
+    fun savePricePerRef(pricePerRef: String){
+        val sharedPreferences = application.getSharedPreferences("app", Context.MODE_PRIVATE)
+        sharedPreferences.edit().putString("price_per_ref", pricePerRef).apply()
+    }
+    fun getPricePerRef(pricePerRef: String){
+        val sharedPreferences = application.getSharedPreferences("app", Context.MODE_PRIVATE)
+        sharedPreferences.edit().putString("price_per_ref", pricePerRef).apply()
+    }
+
 
     fun getNgn(p: String){
         val sharedPreferences = application.getSharedPreferences("app", Context.MODE_PRIVATE)
@@ -55,7 +70,9 @@ private val application: Application,
                         }
                         CLog.debug("SYSTEM DATA", systemData.toString())
                         _systemData.value = systemData
+                        _isGetSystemDataSuccess.value = true
                         savePrice(systemData.ngn.toString())
+                        saveRefAmount(systemData.ref_amount.toString())
 
                     }else{
                         val errorResp = jsonService.decodeFromString(GenericResp.serializer(

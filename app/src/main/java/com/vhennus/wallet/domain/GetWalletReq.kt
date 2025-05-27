@@ -13,7 +13,7 @@ data class AddWalletReq(
     val address:String,
     val message:String,
     val signature: String
-    )
+)
 
 @Serializable
 data class GetWalletTransactionsReq(

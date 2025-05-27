@@ -15,6 +15,7 @@ import com.vhennus.wallet.domain.WalletUIState
 import com.vhennus.wallet.presentation.formatter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vhennus.di.NetworkModule
 import com.vhennus.general.data.APIService
 import com.vhennus.general.data.GetUserToken
 import com.vhennus.general.domain.GenericResp
@@ -54,6 +55,7 @@ class WalletViewModel @Inject constructor(
     private val apiService: APIService,
     private val jsonService: Json,
     private val tokenService: GetUserToken,
+    @NetworkModule.BlockchainAPIService private val blockchainAPIService: APIService
 ) : ViewModel(){
     val defaultSingleWallet = Wallet()
 
@@ -132,21 +134,13 @@ class WalletViewModel @Inject constructor(
         _walletUIState.update { it.copy(
             isCreateWalletButtonLoading = true,
         ) }
-        val req = BlockchainRequest<CreateWalletReq>(
-            action = "create_wallet",
-            data = createWalletRequest
-        )
-        val reqString = jsonService.encodeToString(BlockchainRequest.serializer(CreateWalletReq.serializer()),req )
-
         viewModelScope.launch {
             withContext(Dispatchers.IO){
                 try {
-                    val resp = walletService.sendData(reqString)
-                    CLog.debug("CREATE WALLET RESP", resp)
-                    val respData = jsonService.decodeFromString(BlockchainResp.serializer(String.serializer()), resp)
-                    CLog.debug("CREATE WALLET RESP JSON", respData.toString())
+                    val resp = blockchainAPIService.createWallet(createWalletRequest)
 
-                    if (respData.status == 1){
+                    CLog.debug("CREATE WALLET RESP", resp.toString())
+                    if (resp.code() == 200){
                         _walletUIState.update { it.copy(
                             isCreateWalletButtonLoading = false,
                             createWalletSuccess = true,
@@ -163,11 +157,14 @@ class WalletViewModel @Inject constructor(
                         )
                         addWallet(addReq)
                     }else{
+                        val errorResp = jsonService.decodeFromString(GenericResp.serializer(String.serializer()),
+                            resp.errorBody()?.string() ?: ""
+                        )
                         _walletUIState.update { it.copy(
                             isCreateWalletButtonLoading = false,
                             createWalletSuccess = false,
                             createWalletError = true,
-                            createWalletErrorMessage = respData.message
+                            createWalletErrorMessage = errorResp.message
                         ) }
                     }
                 }catch (exception:IOException){
@@ -235,8 +232,9 @@ class WalletViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 try{
                     val token = tokenService.getUserToken()
+                    CLog.debug("ADD WALLET REQUEST ",req.toString())
                     val resp = apiService.addWallet(req, mapOf("Authorization" to token))
-                    val respMessage = resp.message()
+
 
                     if (resp.isSuccessful){
                         _walletUIState.update { it.copy(
@@ -264,6 +262,8 @@ class WalletViewModel @Inject constructor(
                         ) }
                         CLog.error("ADD WALLET ERROR ",errorResp.toString())
                     }
+                    CLog.debug("ADD WALLET RESPONSE ",resp.toString())
+
                 }catch (exception:Exception){
                     CLog.error("XXX Yola", exception.toString())
                     _walletUIState.update { it.copy(
@@ -284,20 +284,14 @@ class WalletViewModel @Inject constructor(
 
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val req = BlockchainRequest<GetWalletReq>(
-                    action = "get_account",
-                    data = GetWalletReq(address = getWalletReq.address)
-                )
+
                 try {
-                    val json =  jsonService
-                    val reqString = json.encodeToString(BlockchainRequest.serializer(GetWalletReq.serializer()), req)
-                    val resp = walletService.sendData(reqString)
-                    CLog.debug("GET WALLET RESP", resp)
-                    val respData = json.decodeFromString(BlockchainResp.serializer(Account.serializer()), resp)
-                    CLog.debug("GET WALLET RESP Json", respData.toString())
-                    if (respData.status == 1) {
-                        if (respData.data != null) {
-                            _singleWalletC.value = respData.data
+                    val resp = blockchainAPIService.getAccount(getWalletReq)
+
+                    if (resp.code() == 200) {
+                        val account = resp.body()?.data
+                        if (account != null) {
+                            _singleWalletC.value =account
                         }
                         _walletUIState.update { it.copy(
                             isGetSingleWalletLoading = false,
@@ -306,13 +300,17 @@ class WalletViewModel @Inject constructor(
                             getSingleWalletErrorMessage = ""
                         ) }
                     }else{
+                        val errorResp = jsonService.decodeFromString(GenericResp.serializer(Account.serializer()),
+                            resp.errorBody()?.string() ?: ""
+                        )
                         _walletUIState.update { it.copy(
                             isGetSingleWalletLoading = false,
                             isGetSingleWalletSuccess = false,
                             isGetSingleWalletError = true,
-                            getSingleWalletErrorMessage = respData.message
+                            getSingleWalletErrorMessage = errorResp.message
                         ) }
                     }
+                    CLog.debug("GET WALLET RESP", resp.toString())
                 } catch (exception:Exception){
                     _walletUIState.update { it.copy(
                         isGetSingleWalletLoading = false,
@@ -381,21 +379,10 @@ class WalletViewModel @Inject constructor(
         _walletUIState.update { it.copy(isTransferButtonLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val req = BlockchainRequest<TransferReq>(
-                    action = "transfer",
-                    data = transferReq
-                )
                 try {
-                    val json =  jsonService
-                    val reqString = json.encodeToString(BlockchainRequest.serializer(
-                        TransferReq.serializer()), req)
-                    CLog.debug("TRANSFER REQUEST STRING", reqString)
-                    val resp = walletService.sendData(reqString)
-                    CLog.debug("TRANSFER RESP", resp)
-                    val respData = json.decodeFromString(BlockchainResp.serializer(String.serializer()), resp)
-                    CLog.debug("TRANSFER RESP Json", respData.toString())
-                    if (respData.status == 1) {
 
+                    val resp = blockchainAPIService.transfer(transferReq)
+                    if (resp.code() == 200) {
                         _walletUIState.update { it.copy(
                             isTransferButtonLoading  = false,
                             isTransferSuccessful = true,
@@ -403,14 +390,18 @@ class WalletViewModel @Inject constructor(
                             transferErrorMessage = ""
                         ) }
                     }else{
-                        CLog.debug("TRANSFER ERROR ", respData.message)
+                        val errorResp = jsonService.decodeFromString(GenericResp.serializer(String.serializer()),
+                            resp.errorBody()?.string() ?: ""
+                        )
                         _walletUIState.update { it.copy(
                             isTransferButtonLoading  = false,
                             isTransferSuccessful = false,
                             isTransferError = true,
-                            transferErrorMessage = respData.message
+                            transferErrorMessage = errorResp.message
                         ) }
+
                     }
+                    CLog.debug("TRANSFER RESP", resp.toString())
                 } catch (exception:Exception){
                     _walletUIState.update { it.copy(
                         isTransferButtonLoading  = false,
@@ -418,7 +409,7 @@ class WalletViewModel @Inject constructor(
                         isTransferError = true,
                         transferErrorMessage = "Network error"
                     ) }
-                    CLog.debug("TRANSFER ERROR ", exception.toString())
+                    CLog.error("TRANSFER ERROR ", exception.toString())
                 }
             }
         }
@@ -493,30 +484,27 @@ class WalletViewModel @Inject constructor(
                 val accounts = mutableListOf<Account>()
                 walletAddresses.forEach{it->
                     CLog.debug("WL", it)
-                    val req = BlockchainRequest<GetWalletReq>(
-                        action = "get_account",
-                        data = GetWalletReq(address = it)
-                    )
                     try {
-                        val json =  jsonService
-                        val reqString = json.encodeToString(BlockchainRequest.serializer(GetWalletReq.serializer()), req)
-                        val resp = walletService.sendData(reqString)
-                        CLog.debug("GET ALL WALLETS RESP", resp)
-                        val respData = json.decodeFromString(BlockchainResp.serializer(Account.serializer()), resp)
-                        CLog.debug("GET ALL WALLETS RESP Json", respData.toString())
-                        if (respData.status == 1){
-                            if(respData.data != null){
-                                accounts.add(respData.data)
+                        val resp = blockchainAPIService.getAccount(GetWalletReq(address = it))
+
+                        if (resp.code() == 200){
+                            val account = resp.body()?.data
+                            if(account != null){
+                                accounts.add(account)
                             }
 
-                            _walletUIState.update { it.copy(
-                                isGetAllWalletsLoading = false,
-                                isGetAllWalletsSuccess = true,
-                                isGetAllWalletsError = false,
-                                getAllWalletsErrorMessage = ""
-                            ) }
+//                            _walletUIState.update { it.copy(
+//                                isGetAllWalletsLoading = false,
+//                                isGetAllWalletsSuccess = true,
+//                                isGetAllWalletsError = false,
+//                                getAllWalletsErrorMessage = ""
+//                            ) }
                         }else{
-//                            CLog.error("GET ALL WALLETS", respData.message)
+                            val errorResp = jsonService.decodeFromString(GenericResp.serializer(
+                                Account.serializer()),
+                                resp.errorBody()?.string() ?: ""
+                            )
+                            CLog.error("GET ALL WALLETS", errorResp.message)
 //                            _walletUIState.update { it.copy(
 //                                isGetAllWalletsLoading = false,
 //                                isGetAllWalletsSuccess = false,
@@ -524,6 +512,7 @@ class WalletViewModel @Inject constructor(
 //                                getAllWalletsErrorMessage = respData.message
 //                            ) }
                         }
+                        CLog.debug("GET ALL WALLETS RESP", resp.toString())
 
                     }catch (e: Exception){
                         CLog.error("GET ALL WALLETS", e.toString())
@@ -536,6 +525,13 @@ class WalletViewModel @Inject constructor(
                     }
 
                 }
+
+                _walletUIState.update { it.copy(
+                                isGetAllWalletsLoading = false,
+                                isGetAllWalletsSuccess = true,
+                                isGetAllWalletsError = false,
+                                getAllWalletsErrorMessage = ""
+                            ) }
 
                 _allWallets.value = accounts
             }

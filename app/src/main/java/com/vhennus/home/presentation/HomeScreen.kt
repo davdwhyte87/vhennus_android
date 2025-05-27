@@ -1,5 +1,6 @@
 package com.vhennus.home.presentation
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -65,6 +66,7 @@ import com.vhennus.R.drawable
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.chat.presentation.AllChatsScreen
+import com.vhennus.earnings.data.EarningsViewModel
 import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.feed.presentation.FeedScreen
 import com.vhennus.general.data.GeneralViewModel
@@ -80,6 +82,7 @@ import com.vhennus.ui.theme.Purple
 import com.vhennus.ui.theme.Surf
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 
 // home screen will have buttom navigation and will contains four screens
 
@@ -90,15 +93,15 @@ fun HomeScreen(navController: NavController,
                chatViewModel: ChatViewModel,
                authViewModel: AuthViewModel,
                profileViewModel: ProfileViewModel,
-               generalViewModel: GeneralViewModel
+               generalViewModel: GeneralViewModel,
+               earningsViewModel: EarningsViewModel
 ){
     val systemData = generalViewModel.systemData.collectAsState()
-
-
     val context = LocalContext.current
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
     val versionName = packageInfo.versionName
     val feedUIState = feedViewModel.feedUIState.collectAsState()
+    val isGetSystemDataSuccess = generalViewModel.isGetSystemDataSuccess.collectAsState().value
     val showUpdateModal = remember {
         mutableStateOf(false)
     }
@@ -109,15 +112,16 @@ fun HomeScreen(navController: NavController,
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // effects
-    DisposableEffect(true) {
-        // get the app version
-        generalViewModel.getSystemData()
+    DisposableEffect(Unit) {
+
 
         val observer = LifecycleEventObserver{_,event->
             if(event == Lifecycle.Event.ON_RESUME){
                 authViewModel.getUserName()
                 //chatViewModel.getAllMyChatPairs()
                 profileViewModel.getMyProfile()
+                // get the app version
+                generalViewModel.getSystemData()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -127,8 +131,8 @@ fun HomeScreen(navController: NavController,
         }
     }
 
-    LaunchedEffect(feedUIState.value.isGetSystemDataSuccess) {
-        if(feedUIState.value.isGetSystemDataSuccess){
+    LaunchedEffect(isGetSystemDataSuccess) {
+        if(isGetSystemDataSuccess){
 
             if (systemData.value.android_app_version != versionName ){
                 CLog.debug("NEW APP VERSION", "YEs")
@@ -136,6 +140,22 @@ fun HomeScreen(navController: NavController,
             }else{
                 showUpdateModal.value = false
             }
+        }
+    }
+
+    LaunchedEffect(isGetSystemDataSuccess) {
+        if(isGetSystemDataSuccess){
+
+            // send data to post earnings if any
+            val prefs = context.getSharedPreferences("app", Context.MODE_PRIVATE)
+            val mins = prefs.getLong("time_spent", 0L)
+            CLog.debug("CHECKING EARNINGS",mins.toString() )
+            if (mins == 0L){
+                return@LaunchedEffect
+            }
+            val earning =systemData.value.price_per_min * BigDecimal(mins)
+            earningsViewModel.postEarnings(earning)
+            // send request
         }
     }
 

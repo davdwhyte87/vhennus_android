@@ -1,13 +1,19 @@
 package com.vhennus
 
 import android.app.Application
+import android.content.Context
 import com.cloudinary.android.MediaManager
+import com.vhennus.general.utils.SessionTracker
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class Application: Application(){
     override fun onCreate() {
         super.onCreate()
+
+        val prefs = getSharedPreferences("app", Context.MODE_PRIVATE)
+        SessionTracker(prefs)
+
         // cloudinary
         MediaManager.init(this, mapOf(
             "cloud_name" to "dsxzbvfur",

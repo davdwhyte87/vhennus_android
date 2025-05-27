@@ -147,6 +147,7 @@ fun FeedScreen(
       }
     }
   }
+
   LaunchedEffect(feedUIState.value.isFeedLoadingError) {
     if(feedUIState.value.isFeedLoadingError){
       Toast.makeText(context, feedUIState.value.getFeedErrorMessage, Toast.LENGTH_SHORT).show()

@@ -14,5 +14,9 @@ data class SystemData(
     val android_app_version:String = "",
     val apk_link: String = "",
     @Serializable(with = BigDecimalSerializer::class)
-    @Contextual val ngn:BigDecimal = BigDecimal("0.00")
+    @Contextual val ngn:BigDecimal = BigDecimal("0.00"),
+    @Serializable(with = BigDecimalSerializer::class)
+    @Contextual val price_per_min: BigDecimal = BigDecimal.ZERO,
+    @Serializable(with = BigDecimalSerializer::class)
+    @Contextual val ref_amount: BigDecimal = BigDecimal.ZERO
 )

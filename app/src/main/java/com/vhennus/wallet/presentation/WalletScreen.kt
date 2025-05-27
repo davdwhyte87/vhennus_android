@@ -296,8 +296,12 @@ fun WalletScreen(
             Spacer(modifier=Modifier.height(32.dp))
 
             Column(
-                modifier = Modifier.padding(24.dp)
+                modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                if(profileUIState.isGetProfileLoading || walletUIState.isGetAllWalletsLoading){
+                    AnimatedPreloader(modifier = Modifier.size(size = 50.dp), MaterialTheme.colorScheme.primary)
+                }
 
                 Text("Wallet List", style = MaterialTheme.typography.titleMedium)
                 wallets.forEach{ wallet ->

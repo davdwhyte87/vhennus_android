@@ -168,4 +168,13 @@ sealed class NavScreen(
         title = "Forgot Password"
     )
 
+    object EarningsScreen: NavScreen(
+        route = "earnings",
+        title = "Earnings"
+    )
+    object SelectEarningsScreen: NavScreen(
+        route = "select_earnings_wallet",
+        title = "Select Earnings Wallet"
+    )
+
 }

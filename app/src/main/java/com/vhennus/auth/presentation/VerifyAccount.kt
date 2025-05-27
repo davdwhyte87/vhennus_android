@@ -37,6 +37,7 @@ import com.vhennus.auth.domain.ConfirmAccountReq
 import com.vhennus.auth.domain.ResendCodeReq
 import com.vhennus.auth.domain.SignupReq
 import com.vhennus.auth.domain.USER_TYPE
+import com.vhennus.general.presentation.InputField
 import com.vhennus.general.presentation.PasswordTextField
 import com.vhennus.ui.AnimatedPreloader
 
@@ -105,8 +106,8 @@ fun VerifyScreen(
 
     Column (
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth()
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp)
     ){
 
         Image(
@@ -123,16 +124,8 @@ fun VerifyScreen(
             modifier = Modifier
                 .padding( bottom =  20.dp, )
         )
-        OutlinedTextField(value = code.value,
-            onValueChange = {
-                code.value = it
-            },
-            shape = RoundedCornerShape(20.dp),
-            placeholder = { Text(text = "Verification Code") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
-        )
+
+        InputField(code, "Verification Code")
 
         Button(onClick = {
             if (!validateVerifyAccountInput(code.value, context)){

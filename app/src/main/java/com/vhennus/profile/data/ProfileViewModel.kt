@@ -260,7 +260,7 @@ class ProfileViewModel @Inject constructor(
                     val notifyToken = getNotificationToken()
 
                     val data = UpdateProfileRequest(
-                        null, null, null, notifyToken
+                        null, null, null, notifyToken,null
                     )
                     CLog.debug("STORED FCM TOKEN", notifyToken)
                     if(notifyToken == ""){

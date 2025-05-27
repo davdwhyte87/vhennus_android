@@ -216,6 +216,7 @@ fun editProfilePagexxx(
                                     image = uploadedUrl,
                                     null,
                                     null,
+                                    null,
                                     null
                                 )
                             )
@@ -259,7 +260,7 @@ fun editProfilePagexxx(
                 if(!updateBioValidation(context, bio.value, name.value)){
                    return@Button
                 }
-                profileViewModel.updateProfile(UpdateProfileRequest(image = null, bio.value, name = name.value, null ))
+                profileViewModel.updateProfile(UpdateProfileRequest(image = null, bio.value, name = name.value, null, null ))
             },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -458,6 +459,7 @@ fun editProfilePage(
                                         image = uploadedUrl,
                                         null,
                                         null,
+                                        null,
                                         null
                                     )
                                 )
@@ -515,7 +517,7 @@ fun editProfilePage(
                     if(!updateBioValidation(context, bio.value, name.value)){
                         return@Button
                     }
-                    profileViewModel.updateProfile(UpdateProfileRequest(image = null, bio.value, name = name.value, null ))
+                    profileViewModel.updateProfile(UpdateProfileRequest(image = null, bio.value, name = name.value, null,null ))
                 },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,

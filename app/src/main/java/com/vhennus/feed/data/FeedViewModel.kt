@@ -121,7 +121,6 @@ class  FeedViewModel @Inject constructor(
             }
 
         }
-
     }
 
     fun createPost(post: CreatePostReq){
@@ -234,7 +233,7 @@ class  FeedViewModel @Inject constructor(
                             isFeedLoadingSuccess  = false,
                             getFeedErrorMessage = errorResp.message
                         ) }
-                        CLog.error("XX ERROR CREATING POST ", errorResp.server_message+"")
+                        CLog.error("XX ERROR GETTING POST ", errorResp.server_message+"")
                     }
 
 
@@ -245,7 +244,7 @@ class  FeedViewModel @Inject constructor(
                         isFeedLoadingSuccess  = false,
                         getFeedErrorMessage = e.toString()
                     ) }
-                    CLog.error("XX ERROR CREATING POST ", e.toString())
+                    CLog.error("XX ERROR GETTING POST ", e.toString())
                 }
 
             }

@@ -1,6 +1,7 @@
 package com.vhennus.auth.presentation
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -9,8 +10,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +38,7 @@ import com.vhennus.R
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.auth.domain.SignupReq
 import com.vhennus.auth.domain.USER_TYPE
+import com.vhennus.general.presentation.InputField
 import com.vhennus.general.presentation.PasswordTextField
 import com.vhennus.ui.AnimatedPreloader
 
@@ -60,13 +64,20 @@ fun signUpScreen(
     val password2 = remember {
         mutableStateOf("")
     }
+    val referral = remember{
+        mutableStateOf("")
+    }
     val authUIState = authViewModel.authUIState.collectAsState()
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
-    if(authUIState.value.isSignupError){
-        Toast.makeText(LocalContext.current, authUIState.value.signupErrorMessage, Toast.LENGTH_SHORT).show()
-        authViewModel.resetSignupUIState()
+    LaunchedEffect(authUIState.value.isSignupError) {
+        if(authUIState.value.isSignupError){
+            Toast.makeText(context, authUIState.value.signupErrorMessage, Toast.LENGTH_SHORT).show()
+            authViewModel.resetSignupUIState()
+        }
     }
+
 
     LaunchedEffect(authUIState.value.isSignupSuccess) {
         if(authUIState.value.isSignupSuccess){
@@ -86,8 +97,8 @@ fun signUpScreen(
 
     Column (
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth()
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(scrollState)
     ){
 
         Image(
@@ -104,27 +115,9 @@ fun signUpScreen(
             modifier = Modifier
                 .padding( bottom =  20.dp, )
         )
-        OutlinedTextField(value = userName.value,
-            onValueChange = {
-                userName.value = it
-            },
-            shape = RoundedCornerShape(20.dp),
-            placeholder = { Text(text = "Username") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
-        )
 
-        OutlinedTextField(value = email.value,
-            onValueChange = {
-                email.value = it
-            },
-            shape = RoundedCornerShape(20.dp),
-            placeholder = { Text(text = "Email") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
-        )
+        InputField(userName, "Username")
+        InputField(email, "Email")
 
         PasswordTextField(
             password = password.value,
@@ -137,7 +130,10 @@ fun signUpScreen(
             onPasswordChange = { password2.value = it }
         )
 
-
+        InputField(
+            referral,
+            "Referral code",
+        )
 
         Button(onClick = {
             if (!validateInput(userName.value, password.value, password2.value, context, email.value)){
@@ -147,7 +143,8 @@ fun signUpScreen(
                 user_name =userName.value,
                 password= password.value,
                 email = email.value,
-                user_type = USER_TYPE.User
+                user_type = USER_TYPE.User,
+                referral = if (referral.value.isEmpty()||referral.value.isBlank()) null else referral.value
             )
             authViewModel.signup(signupReq)
 
@@ -180,8 +177,11 @@ fun signUpScreen(
 }
 
 fun validateInput(userName:String, password:String, password2:String, context: Context, email: String):Boolean{
-    val isAllLowerCase = userName.all { it.isLowerCase() }
-    if (!isAllLowerCase){
+    val isUsernameValid = userName.all { ch ->
+
+        !ch.isLetter() || ch.isLowerCase()
+    }
+    if (!isUsernameValid){
         Toast.makeText(context, "username should be all lowercase", Toast.LENGTH_SHORT).show()
         return false
     }

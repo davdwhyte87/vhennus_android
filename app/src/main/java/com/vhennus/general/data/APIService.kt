@@ -40,9 +40,14 @@ import com.vhennus.general.domain.SingleSellOrderResp
 import com.vhennus.profile.domain.FriendRequestWithProfile
 import com.vhennus.profile.domain.MiniProfile
 import com.vhennus.profile.domain.ProfileWithFriends
+import com.vhennus.profile.domain.UpdateEarnings
 import com.vhennus.trivia.domain.TriviaGame
 import com.vhennus.trivia.domain.TriviaGameReq
+import com.vhennus.wallet.domain.Account
 import com.vhennus.wallet.domain.AddWalletReq
+import com.vhennus.wallet.domain.CreateWalletReq
+import com.vhennus.wallet.domain.GetWalletReq
+import com.vhennus.wallet.domain.TransferReq
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -204,7 +209,14 @@ interface APIService {
     @POST("api/v1/auth/profile/add_wallet")
     suspend fun addWallet(@Body data: AddWalletReq, @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
 
+    @GET("api/v1/auth/profile/cashout_earnings")
+    suspend fun cashoutEarnings(@HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
 
+    @GET("api/v1/auth/profile/activate_earnings")
+    suspend fun activateEarnings(@HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
+
+    @POST("api/v1/auth/profile/update_earnings")
+    suspend fun postEarnings(@Body data: UpdateProfileRequest, @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
 
 
     //Friend request
@@ -227,6 +239,17 @@ interface APIService {
     // delete account
     @GET("api/v1/auth/user/delete")
     suspend fun deleteAccount( @HeaderMap header:Map<String,String> ):Response<GenericResp<String>>
+
+
+    // blockchain
+    @POST("wallet/create_wallet")
+    suspend fun createWallet(@Body data: CreateWalletReq):Response<GenericResp<String>>
+    @POST("wallet/verify_account")
+    suspend fun verifyAccount(@Body data: AddWalletReq):Response<GenericResp<String>>
+    @POST("wallet/get_account")
+    suspend fun getAccount(@Body data: GetWalletReq):Response<GenericResp<Account>>
+    @POST("wallet/transfer")
+    suspend fun transfer(@Body data: TransferReq):Response<GenericResp<String>>
 
 
 }

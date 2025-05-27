@@ -8,7 +8,8 @@ data class SignupReq(
     val user_name:String,
     val password:String,
     val user_type:USER_TYPE,
-    val email:String
+    val email:String,
+    val referral: String? = null
 )
 
 

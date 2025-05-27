@@ -7,6 +7,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.webkit.CookieManager
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -16,6 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -30,6 +34,7 @@ import com.google.firebase.storage.ktx.storage
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.chat.presentation.SingleChatScreen
+import com.vhennus.earnings.data.EarningsViewModel
 import com.vhennus.feed.data.FeedViewModel
 import com.vhennus.general.data.GeneralViewModel
 import com.vhennus.general.utils.CLog
@@ -52,6 +57,9 @@ class  MainActivity  : ComponentActivity() {
     private val chatViewModel: ChatViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+
 
         // Install splash screen (Android 12+)
         installSplashScreen()
@@ -112,18 +120,9 @@ class  MainActivity  : ComponentActivity() {
             val chatViewModel: ChatViewModel = hiltViewModel()
             val profileViewModel: ProfileViewModel = hiltViewModel()
             val generalViewModel: GeneralViewModel = hiltViewModel()
+            val earningsViewModel: EarningsViewModel = hiltViewModel()
             val context = LocalContext.current
-//            LaunchedEffect(Unit) {
-//                (context as? Activity)?.intent?.data?.let { uri ->
-//                    navController.handleDeepLink(intent)
-//                }
-//            }
 
-//            LaunchedEffect(context) {
-//                (context as? Activity)?.intent?.data?.let { uri ->
-//                    navController.navigate(uri.toString())
-//                }
-//            }
             AmorgensTheme(darkTheme = false) {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -139,13 +138,33 @@ class  MainActivity  : ComponentActivity() {
                         triviaViewModel,
                         chatViewModel,
                         profileViewModel,
-                        generalViewModel
+                        generalViewModel,
+                        earningsViewModel
                     )
 
                 }
             }
         }
     }
+    override fun onNewIntent(intent: Intent) {
+
+        super.onNewIntent(intent)
+
+    }
+
+    private fun handleDeepLink(intent: Intent) {
+        Log.d("CLICK ID", "handling deep link")
+        val clickId = intent.data?.getQueryParameter("clickId")
+        if (clickId != null) {
+            // save it once
+            val prefs = getSharedPreferences("app", MODE_PRIVATE)
+            prefs.edit().putString("click_id", clickId).apply()
+            Log.d("MainActivity", "Saved clickId = $clickId")
+        } else {
+            Log.d("MainActivity", "No clickId in intent: ${intent.data}")
+        }
+    }
+
 
     override fun onDestroy() {
         super.onDestroy()
@@ -163,10 +182,7 @@ class  MainActivity  : ComponentActivity() {
         chatViewModel.disconnectWS()
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-    }
+
 }
 
 //private fun handleDeepLink(intent: Intent?, navController: NavController) {

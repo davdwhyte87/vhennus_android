@@ -1,5 +1,6 @@
 package com.vhennus.wallet.domain
 
+import com.vhennus.general.utils.BigDecimalSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
@@ -11,6 +12,7 @@ data class Account(
     val id: String = "",
     val address:String = "",
     val chain: List<TBlock> = emptyList<TBlock>(),
+    @Serializable(with = BigDecimalSerializer::class)
     @Contextual val balance: BigDecimal = BigDecimal.ZERO,
     val created_at: String ="",
     val public_key: String = ""
@@ -29,5 +31,6 @@ data class TBlock(
     val sender:String = "",
     val receiver:String ="",
     val timestamp: ULong = 0UL,
+    @Serializable(with = BigDecimalSerializer::class)
     @Contextual val amount: BigDecimal = BigDecimal.ZERO
 )

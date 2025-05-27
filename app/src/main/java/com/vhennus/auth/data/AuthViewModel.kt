@@ -104,8 +104,6 @@ class AuthViewModel  @Inject constructor(
                     ) }
                     CLog.error("SIGNUP ERROR", e.toString())
                 }
-
-                _authUIState.update { it.copy(isSignupButtonLoading = true) }
             }
         }
     }
@@ -141,7 +139,7 @@ class AuthViewModel  @Inject constructor(
                             verifyAccountErrorMessage = errorResp.message
                         ) }
 
-                        Log.d("VERIFY ACCOUNT ERROR ", errorResp.message + " "+ errorResp.server_message)
+                        CLog.error("VERIFY ACCOUNT ERROR ", errorResp.message + " "+ errorResp.server_message)
                     }
                 }catch (e:Exception){
                     _authUIState.update { it.copy(
@@ -150,7 +148,7 @@ class AuthViewModel  @Inject constructor(
                         isVerifyAccountError = true,
                         verifyAccountErrorMessage = "Network Error"
                     ) }
-                    Log.d("VERIFY ACCOUNT ERROR", e.toString())
+                    CLog.error("VERIFY ACCOUNT ERROR", e.toString())
                 }
 
 
@@ -188,7 +186,7 @@ class AuthViewModel  @Inject constructor(
                             resendCodeErrorMessage = errorResp.message
                         ) }
 
-                        Log.d("resend code ERROR ", errorResp.message + " "+ errorResp.server_message)
+                        CLog.error("resend code ERROR ", errorResp.message + " "+ errorResp.server_message)
                     }
                 }catch (e:Exception){
                     _authUIState.update { it.copy(
@@ -197,7 +195,7 @@ class AuthViewModel  @Inject constructor(
                         resendCodeError = true,
                         resendCodeErrorMessage = "Network Error"
                     ) }
-                    Log.d("resend code ERROR", e.toString())
+                    CLog.error("resend code ERROR", e.toString())
                 }
 
 
@@ -299,7 +297,7 @@ class AuthViewModel  @Inject constructor(
                     CLog.error("LOGIN ERROR", e.toString())
                 }
 
-                _authUIState.update { it.copy(isLoginButtonLoading = false) }
+
             }
         }
     }

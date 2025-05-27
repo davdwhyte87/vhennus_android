@@ -40,6 +40,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.vhennus.general.data.GeneralViewModel
 import com.vhennus.general.presentation.AppButtonLarge
 import com.vhennus.general.presentation.AppScaffold
 import com.vhennus.general.presentation.CustomSnackbarVisuals
@@ -71,7 +72,8 @@ import java.util.UUID
 fun TransferScreen(
     navController: NavController,
     walletAddress:String,
-    walletViewModel: WalletViewModel
+    walletViewModel: WalletViewModel,
+    generalViewModel: GeneralViewModel
 ){
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -100,6 +102,12 @@ fun TransferScreen(
     val context =  LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = CoroutineScope(Dispatchers.Main)
+    val currency = walletViewModel.selectedCurrency.collectAsState().value
+    val systemData = generalViewModel.systemData.collectAsState().value
+
+    LaunchedEffect(Unit) {
+        walletViewModel.getSelectedCurrency()
+    }
 
     LaunchedEffect(walletUIState.isTransferSuccessful) {
         if(walletUIState.isTransferSuccessful){
@@ -156,14 +164,10 @@ fun TransferScreen(
                 Text("${formatBigDecimalWithCommas(textToBigDecimal(amount.value))} VEC",
                     style = MaterialTheme.typography.titleSmall
                     )
-                InputField(
-                    seed,
-                    "Seed phrase",
-                )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("USD 0", style = MaterialTheme.typography.bodySmall)
+                    Text("${currency} ${formatBigDecimalWithCommas(calculateConvertedBalance(amount.value, currency, systemData, ))}", style = MaterialTheme.typography.bodySmall)
                     Icon(Icons.Filled.CurrencyExchange, "",
                         modifier = Modifier.size(20.dp)
                     )
@@ -175,6 +179,11 @@ fun TransferScreen(
                         })
                     )
                 }
+
+                InputField(
+                    seed,
+                    "Seed phrase",
+                )
             }
 
             // action button

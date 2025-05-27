@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.CurrencyBitcoin
 import androidx.compose.material.icons.outlined.Gamepad
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.vhennus.ui.GeneralScaffold
 import com.vhennus.ui.GeneralTopBar
 import androidx.navigation.NavController
+import com.vhennus.NavScreen
 import com.vhennus.general.presentation.MenuTopBar
 import com.vhennus.menu.domain.MenuItemData
 import com.vhennus.ui.theme.Surf
@@ -43,6 +45,11 @@ fun MenuScreen(navController: NavController){
                     title = "Wallet",
                     route = "wallet",
                     icon = Icons.Outlined.AccountBalanceWallet
+            ),
+            MenuItemData(
+                title = "Earnings",
+                route = NavScreen.EarningsScreen.route,
+                icon = Icons.Outlined.CurrencyBitcoin
             ),
             MenuItemData(
                 title = "Logout",

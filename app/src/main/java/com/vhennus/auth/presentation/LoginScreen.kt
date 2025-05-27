@@ -43,6 +43,7 @@ import com.vhennus.NavScreen
 import com.vhennus.R
 import com.vhennus.auth.data.AuthViewModel
 import com.vhennus.auth.domain.LoginReq
+import com.vhennus.general.presentation.InputField
 import com.vhennus.general.presentation.PasswordTextField
 import com.vhennus.general.utils.CLog
 import com.vhennus.ui.AnimatedPreloader
@@ -99,8 +100,8 @@ fun loginScreen(
 
     Column (
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth()
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp)
     ){
         Image(
             painterResource(R.mipmap.vhennuslogo2),
@@ -110,17 +111,7 @@ fun loginScreen(
                 .clip(CircleShape)
         )
 
-        OutlinedTextField(value = userName.value,
-            onValueChange = {
-                userName.value = it
-            },
-            shape = RoundedCornerShape(20.dp),
-            placeholder = { Text(text = "Username") },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom =  10.dp, )
-        )
+        InputField(userName, "Username")
 
         PasswordTextField(
             password = password.value,

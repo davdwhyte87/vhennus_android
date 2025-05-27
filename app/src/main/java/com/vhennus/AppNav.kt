@@ -22,6 +22,9 @@ import com.vhennus.auth.presentation.signUpScreen
 import com.vhennus.chat.data.ChatViewModel
 import com.vhennus.chat.presentation.AllChatsScreen
 import com.vhennus.chat.presentation.SingleChatScreen
+import com.vhennus.earnings.data.EarningsViewModel
+import com.vhennus.earnings.presentation.EarningsScreen
+import com.vhennus.earnings.presentation.SelectWalletScreen
 import com.vhennus.feed.data.FeedViewModel
 
 import com.vhennus.feed.presentation.createCommentScreen
@@ -66,7 +69,8 @@ fun AppNav(
     triviaViewModel: TriviaViewModel,
     chatViewModel: ChatViewModel,
     profileViewModel:ProfileViewModel,
-    generalViewModel: GeneralViewModel
+    generalViewModel: GeneralViewModel,
+    earningsViewModel: EarningsViewModel
 ){
 
     NavHost(navController = navController, startDestination = NavScreen.HomeScreen.route) {
@@ -85,7 +89,7 @@ fun AppNav(
         composable(route=NavScreen.TransferScreen.route+"/{address}"){ navBackStack->
             val address = navBackStack.arguments?.getString("address")
             if (address != null){
-                TransferScreen( navController, address, walletViewModel)
+                TransferScreen( navController, address, walletViewModel, generalViewModel)
             }
         }
 
@@ -200,7 +204,23 @@ fun AppNav(
         composable(route=NavScreen.SignupScreen.route){
             signUpScreen(authViewModel,navController)
         }
-        
+        composable(route= NavScreen.EarningsScreen.route){
+            EarningsScreen(navController, profileViewModel,earningsViewModel )
+        }
+
+        composable(route= NavScreen.SelectEarningsScreen.route+"/{walletsString}"){backStackEntry->
+            val walletsString = backStackEntry.arguments?.getString("walletsString")
+            if(walletsString!=null){
+                SelectWalletScreen(navController,
+                    walletViewModel,
+                    walletsString,
+                    profileViewModel,
+                    earningsViewModel,
+                    walletViewModel
+                )
+            }
+
+        }
         composable(NavScreen.LogoutScreen.route){
             logoutScreen(navHostController = navController, authViewModel)
         }
@@ -266,7 +286,8 @@ fun AppNav(
                 chatViewModel,
                 authViewModel,
                 profileViewModel,
-                generalViewModel
+                generalViewModel,
+                earningsViewModel
                 )
         }
 

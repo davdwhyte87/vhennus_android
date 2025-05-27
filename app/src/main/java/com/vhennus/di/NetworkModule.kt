@@ -33,6 +33,7 @@ import java.math.BigDecimal
 import java.net.InetAddress
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 
@@ -97,9 +98,65 @@ object NetworkModule {
             .build()
     }
 
+    @Qualifier
+    @Retention(AnnotationRetention.BINARY)
+    annotation class BlockchainRetrofit
+
+    @Qualifier
+    @Retention(AnnotationRetention.BINARY)
+    annotation class BlockchainAPIService
+
+    @OptIn(ExperimentalSerializationApi::class)
+    @Provides
+    @Singleton
+    @BlockchainRetrofit
+    fun provideBlockchainRetrofit(@Named("customGson") gson: Gson): Retrofit {
+        val dohUrl = "https://dns.google/dns-query".toHttpUrl()
+        val googleDoH = DnsOverHttps.Builder()
+            .client(OkHttpClient())       // reuse if you have a shared client
+            .url(dohUrl)                  // now using the extension-parsed URL
+            .bootstrapDnsHosts(           // optional, to bypass system DNS
+                InetAddress.getByName("8.8.8.8"),
+                InetAddress.getByName("8.8.4.4")
+            )
+            .build()
+
+        Log.d("Retrofit", "✅ Using custom Gson instance: $gson")
+        val okHttpClient = OkHttpClient.Builder()
+            .dns(googleDoH)
+            .connectTimeout(120, TimeUnit.SECONDS)   // Set connection timeout
+            .readTimeout(120, TimeUnit.SECONDS)      // Set read timeout
+            .writeTimeout(120, TimeUnit.SECONDS)     // Set write timeout
+            .addInterceptor { chain: Interceptor.Chain ->
+                val request: Request = chain.request().newBuilder()
+                    .addHeader("Content-Type", "application/json")
+                    .build()
+                chain.proceed(request)
+            }
+            .build()
+
+        val json = Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+            coerceInputValues = true
+        }
+
+        return Retrofit.Builder()
+            .baseUrl(BuildConfig.BLOCKCHAIN_URL+"/")
+            .client(okHttpClient)
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+    }
+
     @Provides
     @Singleton
     fun provideApiService(retrofit: Retrofit): APIService {
+        return retrofit.create(APIService::class.java)
+    }
+    @Provides
+    @Singleton
+    @BlockchainAPIService
+    fun provideBlockchainApiService(@BlockchainRetrofit retrofit:  Retrofit): APIService {
         return retrofit.create(APIService::class.java)
     }
 
